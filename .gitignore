@@ -5,7 +5,11 @@ coverage/
 
 # Run artifacts land in the OS state dir (env-paths), never in the repo. A local override
 # via BRAZE_RUNS_DIR pointing here would otherwise commit customer identifiers.
-runs/
+#
+# Anchored to the repository root on purpose. Unanchored, `runs/` matches at every depth, and
+# it silently swallowed packages/cli/src/runs/ — Phase 1 source that then never reached CI
+# (BUG-3). Keep the leading slash.
+/runs/
 *.log
 
 .DS_Store

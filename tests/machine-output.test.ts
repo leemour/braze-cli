@@ -124,3 +124,15 @@ describe("a failure in a machine mode", () => {
     expect(() => JSON.parse(result.stderr)).toThrow()
   })
 })
+
+describe("help text, on the real binary", () => {
+  // The paths are the one thing a caller cannot get from this CLI yet, so the pointer to
+  // Braze's own list has to be where someone looking at the tool will actually see it.
+  it("points at Braze's endpoint index from the root help, not only from `api`", () => {
+    for (const args of [[], ["--help"], ["api", "--help"]]) {
+      const result = braze(args, env())
+
+      expect(`${result.stdout}${result.stderr}`).toContain("https://www.braze.com/docs/api/home")
+    }
+  })
+})

@@ -49,6 +49,8 @@ braze api POST /users/track --input @users.json --confirm   # writes need --conf
 
 braze runs list                          # what past invocations did
 braze runs path <run-id>                 # the directory holding its artifacts
+
+braze commands --json                    # the whole command surface, for an agent
 ```
 
 Arriving with the generated catalog in Phase 2:
@@ -56,9 +58,19 @@ Arriving with the generated catalog in Phase 2:
 ```sh
 braze campaign list                      # typed commands, registered from the catalog
 braze users track --input @users.jsonl --confirm
-braze commands --json                    # the whole command surface, for an agent
-braze schema users.track
+braze schema users.track                 # one operation's input contract
 ```
+
+### For an agent
+
+Start with `braze commands --json`. It returns every command, its arguments and its options —
+including which options take a value and which must be given — plus the exit code for each kind of
+failure, so a caller branches on `$?` rather than parsing a message. It reads the live command
+tree, so the typed commands appear there the moment the catalog lands, with no second list to keep
+in step.
+
+Until then the only way to reach Braze is `braze api <METHOD> <PATH>`, which means **an agent has
+to be told the endpoint paths** — the catalog is what will make those discoverable too.
 
 **A profile can be marked read-only** (`--read-only`), which refuses every write before `--confirm`
 is even considered. `--confirm` guards against a mistyped command; this guards against a correct

@@ -2,6 +2,7 @@ import { BrazeError } from "brazecli-core"
 import { Command, Option } from "commander"
 import type { KeyringStore } from "./auth/keyring.js"
 import { apiCommand } from "./commands/api.js"
+import { commandsCommand } from "./commands/commands.js"
 import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
 import { OUTPUT_FORMATS } from "./config/file.js"
@@ -35,6 +36,7 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
   program.addCommand(profileCommand(options))
   program.addCommand(apiCommand(options))
   program.addCommand(runsCommand(options))
+  program.addCommand(commandsCommand(options))
 
   return program
 }

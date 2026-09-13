@@ -1,8 +1,8 @@
 # Plan: Phase 2 — the generated API catalog
 
-**Done means:** `braze campaign list --json` works without anyone having hand-written a
-`campaign` command, `braze commands --json` lists the whole surface for an agent, and CI fails
-if an endpoint silently disappears from Braze's collection.
+**Done means:** `braze campaigns list --json` works without anyone having hand-written a
+`campaigns` command (plural, per `NEED-18`), `braze commands --json` lists the whole surface for
+an agent, and CI fails if an endpoint silently disappears from Braze's collection.
 
 Status: **`CAT-1` and `CAT-2` done; `CAT-3` is next.** Written 2026-09-13 against `622ef9f`, with Phase 1
 closed and verified live; §1 answered 2026-09-14 and rewritten in place. Backlog items

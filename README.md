@@ -5,7 +5,7 @@ for AI agents and automation first, and for people second.
 
 > **Status: Phase 1 done, verified against live Braze** (2026-09-13). `braze profile`, `braze api`
 > and `braze runs` work; a read returns real data and a write is refused without `--confirm`.
-> **There are no typed commands yet** — `braze campaign list` and the rest arrive with the
+> **There are no typed commands yet** — `braze campaigns list` and the rest arrive with the
 > generated catalog in Phase 2, and until then everything goes through `braze api`. Follow along
 > in [`BACKLOG.md`](BACKLOG.md).
 
@@ -75,7 +75,7 @@ braze commands --json                    # the whole command surface, for an age
 Arriving with the generated catalog in Phase 2:
 
 ```sh
-braze campaign list                      # typed commands, registered from the catalog
+braze campaigns list                     # typed commands, registered from the catalog
 braze users track --input @users.jsonl --confirm
 braze schema users.track                 # one operation's input contract
 ```

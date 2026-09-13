@@ -135,3 +135,19 @@ a refusal for a result — the rule that already holds everywhere else in this C
 A terminal still gets `code: message` on one line. The exit code is unchanged and remains the
 thing a script branches on; the JSON exists to say *which* record or *how long to wait*, which an
 exit code cannot.
+
+**NEED-17 · Merge a pull request as soon as CI is green, or wait for the owner each time?**
+**Merge it (option A).** «1 A». A stack of three or four open branches makes review harder rather
+than easier, and `main` falling behind has already cost a session once (`BUG-3` was invisible
+precisely because nothing had ever been pushed). Phase 2's steps are internal, each behind its own
+gates, so they merge on green. This is not a licence to merge anything: a change that alters
+behaviour the owner has ruled on, or that touches the production profile, still asks first.
+
+**NEED-18 · Singular or plural command names — `braze campaign list` or `braze campaigns list`?**
+**Plural, as Braze's own paths are written (option A).** «2 A». `/campaigns/list` becomes
+`braze campaigns list`, so nobody has to remember two spellings of the same resource, and an agent
+reading a Braze doc page can type what it sees. No singularisation rule is derived: the brief
+contradicts itself (`braze campaign list` in §779, `["users", "track"]` in §10's own example), and
+naive plural-stripping turns `canvas` into `canva`. **The phase plan's done-criterion was written
+as `braze campaign list` and is corrected to the plural.**
+

@@ -3,15 +3,14 @@
 Copy the block below into an agent's instructions. It is deliberately short: the CLI describes
 itself, so the prompt's job is to say *how to ask*, not to list what exists.
 
-Replace `<REPO>` with the absolute path to this checkout. Once the package is published
-(`OPS-2`), `braze` will be on `PATH` and the first line becomes just `braze`.
+It assumes `braze` is on `PATH` — see [installing it locally](../README.md#install-it-locally) in
+the README. If it is not, replace the command with
+`node <REPO>/packages/cli/dist/bin/braze.js`.
 
 ---
 
 ```text
-You have a Braze CLI. Invoke it as:
-
-  node <REPO>/packages/cli/dist/bin/braze.js
+You have a Braze CLI, on your PATH as `braze`.
 
 Always pass --json. Discover what it can do before doing anything else:
 

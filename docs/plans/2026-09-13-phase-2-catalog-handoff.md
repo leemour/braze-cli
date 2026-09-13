@@ -1,6 +1,6 @@
 # Хендофф: Фаза 2 — генерируемый каталог операций
 
-Когда нитка закрыта, `braze campaign list --json` работает, хотя команду `campaign` никто не
+Когда нитка закрыта, `braze campaigns list --json` работает, хотя команду `campaigns` никто не
 писал руками, а CI краснеет, если эндпоинт молча исчез из коллекции Braze.
 
 13.09.2026, `CAT-1` дописан 14.09 · ветка `main`, снимок `622ef9f` · 152 теста зелёных · общие
@@ -128,7 +128,7 @@ pnpm catalog:check                                          # новое, гей
 node packages/cli/dist/bin/braze.js api GET /campaigns/list --query page=0 --json | head -c 120
 
 # Руками: сгенерированная команда должна дать тот же ответ, что и сырая
-node packages/cli/dist/bin/braze.js campaign list --json | head -c 120
+node packages/cli/dist/bin/braze.js campaigns list --json | head -c 120
 ```
 
 Стенда нет, поднимать нечего: всё, что нужно, — `pnpm install` и ключ, который уже записан.

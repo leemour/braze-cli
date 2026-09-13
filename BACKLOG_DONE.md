@@ -5,6 +5,13 @@ is ever removed from this file.
 
 | Number | Task | Closed | Commit |
 |---|---|---|---|
+| `CLI-14` | `braze runs list/show/path`, needing no profile and no key — the point is to read what happened when the configuration is what went wrong | 2026-09-13 | see `git log -- packages/cli/src/commands/runs.ts` |
+| `CLI-10` | `--dry-run`: resolve, validate, construct, count, send nothing. Allowed even on a read-only profile | 2026-09-13 | see `git log -- packages/cli/src/commands/api.ts` |
+| `CLI-9` | `braze api <METHOD> <path>` — relative Braze paths only, writes gated, repeated `--query` refused with a message naming `CAT-3` | 2026-09-13 | see `git log -- packages/cli/src/commands/api.ts` |
+| `CLI-8` | Run directories: `run.json` written at the start and finalized on every path, atomically, `0600` | 2026-09-13 | see `git log -- packages/cli/src/runs` |
+| `CLI-7` | Pino into `events.jsonl` through a plain synchronous append stream — an async destination drops the tail on exit, which is the case the log exists for | 2026-09-13 | see `git log -- packages/cli/src/logging` |
+| `CLI-6` | Pretty renderer: table, labelled fields, JSON fallback. Three shapes, not a renderer per endpoint | 2026-09-13 | see `git log -- packages/cli/src/output/pretty.ts` |
+| `CLI-5` | Output modes, with every diagnostic on stderr in **every** mode, and the invariant tested on the built binary | 2026-09-13 | see `git log -- tests/machine-output.test.ts` |
 | `CLI-11` | Input from `@file`, `-` for stdin, or inline JSON — parsed and refused before a command can half-send it | 2026-09-13 | see `git log -- packages/cli/src/input` |
 | `CLI-4` | Credentials: OS keyring first with a single warned fallback to a `0600` file in a `0700` directory, written atomically. The keyring is reached through one injected seam, so no test can touch a real keychain | 2026-09-13 | see `git log -- packages/cli/src/auth` |
 | `CLI-3` | `braze profile add/list/remove`. The key is never a command line argument and never printed, masked or otherwise | 2026-09-13 | see `git log -- packages/cli/src/commands/profile.ts` |

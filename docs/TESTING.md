@@ -1,6 +1,6 @@
 # Testing
 
-**Status (2026-09-13):** green — 112 tests, 11 files. The layers below
+**Status (2026-09-13):** green — 151 tests, 15 files. The layers below
 that do not exist yet are marked *not built*. Nothing here describes a test that has not been run.
 
 ```sh
@@ -28,8 +28,8 @@ a claim, and it has to be true.
 | Layer | Location | Runner | State |
 |---|---|---|---|
 | Core unit | `packages/core/src/**/*.test.ts` | vitest | 64 tests |
-| CLI unit | `packages/cli/src/**/*.test.ts` | vitest | 44 tests |
-| Cross-cutting | `tests/**/*.test.ts` | vitest | 1 test (portability gate) |
+| CLI unit | `packages/cli/src/**/*.test.ts` | vitest | 83 tests |
+| Cross-cutting | `tests/**/*.test.ts` | vitest | 9 tests (portability gate, machine output on the built binary) |
 | Generator | `tests/generator/**` against committed fixtures | vitest | *not built* |
 | Live Braze | `pnpm test:live` | vitest | *not built* |
 

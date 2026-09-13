@@ -139,7 +139,19 @@ This is why the audit CSV says `submitted` and not `success` for a record in a b
 accepted: the request succeeded, and whether that particular user was updated is a different
 question with a different answer.
 
-## 8. Trade-off order
+## 8. A message from Braze is untrusted data, not text
+
+Braze answers a 401 with `Invalid API key: <the key itself>` in the body. The first real request
+ever made from this repository printed a production key to a terminal, because the error handler
+passed the provider's message through verbatim (`SEC-1`, 2026-09-13).
+
+`BrazeClient` now redacts its own key out of every message it builds — it is the only component
+that holds the secret, so it is the only one that can. **The wider rule: never place a
+third-party string into output or a log without treating it as data that came from outside.**
+When Phase 2 generates hundreds of operations, that rule has to hold in one place, and one place
+is the client.
+
+## 9. Trade-off order
 
 When two of these conflict, the earlier one wins:
 

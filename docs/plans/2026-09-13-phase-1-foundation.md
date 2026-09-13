@@ -5,7 +5,7 @@ returns one deterministic JSON value on stdout, writes a run directory with `run
 `events.jsonl` containing no credentials and no ANSI, and `braze api POST /users/track --input
 @x.json` refuses to send without `--confirm`.
 
-Status: **steps 1–4 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
+Status: **done** (2026-09-13). Kept until the Phase 2 plan replaces it; delete it then. Written against the scaffold commit. Backlog items
 `CORE-1`…`CORE-12` and `CLI-1`…`CLI-13` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §14–§48.
 
@@ -127,7 +127,7 @@ warned file fallback; `--input @file` and stdin.
   stdout and everything else to stderr, with no formatting decisions in it. The moment it grows
   a table it has become the renderer early.
 
-### Step 5 — the observable surface `CLI-5` `CLI-7` `CLI-8` `CLI-9` `CLI-10`
+### Step 5 — the observable surface `CLI-5` `CLI-7` `CLI-8` `CLI-9` `CLI-10` ✅
 
 Output modes and the invariant test; the Pino adapter and `events.jsonl`; run directories and an
 atomically finalized `run.json`; `braze api`; `--dry-run`.

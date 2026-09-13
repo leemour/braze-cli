@@ -51,12 +51,14 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Phase 1, steps 1–4 of 5 done**, all on 2026-09-13. Core does one safe request end to end;
-> the CLI has its flags, its config hierarchy, `braze profile add/list/remove` with keyring
-> storage, and `@file`/stdin input. 112 tests.
+> **Phase 1 is closed** (2026-09-13). `braze api` reaches real Braze, refuses a write without
+> `--confirm`, refuses one outright on a read-only profile, and leaves a run directory with
+> `run.json` and `events.jsonl` behind. 151 tests.
 >
-> Step 5 is the last — what a command actually prints and leaves behind: `CLI-5`, `CLI-6`,
-> `CLI-7`, `CLI-8`, `CLI-9`, `CLI-10`.
+> Verified against live Braze once, read-only. That request found `SEC-1` — Braze echoes the API
+> key inside its own 401 message — which is fixed and re-verified.
+>
+> **Next thread:** Phase 2, starting at `CAT-1`.
 
 **Open thread:** Phase 1 foundation —
 [`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
@@ -86,14 +88,16 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 
 | Number | Task | P |
 |---|---|---|
-| `CLI-5` | Output modes `auto`/`pretty`/`json`/`jsonl`, **and the test that stdout carries only data in machine modes** | P1 |
-| `CLI-6` | Pretty renderer: tables for lists, key/value sections for objects, pretty JSON as the fallback — a handful of renderers, not dozens | P2 |
-| `CLI-7` | Pino adapter to core's `Logger`, redaction list, one `events.jsonl` per run, no ANSI anywhere in it | P1 |
-| `CLI-8` | Run directories and `run.json`, finalized atomically, never carrying the API key or a full request body | P1 |
-| `CLI-9` | `braze api <METHOD> <path>` raw escape hatch, relative Braze paths only, writes requiring `--confirm` | P1 |
-| `CLI-10` | `--dry-run` for every write: resolve, validate, batch, count, construct — and send nothing | P1 |
 | `CLI-12` | 🟡 The mapping exists in `packages/cli/src/exit-codes.ts` and `run` applies it; every new command has to route its failures through a `BrazeError` for it to hold | P2 |
 | `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit — the scaffolding bulk needs later | P2 |
+
+## Left over from Phase 1
+
+| Number | Task | P |
+|---|---|---|
+| `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough`. Nothing to validate against until the catalog exists, so it moves next to `CAT-4` | P2 |
+| `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit. `run.finish` is already idempotent and called on every path, so this is wiring a handler to it | P2 |
+| `CLI-15` | 🟡 `braze profile add` cannot take the key on stdin — only `BRAZE_API_KEY` or a terminal prompt. A CI that has neither is stuck | P3 |
 
 ## Phase 2 — the generated API catalog
 
@@ -144,6 +148,7 @@ Expected to ship with the first practically useful release, not after it.
 |---|---|---|
 | `OPS-2` | Release `brazecli` and `brazecli-core` at v1: changelog, versioning, and confirming npm accepts a name one hyphen from `braze-cli` (`NEED-2`) | P3 |
 | `OPS-3` | Shell completions for bash/zsh/fish, generated from the catalog | P3 |
+| `SEC-2` | Sweep every other place a third-party string reaches a stream — Braze's message is data from outside, and `SEC-1` proved it can carry the key | P2 |
 | `OPS-4` | `test:live` harness — read-only by default, a dedicated profile, never run in CI | P2 |
 | `DOC-1` | Rewrite `README.md` as a real quick start once a command exists that can be run | P2 |
 | `DOC-2` | `docs/authentication.md`, `docs/configuration.md`, `docs/bulk-runs.md`, `docs/security.md`, `docs/development.md` — each written when the thing it describes exists, not before | P2 |

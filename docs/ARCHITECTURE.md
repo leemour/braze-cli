@@ -129,10 +129,19 @@ official Braze collection → (explicit dev-time sync) → spec/braze.postman.js
 The committed snapshot is what ships. A change in Braze's API therefore arrives as a reviewable Git
 diff rather than as a silent change in the installed CLI's behaviour.
 
-⚠ **Unverified:** that the official collection can be exported by script at all. Every guessed
-source URL returned 404 on 2026-09-13 — see `RISK-1` in
-[`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md). Phase 2 opens with a probe
-and carries a fallback branch.
+**The source is settled (2026-09-14, `NEED-13`).** The collection comes from Braze's own Postman
+documenter, `https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG`, which answers
+`200` with the whole collection as JSON and needs no Postman account or token. 99 requests, every
+one carrying a distinct Postman id, and three consecutive downloads are byte-identical. So
+`spec:sync` downloads rather than validating a hand-made export.
+
+This corrects `RISK-1`, which recorded the source as unconfirmed after three guessed URLs 404'd on
+2026-09-13 — none of them this one. Details in [`DECISIONS.md`](DECISIONS.md).
+
+⚠ That address is Postman's internal API rather than a published interface, so it may change
+without notice (`RISK-2`). Nothing at runtime depends on it: the committed snapshot is what ships,
+and a dead address breaks the developer's `spec:sync`, not an installed CLI. The requirement it
+creates is that `spec:sync` verify it received a collection before overwriting `spec/`.
 
 ## 7. A 2xx is not proof every record landed
 

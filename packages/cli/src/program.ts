@@ -7,6 +7,7 @@ import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
 import { emptyConfig, loadConfig, OUTPUT_FORMATS } from "./config/file.js"
 import { resolvePaths } from "./config/paths.js"
+import { DOCUMENTATION } from "./documentation.js"
 import { exitCodeFor, GENERIC_FAILURE } from "./exit-codes.js"
 import { processStreams, type Streams } from "./output/stream.js"
 import { type GlobalFlags, resolveOutputFormat } from "./settings.js"
@@ -34,6 +35,20 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
     .option("--timeout <ms>", "per-attempt timeout in milliseconds", Number)
     .option("--retries <n>", "attempts after the first", Number)
     .showHelpAfterError()
+    .addHelpText(
+      "after",
+      [
+        "",
+        "There are no typed commands yet, so every Braze call goes through `braze api`, and you",
+        "have to know the path. Braze lists them all here:",
+        `  endpoints      ${DOCUMENTATION.endpoints}`,
+        `  auth & limits  ${DOCUMENTATION.basics}`,
+        "",
+        "Writing an agent? `braze commands --json` returns this whole surface, plus the exit code",
+        "for every kind of failure, as JSON.",
+        "",
+      ].join("\n"),
+    )
 
   program.addCommand(profileCommand(options))
   program.addCommand(apiCommand(options))

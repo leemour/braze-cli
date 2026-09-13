@@ -3,8 +3,15 @@
  * timeout and backoff testable without anything actually waiting.
  */
 
+/**
+ * Why the client is waiting. The real sleep ignores it; a test uses it to tell an attempt's
+ * deadline apart from a delay between attempts, which are the only two reasons core ever waits.
+ * Without it a test that records waits sees both and cannot assert on either.
+ */
+export type SleepReason = "timeout" | "retry"
+
 /** Rejects with an `AbortError` if the signal fires first, the way `fetch` does. */
-export type SleepLike = (ms: number, signal?: AbortSignal) => Promise<void>
+export type SleepLike = (ms: number, signal?: AbortSignal, reason?: SleepReason) => Promise<void>
 
 /** Monotonic milliseconds. Durations come from here; a wall clock can step backwards. */
 export type MonotonicClock = () => number

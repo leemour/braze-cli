@@ -5,6 +5,12 @@ is ever removed from this file.
 
 | Number | Task | Closed | Commit |
 |---|---|---|---|
+| `CORE-9` | Operation metadata — access, permission, `retryPolicy`, batch limits, pagination style; `rawOperation` for `braze api`. Retry branches on the policy alone, so there is one source of truth | 2026-09-13 | see `git log -- packages/core/src/operation.ts` |
+| `CORE-7` | Ambiguous writes: a write that produced no response becomes `outcome_unknown` with `retryable: false` stated explicitly, never `failed` | 2026-09-13 | see `git log -- packages/core/src/client.ts` |
+| `CORE-6` | Rate limits: `Retry-After` in both its forms and `X-RateLimit-Reset` beat our backoff; beyond 30 s a structured `rate_limited` comes back instead of a blocked caller | 2026-09-13 | see `git log -- packages/core/src/retry.ts` |
+| `CORE-5` | Retry engine: one retry by default, reads only, full jitter over `[0, min(cap, base·2^n))`, deterministic under an injected `random` | 2026-09-13 | see `git log -- packages/core/src/retry.ts` |
+| `CORE-4` | Error normalization: HTTP status and Braze's error message into the closed code list | 2026-09-13 | see `git log -- packages/core/src/retry.ts` |
+| `CORE-8` | Request identity and timing: a UUID per attempt, and `attempts`, `totalDurationMs`, `retryWaitMs` on every result, all from the monotonic clock | 2026-09-13 | see `git log -- packages/core/src/client.ts` |
 | `CORE-3` | Per-attempt timeout: the client composes its own `AbortController` and fires it through the injected `sleep`, so a timeout test waits for nothing. The timer is cancelled when the response arrives | 2026-09-13 | see `git log -- packages/core/src/client.ts` |
 | `CORE-2` | Request construction: path parameters, query serialization, JSON body, and the refusals — an absolute URL where a path belongs, a non-https endpoint, an unsupplied placeholder | 2026-09-13 | see `git log -- packages/core/src/request.ts` |
 | `CORE-1` | `BrazeClient.send` — one attempt with injected `fetch`, `sleep`, `clock`, `now`, `random` and `logger`; bearer auth; any HTTP status returned rather than classified | 2026-09-13 | see `git log -- packages/core/src/client.ts` |

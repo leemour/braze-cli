@@ -129,7 +129,17 @@ source URL returned 404 on 2026-09-13 — see `RISK-1` in
 [`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md). Phase 2 opens with a probe
 and carries a fallback branch.
 
-## 7. Trade-off order
+## 7. A 2xx is not proof every record landed
+
+Braze answers `/users/track` with **201 and a populated `errors` array** when some records in the
+batch failed. Nothing above the HTTP layer can recover that once it is thrown away, so
+`ExecuteResult` carries `raw` — the body exactly as Braze sent it — alongside the parsed `data`.
+
+This is why the audit CSV says `submitted` and not `success` for a record in a batch Braze
+accepted: the request succeeded, and whether that particular user was updated is a different
+question with a different answer.
+
+## 8. Trade-off order
 
 When two of these conflict, the earlier one wins:
 

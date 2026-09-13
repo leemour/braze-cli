@@ -1,7 +1,17 @@
-import { BrazeError } from "./errors.js"
+import { BrazeError, type ErrorCode } from "./errors.js"
 import type { FetchLike } from "./fetch.js"
 import { type Logger, noopLogger } from "./logger.js"
-import { buildUrl, type HttpMethod, type RequestSpec, resolveEndpoint } from "./request.js"
+import { mayRetry, type Operation } from "./operation.js"
+import { buildUrl, type HttpMethod, type QueryValue, type RequestSpec, resolveEndpoint } from "./request.js"
+import {
+  backoffMs,
+  DEFAULT_RETRY,
+  isTransportFailure,
+  providerWaitMs,
+  type RetryConfig,
+  retryableStatus,
+  statusToCode,
+} from "./retry.js"
 import { type MonotonicClock, monotonic, realSleep, type SleepLike, type WallClock, wallClock } from "./time.js"
 
 export const DEFAULT_TIMEOUT_MS = 30_000
@@ -20,6 +30,37 @@ export interface BrazeClientOptions {
   /** Core invents none. The CLI sends `brazecli/<version> …`; a Worker sends its own. */
   userAgent?: string
   newRequestId?: () => string
+  retry?: Partial<RetryConfig>
+}
+
+export interface OperationInput {
+  pathParams?: Record<string, string | number>
+  query?: Record<string, QueryValue>
+  body?: unknown
+}
+
+export interface ExecuteOptions {
+  signal?: AbortSignal
+  /** Attempts after the first. Overrides the client's configured default for this call. */
+  retries?: number
+}
+
+export interface ExecuteResult<T = unknown> {
+  data: T
+  /**
+   * The body as Braze sent it. Kept because **a 2xx is not proof every record landed**:
+   * `/users/track` answers 201 with a populated `errors` array when some of a batch failed, and
+   * the layer that decides a record's audit status has to be able to see that.
+   */
+  raw: string
+  status: number
+  headers: Headers
+  requestId: string
+  attempts: number
+  startedAt: Date
+  totalDurationMs: number
+  /** How much of the total was spent waiting between attempts. */
+  retryWaitMs: number
 }
 
 export interface SendOptions {
@@ -51,6 +92,7 @@ export class BrazeClient {
   readonly #timeoutMs: number
   readonly #userAgent: string | undefined
   readonly #newRequestId: () => string
+  readonly #retry: RetryConfig
 
   readonly random: () => number
 
@@ -69,6 +111,7 @@ export class BrazeClient {
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
     this.#userAgent = options.userAgent
     this.#newRequestId = options.newRequestId ?? (() => crypto.randomUUID())
+    this.#retry = { ...DEFAULT_RETRY, ...options.retry }
     this.random = options.random ?? Math.random
   }
 
@@ -78,6 +121,10 @@ export class BrazeClient {
 
   get timeoutMs(): number {
     return this.#timeoutMs
+  }
+
+  get retryConfig(): RetryConfig {
+    return this.#retry
   }
 
   /**
@@ -126,7 +173,7 @@ export class BrazeClient {
     const startedAt = this.#now()
     const start = this.#clock()
 
-    void this.#sleep(this.#timeoutMs, finished.signal)
+    void this.#sleep(this.#timeoutMs, finished.signal, "timeout")
       .then(() => {
         timedOut = true
         abort.abort()
@@ -165,6 +212,154 @@ export class BrazeClient {
       startedAt,
       durationMs,
     }
+  }
+
+  /**
+   * The policy layer: one or more attempts, classification, and the honest answer when a write's
+   * fate cannot be known. This is where retrying is decided — never in `send`.
+   */
+  async execute<T = unknown>(
+    operation: Operation,
+    input: OperationInput = {},
+    options: ExecuteOptions = {},
+  ): Promise<ExecuteResult<T>> {
+    // Checked here, so any `cancelled` coming out of `send` below is necessarily one that fired
+    // while a request was in flight — which is what makes it ambiguous for a write.
+    if (options.signal?.aborted) {
+      throw new BrazeError("cancelled", "cancelled before the request was sent", { retryable: false })
+    }
+
+    const spec: RequestSpec = { method: operation.method, path: operation.path, ...input }
+    const maxAttempts = (options.retries ?? this.#retry.retries) + 1
+    const start = this.#clock()
+
+    let attempt = 0
+    let retryWaitMs = 0
+
+    for (;;) {
+      attempt += 1
+
+      let sent: SendResult
+      try {
+        sent = await this.send(spec, { signal: options.signal, attempt })
+      } catch (error) {
+        const failure = error as BrazeError
+
+        if (operation.access === "write" && isTransportFailure(failure.code)) {
+          throw this.#outcomeUnknown(operation, failure, attempt)
+        }
+        if (failure.code !== "cancelled" && mayRetry(operation) && attempt < maxAttempts) {
+          retryWaitMs += await this.#waitBeforeRetry(attempt, failure.code, undefined, options.signal)
+          continue
+        }
+        throw failure
+      }
+
+      const body = await this.#readBody(sent, operation)
+
+      if (sent.response.ok) {
+        return {
+          data: this.#parse<T>(body, sent, operation),
+          raw: body,
+          status: sent.response.status,
+          headers: sent.response.headers,
+          requestId: sent.requestId,
+          attempts: attempt,
+          startedAt: sent.startedAt,
+          totalDurationMs: this.#clock() - start,
+          retryWaitMs,
+        }
+      }
+
+      const code = statusToCode(sent.response.status)
+      const asked = providerWaitMs(sent.response.headers, this.#now)
+
+      const canRetry = retryableStatus(sent.response.status) && mayRetry(operation) && attempt < maxAttempts
+      // Braze asking for longer than we are willing to block is not ours to sit out. Hand back a
+      // retryable error and let the caller — or a person — decide.
+      const askedTooLong = asked !== undefined && asked > this.#retry.maxRetryAfterMs
+
+      if (canRetry && !askedTooLong) {
+        retryWaitMs += await this.#waitBeforeRetry(attempt, code, asked, options.signal)
+        continue
+      }
+
+      throw this.#responseError(code, body, sent, attempt, asked)
+    }
+  }
+
+  #outcomeUnknown(operation: Operation, failure: BrazeError, attempt: number): BrazeError {
+    return new BrazeError(
+      "outcome_unknown",
+      `the request may have been processed by Braze — it produced no response (${failure.code}) and was not retried`,
+      {
+        // Explicit, not absent. A caller reading `retryable` as undefined and trying again is the
+        // double write this state exists to prevent.
+        retryable: false,
+        attempts: attempt,
+        operation: operation.id,
+        requestId: failure.details.requestId,
+      },
+    )
+  }
+
+  async #waitBeforeRetry(
+    attempt: number,
+    reason: ErrorCode,
+    askedMs: number | undefined,
+    signal: AbortSignal | undefined,
+  ): Promise<number> {
+    const waitMs = askedMs ?? backoffMs(attempt, this.#retry, this.random)
+
+    this.#logger.debug({ event: "http.retry", attempt: attempt + 1, reason, wait_ms: Math.round(waitMs) })
+
+    try {
+      await this.#sleep(waitMs, signal, "retry")
+    } catch {
+      throw new BrazeError("cancelled", "cancelled while waiting to retry", { retryable: false, attempts: attempt })
+    }
+    return waitMs
+  }
+
+  async #readBody(sent: SendResult, operation: Operation): Promise<string> {
+    try {
+      return await sent.response.text()
+    } catch (error) {
+      throw new BrazeError("invalid_response", `could not read the response body: ${String(error)}`, {
+        httpStatus: sent.response.status,
+        requestId: sent.requestId,
+        operation: operation.id,
+      })
+    }
+  }
+
+  #parse<T>(body: string, sent: SendResult, operation: Operation): T {
+    if (body === "") return undefined as T
+    try {
+      return JSON.parse(body) as T
+    } catch {
+      throw new BrazeError("invalid_response", `Braze answered ${sent.response.status} with a body that is not JSON`, {
+        httpStatus: sent.response.status,
+        requestId: sent.requestId,
+        operation: operation.id,
+      })
+    }
+  }
+
+  #responseError(
+    code: ErrorCode,
+    body: string,
+    sent: SendResult,
+    attempt: number,
+    askedMs: number | undefined,
+  ): BrazeError {
+    return new BrazeError(code, brazeMessage(body) ?? `Braze answered ${sent.response.status}`, {
+      httpStatus: sent.response.status,
+      retryable: retryableStatus(sent.response.status),
+      attempts: attempt,
+      requestId: sent.requestId,
+      ...(askedMs === undefined ? {} : { retryAfterMs: askedMs }),
+    })
   }
 
   #init(spec: RequestSpec, signal: AbortSignal): RequestInit {
@@ -209,5 +404,16 @@ export class BrazeClient {
 
     const message = error instanceof Error ? error.message : String(error)
     return new BrazeError("network_error", `request failed before a response arrived: ${message}`, details)
+  }
+}
+
+/** Braze puts a human message in the body of a failure. A proxy's HTML 502 does not. */
+const brazeMessage = (body: string): string | undefined => {
+  if (body === "") return undefined
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown }
+    return typeof parsed.message === "string" ? parsed.message : undefined
+  } catch {
+    return undefined
   }
 }

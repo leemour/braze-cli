@@ -51,9 +51,12 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Phase 1, steps 1 and 2 of 5 done**, both on 2026-09-13. The mock Braze is published as
-> `brazecli-core/testing`; `BrazeClient.send` performs one timed, cancellable attempt. Step 3 is
-> next — the safety rules: `CORE-4`, `CORE-5`, `CORE-6`, `CORE-7`, `CORE-9`.
+> **Phase 1, steps 1–3 of 5 done**, all on 2026-09-13. Core is finished apart from validation
+> (`CORE-10`) and the user-agent string (`CORE-11`): the mock Braze, `send` for one attempt, and
+> `execute` for the policy — classification, one retry for reads, rate-limit headers, and
+> `outcome_unknown` for a write that produced no response. 68 tests.
+>
+> Step 4 is next — the CLI shell: `CLI-1`, `CLI-2`, `CLI-3`, `CLI-4`, `CLI-11`.
 
 **Open thread:** Phase 1 foundation —
 [`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
@@ -76,12 +79,6 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 
 | Number | Task | P |
 |---|---|---|
-| `CORE-4` | Error normalization: HTTP status and Braze error body → the closed code list in `packages/core/src/errors.ts` | P1 |
-| `CORE-5` | Retry engine: classification, one-retry default, exponential backoff with jitter, deterministic under injected `sleep`/`random` | P1 |
-| `CORE-6` | Rate limits: honour `Retry-After` and `X-RateLimit-Reset` over our own backoff, cap the wait at 30 s, return a structured `rate_limited` beyond that | P1 |
-| `CORE-7` | Ambiguous write outcome: a connection that dies after the request left becomes `outcome_unknown`, never `failed` | P1 |
-| `CORE-8` | 🟡 Request identity and per-attempt timing done in `BrazeClient.send`; `total_duration_ms` and `retry_wait_ms` wait for `execute` | P2 |
-| `CORE-9` | Operation metadata type: read/write access, Braze permission, `retryPolicy` of `read-safe`/`idempotent`/`never`, batch limits, pagination style | P1 |
 | `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough` | P2 |
 | `CORE-11` | 🟡 The `userAgent` option exists and core invents no default; the CLI still has to build `brazecli/<version> runtime/<runtime> platform/<platform>` | P3 |
 

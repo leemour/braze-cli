@@ -5,7 +5,7 @@ returns one deterministic JSON value on stdout, writes a run directory with `run
 `events.jsonl` containing no credentials and no ANSI, and `braze api POST /users/track --input
 @x.json` refuses to send without `--confirm`.
 
-Status: **steps 1 and 2 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
+Status: **steps 1–3 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
 `CORE-1`…`CORE-12` and `CLI-1`…`CLI-13` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §14–§48.
 
@@ -75,7 +75,7 @@ Left open on purpose: array query parameters throw `validation_error` rather tha
 serialization Braze is inconsistent about. The generated catalog settles it per operation
 (`CAT-3`).
 
-### Step 3 — the safety rules `CORE-4` `CORE-5` `CORE-6` `CORE-7` `CORE-9`
+### Step 3 — the safety rules `CORE-4` `CORE-5` `CORE-6` `CORE-7` `CORE-9` ✅
 
 The part that makes this worth building rather than reaching for `curl`:
 
@@ -90,6 +90,18 @@ The part that makes this worth building rather than reaching for `curl`:
   boundary can tell us it arrived, which is exactly why the state exists.
 - Operation metadata carries access, permission, `retryPolicy`, batch limits and pagination style,
   so Phase 2's generated catalog has a shape to fill.
+
+**Built**, 31 tests. What step 4 and Phase 3 inherit:
+
+- **`execute` keeps the raw body**, because a 2xx is not proof every record landed — Braze
+  answers `/users/track` with 201 and a populated `errors` array when part of a batch failed.
+  `BULK-6` reads that; a layer that discarded it could not tell `submitted` from `success`.
+- **Retry branches on `retryPolicy` alone**, not on the policy *and* the access class. An
+  operation with `access: "write"` and `retryPolicy: "read-safe"` is a catalog bug for `CAT-4`'s
+  override validation to reject — two sources of truth is how one of them ends up wrong.
+- **`sleep` takes a reason, `"timeout"` or `"retry"`.** Core waits for exactly two reasons and a
+  test has to tell them apart; without it a recorded wait list mixes an attempt's deadline with
+  the delay between attempts and can assert on neither.
 
 ### Step 4 — the CLI shell `CLI-1` `CLI-2` `CLI-3` `CLI-4` `CLI-11`
 

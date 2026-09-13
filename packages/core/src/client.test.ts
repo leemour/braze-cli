@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { BrazeClient } from "./client.js"
+import { BrazeClient, type BrazeClientOptions } from "./client.js"
 import { BrazeError } from "./errors.js"
 import { brazeResponses, mockBraze } from "./testing/mock-braze.js"
 import { abortError, type SleepLike } from "./time.js"
@@ -22,7 +22,7 @@ const idleTimer = () => {
 /** Fires the timeout immediately, so a timeout test waits for nothing. */
 const instantTimer: SleepLike = () => Promise.resolve()
 
-const clientFor = (braze: ReturnType<typeof mockBraze>, overrides = {}) =>
+const clientFor = (braze: ReturnType<typeof mockBraze>, overrides: Partial<BrazeClientOptions> = {}) =>
   new BrazeClient({
     endpoint: ENDPOINT,
     apiKey: "secret-key",

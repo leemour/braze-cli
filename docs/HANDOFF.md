@@ -1,4 +1,4 @@
-# braze-cli — start here
+# brazecli — start here
 
 Read in one pass. Everything else is read for a specific task, not in order.
 
@@ -19,12 +19,13 @@ verified. No Braze call has ever been made from this repository.
 
 ## 2. Layout
 
-A single repository, one pnpm workspace, two packages.
+A single repository, one pnpm workspace, two packages. The GitHub repository is
+`braze-cli`; the packages are `brazecli` and `brazecli-core`; the command is `braze`.
 
 | Path | What | May use |
 |---|---|---|
-| `packages/core` | `BrazeClient`, operations, validation, retries, pagination, batching | Web Platform APIs only |
-| `packages/cli` | commands, profiles, keyring, config, Pino, terminal output, run files | Node 22+ |
+| `packages/core` | `brazecli-core` — `BrazeClient`, operations, validation, retries, pagination, batching | Web Platform APIs only |
+| `packages/cli` | `brazecli` — commands, profiles, keyring, config, Pino, terminal output, run files | Node 22+ |
 | `spec/` | the committed Braze API collection snapshot | — |
 | `scripts/` | dev-time tooling: spec sync, catalog generation, gates | Node |
 | `docs/` | everything in this table's left column, explained | — |

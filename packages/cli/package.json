@@ -1,5 +1,5 @@
 {
-  "name": "braze-cli",
+  "name": "brazecli",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@braze-cli/core": "workspace:*"
+    "brazecli-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1"

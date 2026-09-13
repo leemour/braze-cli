@@ -23,7 +23,32 @@ reports `"visibility": "PUBLIC"`, created 2026-09-13. This settles remaining que
 documents are written in English, and CI runs on every pull request because Actions minutes are
 free on a public repository.
 
-*Awaiting the owner:* `NEED-1` (default terminal output), `NEED-2` (npm publishing), `NEED-3` (run
-artifact retention), written out in full in
-[`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md) §4. They move here with
-their answers.
+**NEED-1 · What does a terminal get by default — a table or raw JSON?**
+**A table (option A).** «1 - A». A TTY gets the pretty renderer; a pipe gets JSON; `--json` and
+`BRAZE_OUTPUT=json` force JSON in either case. The strict half is unchanged and is what the tests
+hold: in a machine mode **stdout carries data and nothing else**, diagnostics go to stderr.
+Consequence for `CLI-5`: mode selection is one function, so the whole default can be inverted in
+one line if agent traffic ever makes that the better default.
+
+**NEED-2 · Publish to npm, and under what name?**
+**Publish at v1, not before, as `brazecli`.** «publish later, we can pick a similar name, help me
+choose» → «let's use brazecli». Unscoped, chosen over `brazectl` and over a personal scope. The
+packages are `brazecli` and `brazecli-core`; **the typed command stays `braze`**, set by the `bin`
+field, so the package name is only ever seen in an install line. The GitHub repository keeps its
+`braze-cli` name and URL.
+
+⚠ **Unverified, and it only surfaces at the first publish:** npm refuses a new name that differs
+from an existing one by punctuation alone, and `brazecli` is `braze-cli` without the hyphen. A 404
+from the registry means nothing is published there, not that a publish would be accepted — the
+check runs registry-side on the `PUT`. Nothing is lost by finding out at v1: renaming a package
+that has never been published is a one-line change. `OPS-2` carries it. `braze-cli` is not a free name going spare: it is a live
+package, `braze-cli@0.4.1`, published 2026-08-03 from
+[github.com/vanducng/braze-cli](https://github.com/vanducng/braze-cli) — and almost certainly the
+"existing braze-cli" that [`REQUIREMENTS.md`](REQUIREMENTS.md) §69 says to take ideas from
+(`FIND-5`). Nothing is published until v1; `OPS-2` carries the work.
+
+**NEED-3 · Are run directories ever deleted automatically?**
+**No (option A).** «3 - A». Nothing expires on a timer. A run's `records.csv` is the only record
+that an operation happened, and losing it silently is worse than the disk it costs. A
+`braze runs cleanup` with an explicit retention setting stays in Phase 4 as `BULK-10`, opt-in
+rather than default.

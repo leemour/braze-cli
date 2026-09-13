@@ -1,5 +1,5 @@
 {
-  "name": "braze-cli-workspace",
+  "name": "brazecli-workspace",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.20.0",

@@ -96,9 +96,9 @@ not after ([`../TESTING.md`](../TESTING.md)).
   determinism; a missing confirmation returns `confirmation_required` and exits.
 - **Bun cannot verify portability**, only execute it — see `FIND-1` in
   [`../journal/2026-09-13-repo-setup.md`](../journal/2026-09-13-repo-setup.md).
-- **`NEED-1` is unanswered** (pretty or JSON by default in a TTY). Build the requirements' answer
-  — pretty in a TTY, JSON when piped — behind one function, so the other choice is a one-line
-  change.
+- **Output default is settled** (`NEED-1`): a TTY gets the pretty renderer, a pipe gets JSON,
+  `--json` forces it. Keep the choice behind one function anyway — if agent traffic ever makes
+  JSON the better default, that has to be a one-line change, not a rewrite of every command.
 
 ## 5. Out of scope
 

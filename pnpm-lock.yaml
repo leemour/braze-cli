@@ -26,7 +26,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@braze-cli/core':
+      brazecli-core:
         specifier: workspace:*
         version: link:../core
     devDependencies:

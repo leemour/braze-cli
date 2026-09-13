@@ -14,20 +14,20 @@ Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 ## 1. Two packages, one direction
 
 ```text
-                         portable — no Node, no filesystem, no terminal
+                       portable — no Node, no filesystem, no terminal
                  ┌──────────────────────────────────────────────┐
-                 │  @braze-cli/core          packages/core      │
+                 │  brazecli-core          packages/core        │
                  │                                              │
-                 │  BrazeClient · operations · Valibot schemas   │
-                 │  retry · pagination · batching · bulk queue   │
+                 │  BrazeClient · operations · Valibot schemas  │
+                 │  retry · pagination · batching · bulk queue  │
                  │  error model · Logger interface              │
                  └───────────────────────┬──────────────────────┘
                                          │ adapters only
                  ┌───────────────────────▼──────────────────────┐
-                 │  braze-cli                packages/cli       │
+                 │  brazecli               packages/cli         │
                  │                                              │
-                 │  Commander · keyring · config files · Pino    │
-                 │  Clack · colors · tables · CSV · run dirs     │
+                 │  Commander · keyring · config files · Pino   │
+                 │  Clack · colors · tables · CSV · run dirs    │
                  └──────────────────────────────────────────────┘
 ```
 

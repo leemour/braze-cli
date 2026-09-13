@@ -1,4 +1,4 @@
-# braze-cli
+# brazecli
 
 A command line interface for the [Braze](https://www.braze.com/docs/api/basics/) REST API, built
 for AI agents and automation first, and for people second.
@@ -17,12 +17,13 @@ for AI agents and automation first, and for people second.
 - **Debugging** — every run leaves a directory with structured logs and metadata you can grep.
 - **People** — tables, colour and a spinner when a terminal is attached.
 
-Underneath is a separate package, `@braze-cli/core`, that uses Web Platform APIs only and is meant
+Underneath is a separate package, `brazecli-core`, that uses Web Platform APIs only and is meant
 to run unchanged in a Cloudflare Worker, a browser or a serverless function.
 
 ## Install
 
-Not published yet — see `OPS-2` in [`BACKLOG.md`](BACKLOG.md). For now, from a clone:
+Not published yet — it goes to npm as `brazecli` at v1, tracked as `OPS-2` in
+[`BACKLOG.md`](BACKLOG.md). The typed command is `braze` either way. For now, from a clone:
 
 ```sh
 pnpm install
@@ -56,7 +57,7 @@ recommended command line argument and never reaches a log.
 idempotency key. A request whose connection died after it was sent is reported as
 `outcome_unknown`, not as a failure.
 
-**Run artifacts** live in the platform state directory (`~/.local/state/braze-cli/runs/` on Linux),
+**Run artifacts** live in the platform state directory (`~/.local/state/brazecli/runs/` on Linux),
 one directory per invocation: `run.json`, `events.jsonl`, and `records.csv` whenever more than one
 logical record was touched.
 

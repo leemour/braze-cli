@@ -59,15 +59,10 @@ Start with `CORE-1`.
 
 ## Blocked on the owner
 
-| Number | Question | Where |
-|---|---|---|
-| `NEED-1` | 🚩 Default terminal output — pretty in a TTY, or JSON always? Shapes `CLI-5`. | journal §4 |
-| `NEED-2` | 🚩 npm publishing — personal scope, or GitHub install only? Shapes `OPS-2`. | journal §4 |
-| `NEED-3` | 🚩 Run artifact retention — keep everything, or expire by default? Shapes `BULK-10`. | journal §4 |
-
-Written out in full in
-[`docs/journal/2026-09-13-repo-setup.md`](docs/journal/2026-09-13-repo-setup.md) §4. None of them
-block starting Phase 1; each has a default recorded there.
+**Nothing.** `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
+[`docs/DECISIONS.md`](docs/DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;
+the packages are `brazecli` and `brazecli-core`, published no earlier than v1; run artifacts never
+expire on a timer.
 
 ---
 
@@ -142,7 +137,7 @@ Expected to ship with the first practically useful release, not after it.
 | `BULK-7` | Progress UI: records/sec, batches/sec, elapsed, rough ETA — pretty mode only, never in a log or on stdout in JSON mode | P2 |
 | `BULK-8` | Ctrl+C mid-run flushes the audit CSV and finalizes `run.json` without corrupting a row | P1 |
 | `BULK-9` | A synthetic million-record run proving memory stays bounded, without making a million HTTP calls | P2 |
-| `BULK-10` | 🚩 Run artifact retention and `braze runs cleanup` — waits on `NEED-3` | P3 |
+| `BULK-10` | `braze runs cleanup` with an explicit retention setting — opt-in, never a default (`NEED-3`) | P3 |
 
 ## Phase 4 — when real usage asks for it
 
@@ -158,7 +153,7 @@ Expected to ship with the first practically useful release, not after it.
 
 | Number | Task | P |
 |---|---|---|
-| `OPS-2` | 🚩 Versioning and release: package names, changelog, publish or GitHub-install — waits on `NEED-2` | P3 |
+| `OPS-2` | Release `brazecli` and `brazecli-core` at v1: changelog, versioning, and confirming npm accepts a name one hyphen from `braze-cli` (`NEED-2`) | P3 |
 | `OPS-3` | Shell completions for bash/zsh/fish, generated from the catalog | P3 |
 | `OPS-4` | `test:live` harness — read-only by default, a dedicated profile, never run in CI | P2 |
 | `DOC-1` | Rewrite `README.md` as a real quick start once a command exists that can be run | P2 |

@@ -46,13 +46,23 @@ today=$(date +%F)
 # Угадывать между двумя сегодняшними файлами нельзя — запись уехала бы в чужую сессию.
 if [ -n "$topic" ]; then
   file="$dir/$today-$topic.md"
+  # Заводим журнал сами, если его ещё нет. Отказ на этом месте — это состояние «номер нужен,
+  # файла нет», в котором агент либо пишет файл мимо шаблона, либо не пишет вовсе; ровно то,
+  # ради чего note.sh и существует.
+  if [ ! -f "$file" ]; then
+    sed -e "1s|.*|# $today — $topic|" \
+        -e "s|^Агент: .*|Агент: \`${AGENT_NAME:-unnamed}\` · ветка: \`$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')\` · начато: \`$(date +%H:%M)\`|" \
+        "$dir/_TEMPLATE.md" > "$file"
+    echo "заведён журнал $file" >&2
+  fi
 else
   matches=$(find "$dir" -maxdepth 1 -name "$today-*.md" | sort)
   count=$(printf '%s' "$matches" | grep -c . || true)
   if [ "$count" = "1" ]; then
     file=$matches
   elif [ "$count" = "0" ]; then
-    echo "нет журнала за $today — заведи его из _TEMPLATE.md или укажи --topic" >&2
+    echo "нет журнала за $today. Укажи тему — файл заведётся сам:" >&2
+    echo "  $0 --topic <тема> $prefix \"$title\"" >&2
     exit 1
   else
     echo "сегодня несколько журналов, укажи --topic:" >&2

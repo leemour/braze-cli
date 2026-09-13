@@ -18,6 +18,10 @@ what you inferred.
 END
 ```
 
+Pass `--topic <topic>` on the first call of a session and **the journal file is created
+from the template**; after that the topic can be omitted, as long as only one journal
+exists for today.
+
 `note.sh` allocates the number **and writes the entry in one operation**, so "took a number and
 forgot to write it down" stops being a state that can happen. It routes by prefix: `TASK` to §1,
 `ASK` to §2, `NEED` to §4, everything else to §3.

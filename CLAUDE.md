@@ -75,4 +75,6 @@ Conventional commits. Run the relevant checks before committing — at minimum `
 `pnpm test`, plus `pnpm portability:core` if `packages/core` was touched. The pre-push hook runs
 the typecheck and the portability gate; it is a safety net, not a substitute.
 
-Work on a branch off `main` and open a pull request. CI gates every one.
+Work on a branch off `main` and open a pull request. CI gates every one. The single
+exception in this repository's history is the scaffold commit itself — there was no `main`
+to branch from yet.

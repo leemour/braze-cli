@@ -62,6 +62,14 @@ All three were verified on 2026-09-13 by putting a canary
 (`export const home = () => process.env.HOME`) into `packages/core/src` and confirming each one
 goes red. Run them with `pnpm lint`, `pnpm typecheck`, `pnpm portability:core`.
 
+**Biome and `types: []` are the authority on globals; the bundle is the authority on imports.**
+The bundle also scans for Node globals, but only in usage shapes (`process.`, `typeof process`,
+`new Buffer`) rather than as bare words — a plain `/\bprocess\b/` matched the English sentence
+"the queue will process records" inside a string literal and failed a clean bundle. A gate that
+cries wolf gets switched off, so its calibration is tested in both directions:
+`tests/core-portability.test.ts` asserts it fires on a real `process.env`, fires on a `node:`
+import, and stays quiet on that sentence.
+
 ⚠ **`bun build --target=browser` is not a substitute for the neutral bundle.** It rewrites
 `node:fs` to `{}` and exits 0 — green build, runtime failure. Bun's role here is different: it is
 the **second runtime**, and `pnpm smoke:bun` actually executes core under it.

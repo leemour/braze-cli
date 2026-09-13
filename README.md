@@ -3,10 +3,11 @@
 A command line interface for the [Braze](https://www.braze.com/docs/api/basics/) REST API, built
 for AI agents and automation first, and for people second.
 
-> **Status: scaffold.** The workspace, the checks, CI and the documentation exist. **No command
-> talks to Braze yet.** Everything below the install section describes the target shape, and is
-> here so the design can be reviewed before it is built. Follow along in
-> [`BACKLOG.md`](BACKLOG.md).
+> **Status: Phase 1 done, verified against live Braze** (2026-09-13). `braze profile`, `braze api`
+> and `braze runs` work; a read returns real data and a write is refused without `--confirm`.
+> **There are no typed commands yet** — `braze campaign list` and the rest arrive with the
+> generated catalog in Phase 2, and until then everything goes through `braze api`. Follow along
+> in [`BACKLOG.md`](BACKLOG.md).
 
 ## What it is for
 
@@ -32,22 +33,36 @@ pnpm build
 
 Requires Node 22+ (24 in CI) and pnpm 11+.
 
-## Planned usage
+## Usage
+
+Working today:
 
 ```sh
-braze profile add production            # asks for the REST endpoint and the API key
-braze profile add staging
-braze profile list
+braze profile add production --endpoint https://rest.fra-01.braze.eu --read-only
+braze profile list                       # names, endpoints, whether a key exists — never the key
 
-braze --profile production campaign list          # a read
-braze campaign get --campaign-id abc
+braze api GET /campaigns/list --json     # a read
+braze api GET /campaigns/details --query campaign_id=abc
 
-braze users track --input @users.jsonl --dry-run  # validates and counts, sends nothing
-braze users track --input @users.jsonl --confirm  # writes need --confirm, never a prompt
+braze api POST /users/track --input @users.json --dry-run   # validates and counts, sends nothing
+braze api POST /users/track --input @users.json --confirm   # writes need --confirm, never a prompt
 
-braze api GET /campaigns/details --query campaign_id=abc   # anything not yet typed
-braze commands --json                              # the whole command surface, for an agent
+braze runs list                          # what past invocations did
+braze runs path <run-id>                 # the directory holding its artifacts
 ```
+
+Arriving with the generated catalog in Phase 2:
+
+```sh
+braze campaign list                      # typed commands, registered from the catalog
+braze users track --input @users.jsonl --confirm
+braze commands --json                    # the whole command surface, for an agent
+braze schema users.track
+```
+
+**A profile can be marked read-only** (`--read-only`), which refuses every write before `--confirm`
+is even considered. `--confirm` guards against a mistyped command; this guards against a correct
+command aimed at the wrong environment. Recommended for anything pointing at production.
 
 **Credentials** come from the OS keyring, with a warned fallback to a permission-restricted file.
 `BRAZE_API_KEY`, `BRAZE_REST_ENDPOINT` and `BRAZE_PROFILE` override it. The API key is never a

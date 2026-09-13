@@ -47,6 +47,36 @@ package, `braze-cli@0.4.1`, published 2026-08-03 from
 "existing braze-cli" that [`REQUIREMENTS.md`](REQUIREMENTS.md) §69 says to take ideas from
 (`FIND-5`). Nothing is published until v1; `OPS-2` carries the work.
 
+**NEED-5 · Which Braze cluster?**
+**`https://rest.fra-01.braze.eu`.** The owner read it from the dashboard. Measured, not assumed:
+the same key answers `403 Access Denied` there and `401 Invalid API key` on `iad-01`, and per
+[Braze's error documentation](https://www.braze.com/docs/api/errors/) a 403 means the key **is**
+recognised. ⚠ `blinkist-job-system/.env.development` says `iad-01` and is stale; the same repo's
+`scripts/find_braze_users_without_email.rb:50` defaults to `fra-01` and was right all along. **A
+value in someone's `.env` is their local setting, not a fact about the system.**
+
+**NEED-6 · Should a profile be able to refuse writes outright?**
+**Yes.** «да, пока разрабатываем, давай сделаем readonly режим». `readOnly: true` on a profile
+refuses every write **before** `--confirm` is considered — `--confirm` guards against a mistyped
+command, this guards against a correct command aimed at the wrong environment. Dry runs are still
+allowed, deliberately: that is the tool you want most when a profile is locked down. The
+production profile carries it.
+
+**NEED-7 · A separate staging profile before any live check?**
+**Not for now.** «3 - пока не заводи staging». Live checks are read-only against production
+instead, and only when the owner says so.
+
+**NEED-8 · Rotate the key after `SEC-1`?**
+**Done by the owner** — the leaked key was deleted in Braze, which also confirmed why it was
+being refused: it no longer existed.
+
+**NEED-11 · Which permissions should the development key carry?**
+**Read-only, and read-only across the board.** The owner issued a key with the full read set. Nine
+read endpoints answer 200: campaigns, canvas and segments list; catalogs; sessions and DAU data
+series; purchases product list; email templates; content blocks. Two things this rules out for a
+development key, and they stay ruled out: `users.export.*` returns customer profiles, and the
+email endpoints return addresses.
+
 **NEED-3 · Are run directories ever deleted automatically?**
 **No (option A).** «3 - A». Nothing expires on a timer. A run's `records.csv` is the only record
 that an operation happened, and losing it silently is worse than the disk it costs. A

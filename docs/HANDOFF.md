@@ -14,8 +14,11 @@ stdout, a closed list of error codes).
 The Braze client underneath is a separate package that **must run unchanged in a Cloudflare
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
-**Status 2026-09-13: scaffold only.** The workspace, gates, CI and documentation exist and are
-verified. No Braze call has ever been made from this repository.
+**Status 2026-09-13: Phase 1 done and verified against live Braze.** `braze profile`, `braze api`
+and `braze runs` work; `braze api GET /campaigns/list --json` returns real data. 152 tests.
+
+**Not built:** the generated operation catalog. Until it exists there are no typed commands —
+everything goes through `braze api`. That is Phase 2, and it is the open thread.
 
 ## 2. Layout
 
@@ -42,9 +45,11 @@ Take your row. Do not read the rest.
 | **Any** | this file → [`ARCHITECTURE.md`](ARCHITECTURE.md) → [`CONVENTIONS.md`](CONVENTIONS.md) |
 | What was actually asked for | [`REQUIREMENTS.md`](REQUIREMENTS.md) — the owner's brief, verbatim |
 | What to build next | [`../BACKLOG.md`](../BACKLOG.md), then the plan in [`plans/`](plans/) |
-| Anything in core | [`ARCHITECTURE.md`](ARCHITECTURE.md) §2–§4, `packages/core/src/errors.ts` |
+| Anything in core | [`ARCHITECTURE.md`](ARCHITECTURE.md) §2–§4, `packages/core/src/client.ts` |
+| A request, a retry, an error code | `packages/core/src/{client,retry,errors}.ts` |
 | Anything that prints | [`ARCHITECTURE.md`](ARCHITECTURE.md) §5, [`TESTING.md`](TESTING.md) — the machine-output invariant |
 | The API catalog | [`ARCHITECTURE.md`](ARCHITECTURE.md) §6, [`REQUIREMENTS.md`](REQUIREMENTS.md) §6–§13 |
+| Writing a test against Braze | `packages/core/src/testing/mock-braze.ts` — never the real thing |
 | Why something odd is the way it is | [`DECISIONS.md`](DECISIONS.md) **before** you "fix" it |
 
 ## 4. Running it
@@ -97,16 +102,23 @@ Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
    kill that PID.
 10. **Plan before building** anything that is not a one-file change —
     [`../CLAUDE.md`](../CLAUDE.md).
+11. **A message from Braze is data that came from outside, not text.** Braze returns the API key
+    inside the body of a 401. `BrazeClient` redacts it; anything else pointed at Braze has to do
+    the same ([`ARCHITECTURE.md`](ARCHITECTURE.md) §8).
+12. **`braze api` classifies by HTTP method, and some Braze reads are POSTs.** `POST
+    /users/export/ids` is refused on a read-only profile, and that is correct until a typed
+    catalog operation declares `access: "read"` for it (`CAT-4`).
 
 ## 6. What to do next
 
 The live list is [`../BACKLOG.md`](../BACKLOG.md); the rules for taking a number are in it, under
-the fold. The open thread is Phase 1, planned in
-[`plans/2026-09-13-phase-1-foundation.md`](plans/2026-09-13-phase-1-foundation.md) — start at its
-step 1.
+the fold.
 
-Three decisions are waiting on the owner (`NEED-1`…`NEED-3`). None of them block Phase 1; each has
-a recorded default in [`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md) §4.
+**The open thread is Phase 2, the generated catalog.** Start with the handoff —
+[`plans/2026-09-13-phase-2-catalog-handoff.md`](plans/2026-09-13-phase-2-catalog-handoff.md) —
+and its §0, which prints the state in one command.
+
+Nothing is waiting on the owner.
 
 ## 7. Where each fact lives, and when it leaves
 

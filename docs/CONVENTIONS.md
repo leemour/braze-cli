@@ -69,5 +69,12 @@ real value from a real run.
 **Leave a section out rather than filling it with placeholder prose.** An empty heading is honest;
 invented content is not.
 
+**A command you hand someone is a snapshot, not a template.** Never put a placeholder inside a
+runnable command — `--endpoint https://rest.XXX.braze.YYY` was pasted verbatim into a real config
+(`UX-1`), and a command given before a fact was settled was re-run after it changed, silently
+reverting the fix. Either the real value goes in, or the value is asked for as a plain question
+first. When the facts move, reissue the command rather than trusting that nobody will run the old
+one.
+
 **English in committed documents.** The session journal is Russian, because it is the owner's own
 trail. Do not mix languages inside one file.

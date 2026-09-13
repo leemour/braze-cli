@@ -2,10 +2,15 @@
 
 How this repository is put together and, more usefully, which seams you are not allowed to cross.
 
-**Status (2026-09-13):** scaffold only. The workspace, the linter, the portability gates, CI and
-the docs exist and are verified. `packages/core` holds the logger interface and the error model;
-`packages/cli` holds a placeholder entry point. Nothing talks to Braze yet — that is Phase 1,
-planned in [`plans/2026-09-13-phase-1-foundation.md`](plans/2026-09-13-phase-1-foundation.md).
+**Status (2026-09-13):** Phase 1 built and verified against live Braze. `BrazeClient` performs
+one timed, cancellable attempt (`send`) under a policy layer that classifies, retries reads and
+refuses to guess about writes (`execute`). The CLI has profiles, keyring storage, output modes,
+run artifacts and `braze api`. 152 tests.
+
+⚠ **Not built, and load-bearing for everything that follows:** the generated operation catalog
+(§6). Until it exists there are no typed commands — every call goes through `braze api`, which
+classifies by HTTP method and therefore treats a read like `POST /users/export/ids` as a write.
+That is Phase 2.
 
 Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 

@@ -51,17 +51,19 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Phase 1 is closed** (2026-09-13). `braze api` reaches real Braze, refuses a write without
-> `--confirm`, refuses one outright on a read-only profile, and leaves a run directory with
-> `run.json` and `events.jsonl` behind. 151 tests.
+> **Phase 1 is closed and verified against live Braze** (2026-09-13). `braze api GET
+> /campaigns/list --json` returns real data with exit code 0; a write is refused without
+> `--confirm` and refused outright on a read-only profile; each run leaves `run.json` and a
+> populated `events.jsonl`. 152 tests.
 >
-> Verified against live Braze once, read-only. That request found `SEC-1` — Braze echoes the API
-> key inside its own 401 message — which is fixed and re-verified.
->
-> **Next thread:** Phase 2, starting at `CAT-1`.
+> Three defects came out of the live runs and are fixed: `SEC-1` (Braze echoes the API key inside
+> its 401 message), `BUG-1` (the audit log was empty by default) and `FIND-13` (`/users/export/ids`
+> is a read Braze implements as a POST — correct behaviour today, and the first concrete case for
+> `CAT-4`).
 
-**Open thread:** Phase 1 foundation —
-[`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
+**Open thread:** Phase 2, the generated catalog —
+[`docs/plans/2026-09-13-phase-2-catalog.md`](docs/plans/2026-09-13-phase-2-catalog.md). Start at
+`CAT-1`, which decides the shape of everything after it.
 
 ## Blocked on the owner
 

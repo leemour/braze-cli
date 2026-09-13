@@ -133,18 +133,18 @@ describe("BrazeClient.send", () => {
     expect(timer.signals[0]?.aborted).toBe(true)
   })
 
-  it("logs the request and the response without the key", async () => {
+  it("logs the request and the response at info — they are the audit trail, not chatter", async () => {
     const braze = mockBraze(brazeResponses.ok())
-    const debug = vi.fn()
+    const info = vi.fn()
 
-    await clientFor(braze, { logger: { debug, info: vi.fn(), warn: vi.fn(), error: vi.fn() } }).send({
+    await clientFor(braze, { logger: { debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() } }).send({
       method: "GET",
       path: "/campaigns/list",
     })
 
-    expect(debug).toHaveBeenCalledWith(expect.objectContaining({ event: "http.request", path: "/campaigns/list" }))
-    expect(debug).toHaveBeenCalledWith(expect.objectContaining({ event: "http.response", status: 200 }))
-    expect(JSON.stringify(debug.mock.calls)).not.toContain("secret-key")
+    expect(info).toHaveBeenCalledWith(expect.objectContaining({ event: "http.request", path: "/campaigns/list" }))
+    expect(info).toHaveBeenCalledWith(expect.objectContaining({ event: "http.response", status: 200 }))
+    expect(JSON.stringify(info.mock.calls)).not.toContain("secret-key")
   })
 
   describe("when no response arrives", () => {

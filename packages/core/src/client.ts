@@ -174,7 +174,7 @@ export class BrazeClient {
       )
     }
 
-    this.#logger.debug({
+    this.#logger.info({
       event: "http.request",
       request_id: requestId,
       method: spec.method,
@@ -206,13 +206,13 @@ export class BrazeClient {
 
     const durationMs = this.#clock() - start
 
-    this.#logger.debug({
+    this.#logger.info({
       event: "http.response",
       request_id: requestId,
       status: response.status,
       attempt,
       duration_ms: Math.round(durationMs),
-      rate_limit_remaining: response.headers.get("x-ratelimit-remaining") ?? undefined,
+      rate_limit_remaining: numberOrUndefined(response.headers.get("x-ratelimit-remaining")),
     })
 
     return {
@@ -324,7 +324,7 @@ export class BrazeClient {
   ): Promise<number> {
     const waitMs = askedMs ?? backoffMs(attempt, this.#retry, this.random)
 
-    this.#logger.debug({ event: "http.retry", attempt: attempt + 1, reason, wait_ms: Math.round(waitMs) })
+    this.#logger.warn({ event: "http.retry", attempt: attempt + 1, reason, wait_ms: Math.round(waitMs) })
 
     try {
       await this.#sleep(waitMs, signal, "retry")
@@ -422,6 +422,13 @@ export class BrazeClient {
       details,
     )
   }
+}
+
+/** Headers are strings; the log is read by machines that would rather compare numbers. */
+const numberOrUndefined = (value: string | null): number | undefined => {
+  if (value === null) return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 /** Braze puts a human message in the body of a failure. A proxy's HTML 502 does not. */

@@ -311,16 +311,16 @@ describe("BrazeClient.execute", () => {
     })
   })
 
-  it("logs the retry with its reason and how long it waited", async () => {
+  it("logs a retry at warn — it is worth noticing, not merely recording", async () => {
     const braze = mockBraze([brazeResponses.rateLimited({ retryAfterSeconds: 3 }), brazeResponses.ok()])
-    const debug = vi.fn()
+    const warn = vi.fn()
 
     await clientFor(braze, {
       sleep: recordingSleep().sleep,
-      logger: { debug, info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+      logger: { debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() },
     }).execute(campaignList)
 
-    expect(debug).toHaveBeenCalledWith(
+    expect(warn).toHaveBeenCalledWith(
       expect.objectContaining({ event: "http.retry", attempt: 2, reason: "rate_limited", wait_ms: 3000 }),
     )
   })

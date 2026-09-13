@@ -18,7 +18,9 @@ Worker, a browser or a serverless function**. That constraint shapes almost ever
 and `braze runs` work; `braze api GET /campaigns/list --json` returns real data. 152 tests.
 
 **Not built:** the generated operation catalog. Until it exists there are no typed commands —
-everything goes through `braze api`. That is Phase 2, and it is the open thread.
+everything goes through `braze api`. That is Phase 2, and it is the open thread. Its one open
+question is answered as of 2026-09-14: the collection downloads anonymously from Braze's own
+Postman documenter (`NEED-13`), so Phase 2 starts at `CAT-2` and not at a probe.
 
 ## 2. Layout
 

@@ -1,0 +1,25 @@
+{
+  "name": "braze-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Braze REST API command line interface for agents, automation and humans.",
+  "bin": {
+    "braze": "./dist/bin/braze.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@braze-cli/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1"
+  }
+}

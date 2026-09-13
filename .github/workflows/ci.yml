@@ -1,0 +1,63 @@
+name: CI
+
+# The repo is public, so Actions minutes are free and the gate can sit on every PR.
+# (nbzb runs its gate after merge instead — that is a private-repo billing workaround,
+# not a pattern to copy here.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned, not `node-version-file: .nvmrc`. That file can say `lts/*`, a moving target that
+  # would jump majors under us without a commit.
+  NODE_VERSION: "24"
+
+jobs:
+  check:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  portability:
+    name: Core runs outside Node
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+      - run: pnpm install --frozen-lockfile
+
+      # Bundles core for a runtime with no builtins at all. Catches a Node dependency that
+      # arrives through a package, where there is no source to lint.
+      - run: pnpm portability:core
+
+      # Second runtime, actually executing core rather than only bundling it.
+      - run: pnpm smoke:bun

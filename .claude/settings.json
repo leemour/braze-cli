@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:fix)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build)",
+      "Bash(pnpm portability:core)",
+      "Bash(pnpm smoke:bun)",
+      "Bash(pnpm exec biome:*)",
+      "Bash(pnpm exec vitest:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(node scripts/:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(docs/journal/note.sh:*)",
+      "Bash(docs/journal/next-id.sh:*)"
+    ],
+    "deny": [
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!**/dist", "!**/node_modules", "!spec/*.json", "!.claude", "!pnpm-lock.yaml"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": { "level": "error", "options": { "allow": ["error"] } }
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["packages/core/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["node:*", "fs", "path", "crypto", "os", "child_process", "stream", "util", "events"],
+                    "message": "packages/core must run unchanged in Cloudflare Workers and browsers. Node APIs belong in packages/cli — see docs/ARCHITECTURE.md."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Not available in Workers. Pass configuration into BrazeClient instead — docs/ARCHITECTURE.md.",
+                  "Buffer": "Not available in Workers. Use Uint8Array/Blob/TextEncoder — docs/ARCHITECTURE.md.",
+                  "__dirname": "Not available in Workers.",
+                  "__filename": "Not available in Workers.",
+                  "require": "Not available in Workers.",
+                  "window": "Core must not assume a browser DOM either. Use Web Platform APIs only.",
+                  "document": "Core must not assume a browser DOM either. Use Web Platform APIs only."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "tests/**", "scripts/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ]
+}

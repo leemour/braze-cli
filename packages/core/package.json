@@ -1,0 +1,23 @@
+{
+  "name": "@braze-cli/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runtime-neutral Braze REST client and operation catalog. No Node APIs.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "p-queue": "^9.0.0",
+    "valibot": "^1.1.0"
+  }
+}

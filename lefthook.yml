@@ -1,0 +1,27 @@
+# Git hooks. Installed by the `prepare` npm script, which pnpm runs on every install —
+# necessary because pnpm blocks dependencies' build scripts by default, so lefthook's own
+# postinstall never fires and the hooks would otherwise silently never land.
+#
+# Install by hand:      pnpm exec lefthook install
+# Skip for one commit:  LEFTHOOK=0 git commit …
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{ts,tsx,js,mjs,cjs,json,jsonc}"
+      # Staged files only. The whole-repo run is the CI gate; running it per-commit is how
+      # people end up reaching for --no-verify, which is worse than no hook.
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+
+pre-push:
+  parallel: true
+  commands:
+    typecheck:
+      # Whole-project, so it belongs here rather than in the staged-file-scoped pre-commit.
+      run: pnpm typecheck
+
+    portability:
+      # Cheap (one esbuild pass) and catches the regression that is hardest to notice:
+      # a dependency dragging a Node builtin into packages/core.
+      run: pnpm portability:core

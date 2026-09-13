@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Run artifacts land in the OS state dir (env-paths), never in the repo. A local override
+# via BRAZE_RUNS_DIR pointing here would otherwise commit customer identifiers.
+runs/
+*.log
+
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Per-machine Claude Code state; the shared settings.json is committed.
+.claude/settings.local.json
+.claude/worktrees/

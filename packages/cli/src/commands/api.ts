@@ -1,5 +1,6 @@
 import { BrazeClient, BrazeError, type HttpMethod, rawOperation } from "brazecli-core"
 import { Command } from "commander"
+import { DOCUMENTATION } from "../documentation.js"
 import { assertWriteAllowed } from "../guards.js"
 import { readInput } from "../input/read.js"
 import { createRenderer } from "../output/renderer.js"
@@ -22,6 +23,10 @@ export const apiCommand = (context: ApiContext = {}): Command =>
     .argument("<path>", "a Braze path such as /campaigns/list — never a whole URL")
     .option("--query <key=value>", "repeatable query parameter", collectQuery, {})
     .option("--input <source>", "request body: @file, - for stdin, or inline JSON")
+    .addHelpText(
+      "after",
+      `\nThis CLI does not yet know which paths exist — that arrives with the generated catalog.\nBraze lists them all here: ${DOCUMENTATION.endpoints}\n`,
+    )
     .action(
       async (
         rawMethod: string,

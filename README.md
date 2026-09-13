@@ -69,8 +69,16 @@ failure, so a caller branches on `$?` rather than parsing a message. It reads th
 tree, so the typed commands appear there the moment the catalog lands, with no second list to keep
 in step.
 
-Until then the only way to reach Braze is `braze api <METHOD> <PATH>`, which means **an agent has
-to be told the endpoint paths** — the catalog is what will make those discoverable too.
+**Failures are machine-readable too.** In `--json` mode an error is one JSON object on stderr —
+`{"error":{"code":"rate_limited","retryable":true,"retryAfterMs":3000,…}}` — while stdout stays
+empty, so a refusal can never be mistaken for a result. The exit code is what to branch on
+(`braze commands --json` publishes the whole table); the object says which record and how long to
+wait.
+
+Until the catalog lands the only way to reach Braze is `braze api <METHOD> <PATH>`, which means
+**an agent has to be told the endpoint paths**. `braze api --help` and the `endpoints` block of
+`braze commands --json` both point at [Braze's endpoint
+index](https://www.braze.com/docs/api/home), which is the list to read in the meantime.
 
 **A profile can be marked read-only** (`--read-only`), which refuses every write before `--confirm`
 is even considered. `--confirm` guards against a mistyped command; this guards against a correct

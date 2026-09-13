@@ -2,6 +2,7 @@ import type { Command } from "commander"
 import { Command as CommanderCommand } from "commander"
 import { emptyConfig, loadConfig } from "../config/file.js"
 import { resolvePaths } from "../config/paths.js"
+import { DOCUMENTATION } from "../documentation.js"
 import { EXIT_CODES, GENERIC_FAILURE } from "../exit-codes.js"
 import { createRenderer } from "../output/renderer.js"
 import { processStreams, type Streams } from "../output/stream.js"
@@ -94,6 +95,14 @@ export const commandsCommand = (context: CommandsContext = {}): Command => {
       globalOptions: root.options.filter((option) => !option.hidden).map(describeOption),
       commands,
       exitCodes: { ok: 0, generic_failure: GENERIC_FAILURE, ...EXIT_CODES },
+      // Named rather than described: an agent that cannot find a path has to be able to go and
+      // read one, and until the catalog lands this CLI cannot list them itself.
+      endpoints: {
+        discoverable: false,
+        reason: "the generated catalog is not built yet; send requests with `braze api <method> <path>`",
+        documentation: DOCUMENTATION.endpoints,
+        apiBasics: DOCUMENTATION.basics,
+      },
     })
   })
 

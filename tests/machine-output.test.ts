@@ -39,7 +39,10 @@ beforeAll(() => {
       version: 1,
       credentialStorage: "file",
       defaultProfile: "t",
-      profiles: { t: { restEndpoint: "https://rest.iad-01.braze.com", readOnly: false } },
+      profiles: {
+        t: { restEndpoint: "https://rest.iad-01.braze.com", readOnly: false },
+        ro: { restEndpoint: "https://rest.iad-01.braze.com", readOnly: true },
+      },
     }),
   )
 })
@@ -86,5 +89,38 @@ describe("the machine-output invariant, on the real binary", () => {
 
     const asPretty = braze(["runs", "list", "--output", "pretty"], env())
     expect(asPretty.code).toBe(0)
+  })
+})
+
+describe("a failure in a machine mode", () => {
+  const refusedWrite = ["api", "POST", "/users/track", "--input", "{}", "--confirm"]
+
+  it("is one JSON object on stderr, leaving stdout empty", () => {
+    const result = braze([...refusedWrite, "--json"], { ...env(), BRAZE_PROFILE: "ro" })
+
+    expect(result.stdout).toBe("")
+    expect(JSON.parse(result.stderr).error).toMatchObject({ code: "permission_error" })
+    expect(result.code).toBe(5)
+  })
+
+  it("names the code a caller branches on, and matches the exit status to it", () => {
+    const result = braze(["api", "GET", "/campaigns/list", "--json"], {
+      ...env(),
+      BRAZE_REST_ENDPOINT: "https://127.0.0.1:1",
+    })
+
+    const { error } = JSON.parse(result.stderr)
+    expect(error.code).toBe("network_error")
+    expect(result.code).toBe(10)
+  })
+
+  it("stays human-readable in pretty mode", () => {
+    const result = braze(["api", "GET", "/campaigns/list", "--output", "pretty"], {
+      ...env(),
+      BRAZE_REST_ENDPOINT: "https://127.0.0.1:1",
+    })
+
+    expect(result.stderr).toContain("network_error:")
+    expect(() => JSON.parse(result.stderr)).toThrow()
   })
 })

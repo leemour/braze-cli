@@ -126,3 +126,12 @@ documenter page runs on, and Postman promises nothing about it. This costs nothi
 the committed snapshot is what ships, so a dead address breaks `spec:sync` and not the installed
 CLI — but `spec:sync` must refuse to overwrite the snapshot with anything that is not a collection,
 rather than quietly writing an HTML error page into `spec/`.
+
+**NEED-16 · Where does an error go in a machine mode — stdout or stderr?**
+**stderr, as one JSON object (option A).** «1 А». `{"error":{"code","message",…}}`, carrying
+whatever the failure knows: `httpStatus`, `retryable`, `retryAfterMs`, `attempts`, `requestId`,
+`runId`, `operation`. **stdout stays empty on a failure**, so an agent reading it can never mistake
+a refusal for a result — the rule that already holds everywhere else in this CLI holds here too.
+A terminal still gets `code: message` on one line. The exit code is unchanged and remains the
+thing a script branches on; the JSON exists to say *which* record or *how long to wait*, which an
+exit code cannot.

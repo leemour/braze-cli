@@ -82,3 +82,47 @@ email endpoints return addresses.
 that an operation happened, and losing it silently is worse than the disk it costs. A
 `braze runs cleanup` with an explicit retention setting stays in Phase 4 as `BULK-10`, opt-in
 rather than default.
+
+## 2026-09-14
+
+**NEED-13 · Where does the API catalog come from?**
+**From Braze's own Postman documenter, fetched anonymously** — this is measured, not decided, and
+it settles `CAT-1` and `RISK-1`:
+
+```text
+https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG
+```
+
+That is the collection behind the page [Braze's documentation itself links
+to](https://www.braze.com/docs/api/postman_collection). It answers `200` with the whole collection
+as JSON — 565 438 bytes, schema v2.0.0, `info.name` "Braze Endpoints" — **with no Postman account
+and no token**. 99 requests in 32 folders, covering every endpoint already confirmed live under
+`NEED-11` as well as `/users/export/ids`, the case behind `FIND-13`.
+
+So the first row of the plan's probe table wins and no fallback is needed: `spec:sync` downloads,
+it does not merely validate a manual export. `RISK-1` recorded this source as unconfirmed; it had
+tested three guessed addresses, none of them this one, and is corrected in place in
+[`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md).
+
+Three properties that the rest of Phase 2 is built on, each measured:
+
+- **Repeated fetches are byte-identical.** Three downloads gave one sha256. A diff in `spec/`
+  therefore means Braze changed something, which is the whole point of §7 committing the snapshot.
+- **Every request carries a Postman id, and all 99 are distinct.** §9's preferred identity holds.
+- **Its fallback identity does not.** Only 95 of the 99 `METHOD + path` pairs are distinct — the
+  four Subscription Groups endpoints are each documented twice, once for email and once for SMS.
+  Keying on method and path alone silently loses four operations, which is what §12 forbids
+  (`FIND-15`).
+
+**What was rejected.** `https://api.getpostman.com/collections/<uid>` — the documented Postman
+API — answers `401 Invalid API Key`; it needs a token this repository does not have and now does
+not need. [`braze-community/braze-specification`](https://github.com/braze-community/braze-specification)
+republishes the same collection plus a derived OpenAPI spec, and is a reasonable fallback, but it
+is explicitly not affiliated with Braze and adds a maintainer between us and the source, so the
+official route wins while it works.
+
+⚠ **The address is Postman's internal API, not a published interface** (`RISK-2`). It is what the
+documenter page runs on, and Postman promises nothing about it. This costs nothing at runtime —
+the committed snapshot is what ships, so a dead address breaks `spec:sync` and not the installed
+CLI — but `spec:sync` must refuse to overwrite the snapshot with anything that is not a collection,
+rather than quietly writing an HTML error page into `spec/`.

@@ -62,8 +62,9 @@ current phase: [`docs/plans/`](docs/plans/).
 > `CAT-4`).
 
 **Open thread:** Phase 2, the generated catalog —
-[`docs/plans/2026-09-13-phase-2-catalog.md`](docs/plans/2026-09-13-phase-2-catalog.md). Start at
-`CAT-1`, which decides the shape of everything after it.
+[`docs/plans/2026-09-13-phase-2-catalog.md`](docs/plans/2026-09-13-phase-2-catalog.md). `CAT-1` is
+answered (`NEED-13`): the collection downloads anonymously from Braze's Postman documenter, 99
+requests, every one with a distinct Postman id. **Start at `CAT-2`**, the committed snapshot.
 
 ## Blocked on the owner
 
@@ -105,7 +106,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 
 | Number | Task | P |
 |---|---|---|
-| `CAT-1` | 🚩 Probe whether the official Braze collection can be exported by script at all, and pick the source — see `RISK-1`; **every other `CAT` item depends on the answer** | P1 |
+| `CAT-1` | ✅ Done 2026-09-14. The source is Braze's own Postman documenter, fetched anonymously — `NEED-13` in [`docs/DECISIONS.md`](docs/DECISIONS.md) | P1 |
 | `CAT-2` | `spec:sync` writing `spec/braze.postman.json` plus source, timestamp, collection id and sha256 | P1 |
 | `CAT-3` | Normalizer: collection → operation catalog with stable ids (Postman request id, falling back to method + normalized path) | P1 |
 | `CAT-4` | `overrides.ts` and its merge — command name, access, permission, schema, batch limits, retry policy, PII fields, ignored state | P1 |

@@ -4,40 +4,55 @@
 `campaign` command, `braze commands --json` lists the whole surface for an agent, and CI fails
 if an endpoint silently disappears from Braze's collection.
 
-Status: **not started.** Written 2026-09-13 against `622ef9f`, with Phase 1 closed and verified
-live. Backlog items `CAT-1`…`CAT-11` plus `CORE-10` in
-[`../../BACKLOG.md`](../../BACKLOG.md); brief in [`../REQUIREMENTS.md`](../REQUIREMENTS.md)
-§6–§13, §49–§51, §56, §58.
+Status: **`CAT-1` done, the rest not started.** Written 2026-09-13 against `622ef9f`, with Phase 1
+closed and verified live; §1 answered 2026-09-14 and rewritten in place. Backlog items
+`CAT-1`…`CAT-11` plus `CORE-10` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
+[`../REQUIREMENTS.md`](../REQUIREMENTS.md) §6–§13, §49–§51, §56, §58.
 
 ---
 
-## 1. The one thing that decides the rest
+## 1. The one thing that decides the rest — ✅ answered 2026-09-14
 
-⚠ **Nobody has confirmed that Braze's collection can be exported by a script.** Every guessed
-source returned 404 on 2026-09-13 (`RISK-1`). The brief hedges this itself (§8: "exact mechanics
-depend on how reliably the public Postman collection can be exported").
+**`CAT-1` is done, and the happy path won.** The collection downloads anonymously from Braze's own
+Postman documenter:
 
-So `CAT-1` is not a warm-up, it is the decision. Everything downstream — the normalizer, the
-overrides, the coverage gate — is written against whatever shape that probe finds, and writing
-any of it first risks writing it twice.
+```text
+https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG
+```
 
-**Probe, in this order, and stop at the first that works:**
+`200`, 565 438 bytes of collection JSON, no token. Recorded as `NEED-13` in
+[`../DECISIONS.md`](../DECISIONS.md) with the measurements; `RISK-1` is corrected in place in its
+journal. **No fallback branch is needed — `spec:sync` downloads.**
 
-| Source | What to try | If it works |
-|---|---|---|
-| Postman public API | the collection's public link, then `GET https://api.getpostman.com/collections/<id>` with a token | the brief's happy path, `CAT-2` as written |
-| A manual export | ask the owner to export the collection from Postman once | `spec:sync` becomes "validate and record", not "download" |
-| Braze's own docs | whether `braze.com/docs/api/` exposes anything structured per endpoint | the normalizer reads that shape instead |
-| Nothing structured | — | **stop and ask**; a hand-written catalog is a different project and needs the owner's decision |
+What the rest of the phase now inherits, measured rather than assumed:
 
-Write the answer into [`../DECISIONS.md`](../DECISIONS.md) before writing code.
+- **99 requests, 32 folders**, covering everything confirmed live under `NEED-11` plus
+  `/users/export/ids`.
+- **All 99 Postman ids are distinct**, so §9's preferred identity holds — but only 95 of the
+  `METHOD + path` pairs are, because the four Subscription Groups endpoints appear twice, once
+  under Email and once under SMS and WhatsApp (`FIND-15`). The fallback identity must not be the
+  primary one, and `CAT-3` owes a test that catches an id collision instead of dropping the
+  operation.
+- **Three downloads produced one sha256**, so a diff in `spec/` is signal, not churn.
+- **The address is Postman's internal API** and may move without notice (`RISK-2`). Runtime does
+  not care — the committed snapshot ships — but `spec:sync` must verify it received a collection
+  before it overwrites anything.
+
+> The probe ran the plan's original table in order. `https://api.getpostman.com/collections/<uid>`
+> returned `401` (it wants a token), the documenter route returned the collection, and rows three
+> and four were never reached. The community package
+> [`braze-community/braze-specification`][braze-spec] republishes the same collection and stays on
+> the shelf as a fallback, unaffiliated with Braze.
+
+[braze-spec]: https://github.com/braze-community/braze-specification
 
 ## 2. Order of work
 
 Each step ends green — lint, typecheck, tests, portability — and is committable alone.
 
-### Step 1 — the probe `CAT-1`
-Above. Its output is a decision record and a fixture, not a feature.
+### Step 1 — the probe `CAT-1` ✅
+Done — §1 above. Its output was a decision record (`NEED-13`), not a feature. Nothing was committed
+into `spec/`; that is Step 2's job.
 
 ### Step 2 — a committed snapshot `CAT-2`
 `spec/braze.postman.json` plus provenance: source, timestamp, collection id, sha256. The point
@@ -48,7 +63,8 @@ an installed CLI.
 Collection → an array of `Operation` (`packages/core/src/operation.ts:14` — the shape already
 exists and Phase 1 uses it). Stable ids: Postman request id, falling back to method + normalized
 path. **Never drop an endpoint silently** — an unrecognised one is an entry with a reason, not
-an omission.
+an omission. `FIND-15` is the concrete case: four endpoints share a `METHOD + path` with another,
+so identity must come from the Postman id and a collision must fail loudly.
 
 ### Step 4 — overrides and coverage `CAT-4` `CAT-5` `CORE-10`
 Handwritten corrections merged over the generated catalog. The first three, already known:

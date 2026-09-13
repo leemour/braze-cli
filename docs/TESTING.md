@@ -94,6 +94,16 @@ that reaches the real Braze fails for reasons that have nothing to do with the c
 `pnpm test:live` is separate, opt-in, and **read-only** — a live write needs a second explicit
 opt-in and a dedicated profile, if it is ever introduced at all.
 
+## Checking a real key without printing it
+
+`./scripts/check-key.sh [profile]` runs the same read twice — once through the CLI, once through
+bare `curl` — and filters the key out of both. It exists because "the key is wrong" and "our code
+is wrong" look identical from one side, and the two answers together tell them apart.
+
+Braze returns the API key inside the body of a 401 (`SEC-1`), so **any** tool pointed at Braze
+can print it. The CLI redacts it in `BrazeClient`; anything else you run by hand has to filter it
+itself, which is what the script's `hide` does.
+
 ## What to write
 
 Trophy shape: prefer the test that pins a contract someone could plausibly break over the one that

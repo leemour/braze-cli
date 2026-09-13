@@ -62,6 +62,17 @@ pnpm smoke:bun            # core actually executes under bun
 CI runs all of them on every pull request —
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
+Checking whether a stored key actually works:
+
+```sh
+./scripts/check-key.sh              # the default profile
+./scripts/check-key.sh staging
+```
+
+It sends the same read through our CLI and through bare `curl`. **Identical answers mean the key
+or the cluster is wrong; differing answers mean we are.** Neither output can print the key —
+Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
+
 ## 5. Rules that cost time when broken
 
 1. **Nothing Node-shaped enters `packages/core`.** Not `process.env`, not `Buffer`, not a config

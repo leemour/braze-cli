@@ -1,10 +1,12 @@
 packages:
   - packages/*
 
-# pnpm 11 blocks dependencies' install scripts by default. Without this, esbuild never
-# unpacks its platform binary and lefthook never installs the git hooks — both fail quietly
-# with a warning, not an error. The setting moved here from package.json's `pnpm` key in
-# pnpm 11; left there it is silently ignored.
-onlyBuiltDependencies:
-  - esbuild
-  - lefthook
+# pnpm blocks dependencies' install scripts by default. Without this, esbuild never unpacks
+# its platform binary and lefthook never installs the git hooks. The key has moved twice:
+# `pnpm.onlyBuiltDependencies` in package.json (pnpm 10), then `onlyBuiltDependencies` here,
+# and since pnpm 11 it is `allowBuilds` with an explicit boolean per package. The older
+# spellings are read but no longer permit the build, so a fresh install fails closed with
+# ERR_PNPM_IGNORED_BUILDS — which is what broke CI on every run before 2026-09-14.
+allowBuilds:
+  esbuild: true
+  lefthook: true

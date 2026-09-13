@@ -21,6 +21,7 @@ export interface Settings {
   config: Config
   profileName: string
   restEndpoint: string
+  readOnly: boolean
   apiKey: string
   apiKeySource: CredentialSource
   outputFormat: OutputFormat
@@ -88,6 +89,7 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
     config,
     profileName,
     restEndpoint,
+    readOnly: profile?.readOnly === true,
     apiKey: stored.apiKey,
     apiKeySource: stored.source,
     outputFormat: resolveOutputFormat(flags, env, config, options.isTty ?? process.stdout.isTTY === true),

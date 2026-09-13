@@ -1,17 +1,20 @@
 import { BrazeError } from "brazecli-core"
 import { Command, Option } from "commander"
 import type { KeyringStore } from "./auth/keyring.js"
+import { apiCommand } from "./commands/api.js"
 import { profileCommand } from "./commands/profile.js"
+import { runsCommand } from "./commands/runs.js"
 import { OUTPUT_FORMATS } from "./config/file.js"
 import { exitCodeFor, GENERIC_FAILURE } from "./exit-codes.js"
 import { processStreams, type Streams } from "./output/stream.js"
-
-export const VERSION = "0.0.0"
+import { VERSION } from "./version.js"
 
 export interface ProgramOptions {
   env?: NodeJS.ProcessEnv
   keyring?: KeyringStore
   streams?: Streams
+  isTty?: boolean
+  fetch?: typeof globalThis.fetch
 }
 
 export const buildProgram = (options: ProgramOptions = {}): Command => {
@@ -30,6 +33,8 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
     .showHelpAfterError()
 
   program.addCommand(profileCommand(options))
+  program.addCommand(apiCommand(options))
+  program.addCommand(runsCommand(options))
 
   return program
 }

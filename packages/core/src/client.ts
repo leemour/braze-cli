@@ -119,6 +119,19 @@ export class BrazeClient {
     return this.#endpoint
   }
 
+  /**
+   * **Braze echoes the API key back inside its own error messages.** A 401 answers with
+   * `Invalid API key: <the key>`, and passing a provider message through verbatim puts the
+   * credential on someone's terminal, in their scrollback, and into whatever they paste next.
+   * Measured against live Braze on 2026-09-13 (`SEC-1`).
+   *
+   * The client is the only thing that holds the secret, so it is the only thing that can do
+   * this — which is why it happens here and not in a renderer.
+   */
+  #redact(text: string): string {
+    return this.#apiKey.length > 0 ? text.split(this.#apiKey).join("[redacted api key]") : text
+  }
+
   get timeoutMs(): number {
     return this.#timeoutMs
   }
@@ -325,7 +338,7 @@ export class BrazeClient {
     try {
       return await sent.response.text()
     } catch (error) {
-      throw new BrazeError("invalid_response", `could not read the response body: ${String(error)}`, {
+      throw new BrazeError("invalid_response", this.#redact(`could not read the response body: ${String(error)}`), {
         httpStatus: sent.response.status,
         requestId: sent.requestId,
         operation: operation.id,
@@ -353,7 +366,7 @@ export class BrazeClient {
     attempt: number,
     askedMs: number | undefined,
   ): BrazeError {
-    return new BrazeError(code, brazeMessage(body) ?? `Braze answered ${sent.response.status}`, {
+    return new BrazeError(code, this.#redact(brazeMessage(body) ?? `Braze answered ${sent.response.status}`), {
       httpStatus: sent.response.status,
       retryable: retryableStatus(sent.response.status),
       attempts: attempt,
@@ -403,7 +416,11 @@ export class BrazeClient {
     }
 
     const message = error instanceof Error ? error.message : String(error)
-    return new BrazeError("network_error", `request failed before a response arrived: ${message}`, details)
+    return new BrazeError(
+      "network_error",
+      this.#redact(`request failed before a response arrived: ${message}`),
+      details,
+    )
   }
 }
 

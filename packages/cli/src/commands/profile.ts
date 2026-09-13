@@ -39,26 +39,43 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
     .argument("<name>", "profile name, such as production or staging")
     .requiredOption("--endpoint <url>", "Braze REST endpoint, e.g. https://rest.fra-01.braze.eu")
     .option("--default", "make this the profile used when none is given")
+    .option("--read-only", "refuse every write for this profile, whatever flags a command carries")
     .description("add or update a profile and store its API key")
-    .action(async (name: string, flags: { endpoint: string; default?: boolean }) => {
+    .action(async (name: string, flags: { endpoint: string; default?: boolean; readOnly?: boolean }) => {
       const { paths, config, streams, credentials, env } = context(options)
 
       // Never a command line argument: it would land in shell history, in `ps`, and in CI logs.
-      const apiKey = env.BRAZE_API_KEY?.trim() || (await askForKey(name, options))
-      if (!apiKey) {
+      const given = env.BRAZE_API_KEY?.trim() || (await askForKey(name, options))
+
+      // Re-running `add` to correct an endpoint must not demand the key again. Keeping the
+      // stored one is the obvious reading of "update this profile", and it is said out loud so
+      // nobody is left guessing which key is now in use.
+      const existing = given ? undefined : credentials.read(name)
+      if (!given && !existing) {
         throw new BrazeError(
           "validation_error",
           "no API key given — set BRAZE_API_KEY for this command, or run it in a terminal to be asked",
         )
       }
 
-      config.profiles[name] = { restEndpoint: flags.endpoint }
+      config.profiles[name] = { restEndpoint: flags.endpoint, readOnly: flags.readOnly === true }
       if (flags.default || config.defaultProfile === undefined) config.defaultProfile = name
       saveConfig(paths.config, config)
 
-      const storedIn = credentials.write(name, apiKey)
-      streams.diagnostic(`profile "${name}" saved · key stored in the ${storedIn}`)
-      streams.data(JSON.stringify({ profile: name, restEndpoint: flags.endpoint, keyStoredIn: storedIn }))
+      const storedIn = given ? credentials.write(name, given) : (existing?.source ?? "file")
+      streams.diagnostic(
+        given
+          ? `profile "${name}" saved · key stored in the ${storedIn}`
+          : `profile "${name}" updated · keeping the key already in the ${storedIn}`,
+      )
+      streams.data(
+        JSON.stringify({
+          profile: name,
+          restEndpoint: flags.endpoint,
+          keyStoredIn: storedIn,
+          keyChanged: Boolean(given),
+        }),
+      )
     })
 
   command
@@ -72,6 +89,7 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
       const rows = Object.entries(config.profiles).map(([name, profile]) => ({
         name,
         restEndpoint: profile.restEndpoint,
+        readOnly: profile.readOnly === true,
         isDefault: config.defaultProfile === name,
         apiKey: credentials.read(name) ? { present: true, source: credentials.read(name)?.source } : { present: false },
       }))

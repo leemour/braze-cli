@@ -73,6 +73,48 @@ describe("BrazeClient.execute", () => {
     expect(result.retryWaitMs).toBe(0)
   })
 
+  // SEC-1, measured against live Braze on 2026-09-13: a 401 answers `Invalid API key: <the key>`,
+  // and passing a provider message through verbatim puts the credential on someone's terminal.
+  describe("Braze echoing the key back", () => {
+    it("never lets the key out in an error message", async () => {
+      const braze = mockBraze([brazeResponses.error(401, "Invalid API key: secret-key")])
+
+      const failure = (await clientFor(braze)
+        .execute(campaignList)
+        .catch((error: unknown) => error)) as BrazeError
+
+      expect(failure.code).toBe("authentication_error")
+      expect(failure.message).not.toContain("secret-key")
+      expect(failure.message).toContain("[redacted api key]")
+    })
+
+    it("catches it in a transport failure message too", async () => {
+      // A network failure on a read is retried, so both attempts have to fail for the error to
+      // surface — and the message must be clean either way.
+      const braze = mockBraze([
+        brazeResponses.networkError("connect failed for key secret-key"),
+        brazeResponses.networkError("connect failed for key secret-key"),
+      ])
+
+      const failure = (await clientFor(braze, { sleep: recordingSleep().sleep })
+        .execute(campaignList)
+        .catch((error: unknown) => error)) as BrazeError
+
+      expect(failure.message).not.toContain("secret-key")
+      expect(failure.message).toContain("[redacted api key]")
+    })
+
+    it("catches every occurrence, not just the first", async () => {
+      const braze = mockBraze([brazeResponses.error(401, "key secret-key rejected; retry with secret-key")])
+
+      const failure = (await clientFor(braze)
+        .execute(campaignList)
+        .catch((error: unknown) => error)) as BrazeError
+
+      expect(failure.message).not.toContain("secret-key")
+    })
+  })
+
   it("keeps the raw body, because a 2xx is not proof every record landed", async () => {
     // Braze answers /users/track with 201 and a populated `errors` array when part of a batch
     // failed. The layer that writes a per-record audit status has to be able to see that.

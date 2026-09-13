@@ -26,6 +26,10 @@
         "useConst": "error",
         "noNonNullAssertion": "error"
       },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
       "suspicious": {
         "noExplicitAny": "error",
         "noConsole": { "level": "error", "options": { "allow": ["error"] } }

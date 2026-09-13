@@ -11,6 +11,12 @@ export type OutputFormat = (typeof OUTPUT_FORMATS)[number]
 const ProfileSchema = v.object({
   restEndpoint: v.pipe(v.string(), v.url()),
   appId: v.optional(v.string()),
+  /**
+   * Refuses every write for this profile, **before** `--confirm` is even looked at. `--confirm`
+   * protects against a typo; this protects against pasting someone else's command that already
+   * carries it. Meant for a production profile during development.
+   */
+  readOnly: v.optional(v.boolean(), false),
 })
 
 export const ConfigSchema = v.object({

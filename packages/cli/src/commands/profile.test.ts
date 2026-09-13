@@ -31,6 +31,7 @@ describe("braze profile", () => {
       profile: "production",
       restEndpoint: "https://rest.fra-01.braze.eu",
       keyStoredIn: "keyring",
+      keyChanged: true,
     })
   })
 
@@ -69,6 +70,21 @@ describe("braze profile", () => {
       isDefault: true,
       apiKey: { present: true, source: "keyring" },
     })
+  })
+
+  it("keeps the stored key when re-run only to correct the endpoint", async () => {
+    await braze(["profile", "add", "production", "--endpoint", "https://rest.XXX.braze.YYY"], { BRAZE_API_KEY: "k" })
+    streams.stdout.length = 0
+
+    const code = await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"])
+
+    expect(code).toBe(0)
+    expect(keyring.entries.get("brazecli:production")).toBe("k")
+    expect(JSON.parse(streams.stdout.join("\n"))).toMatchObject({
+      restEndpoint: "https://rest.fra-01.braze.eu",
+      keyChanged: false,
+    })
+    expect(streams.stderr.join("\n")).toMatch(/keeping the key already in the keyring/)
   })
 
   it("removes a profile and its key", async () => {

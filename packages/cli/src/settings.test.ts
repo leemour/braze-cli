@@ -9,8 +9,8 @@ import { resolveColor, resolveOutputFormat, resolveSettings } from "./settings.j
 const configured = () => {
   const dir = mkdtempSync(join(tmpdir(), "brazecli-settings-"))
   const config = emptyConfig()
-  config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu" }
-  config.profiles.staging = { restEndpoint: "https://rest.iad-03.braze.com" }
+  config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu", readOnly: false }
+  config.profiles.staging = { restEndpoint: "https://rest.iad-03.braze.com", readOnly: false }
   config.defaultProfile = "production"
   saveConfig(dir, config)
   return dir

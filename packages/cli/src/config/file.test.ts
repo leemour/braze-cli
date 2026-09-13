@@ -18,7 +18,7 @@ describe("config file", () => {
   it("round-trips what was saved", () => {
     const dir = tempDir()
     const config = emptyConfig()
-    config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu" }
+    config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu", readOnly: false }
     config.defaultProfile = "production"
 
     saveConfig(dir, config)

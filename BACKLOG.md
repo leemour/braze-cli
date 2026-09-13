@@ -51,8 +51,9 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Phase 1, step 1 of 5 done.** `CORE-12` (the mock Braze) landed 2026-09-13 and is published as
-> `brazecli-core/testing`. Step 2 is next: `CORE-1`, `CORE-2`, `CORE-3`, `CORE-8`.
+> **Phase 1, steps 1 and 2 of 5 done**, both on 2026-09-13. The mock Braze is published as
+> `brazecli-core/testing`; `BrazeClient.send` performs one timed, cancellable attempt. Step 3 is
+> next — the safety rules: `CORE-4`, `CORE-5`, `CORE-6`, `CORE-7`, `CORE-9`.
 
 **Open thread:** Phase 1 foundation —
 [`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
@@ -75,17 +76,14 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 
 | Number | Task | P |
 |---|---|---|
-| `CORE-1` | `BrazeClient` skeleton: injected `fetch`/`sleep`/`clock`/`random`/`logger`, base endpoint, bearer auth, one request/response round trip | P1 |
-| `CORE-2` | Request construction: path params, query serialization, JSON body, multipart — `URL`/`URLSearchParams` only | P1 |
-| `CORE-3` | Per-attempt timeout via `AbortController`, default 30 s, normalizing to the `timeout` error | P1 |
 | `CORE-4` | Error normalization: HTTP status and Braze error body → the closed code list in `packages/core/src/errors.ts` | P1 |
 | `CORE-5` | Retry engine: classification, one-retry default, exponential backoff with jitter, deterministic under injected `sleep`/`random` | P1 |
 | `CORE-6` | Rate limits: honour `Retry-After` and `X-RateLimit-Reset` over our own backoff, cap the wait at 30 s, return a structured `rate_limited` beyond that | P1 |
 | `CORE-7` | Ambiguous write outcome: a connection that dies after the request left becomes `outcome_unknown`, never `failed` | P1 |
-| `CORE-8` | Request identity and timing: `crypto.randomUUID()` per attempt, monotonic `attempt_duration_ms` / `total_duration_ms` / `retry_wait_ms` | P2 |
+| `CORE-8` | 🟡 Request identity and per-attempt timing done in `BrazeClient.send`; `total_duration_ms` and `retry_wait_ms` wait for `execute` | P2 |
 | `CORE-9` | Operation metadata type: read/write access, Braze permission, `retryPolicy` of `read-safe`/`idempotent`/`never`, batch limits, pagination style | P1 |
 | `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough` | P2 |
-| `CORE-11` | User-Agent: `braze-cli/<version> runtime/<runtime> platform/<platform>`, overridable by a non-CLI caller, carrying nothing that identifies a machine | P3 |
+| `CORE-11` | 🟡 The `userAgent` option exists and core invents no default; the CLI still has to build `brazecli/<version> runtime/<runtime> platform/<platform>` | P3 |
 
 ### CLI — the Node side
 

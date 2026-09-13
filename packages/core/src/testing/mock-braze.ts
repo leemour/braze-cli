@@ -1,4 +1,5 @@
 import type { FetchLike } from "../fetch.js"
+import { abortError } from "../time.js"
 
 /**
  * A scripted stand-in for Braze. Written before `BrazeClient` on purpose: retry, timeout and the
@@ -132,9 +133,6 @@ const untilAborted = (signal: AbortSignal | null | undefined): Promise<Response>
     signal.addEventListener("abort", () => reject(abortError()), { once: true })
   })
 }
-
-// What a real fetch rejects with on abort, in every runtime core targets.
-const abortError = () => new DOMException("The operation was aborted.", "AbortError")
 
 export const mockBraze = (script: MockScript): MockBraze => {
   const specs = typeof script === "function" ? script : Array.isArray(script) ? script : [script]

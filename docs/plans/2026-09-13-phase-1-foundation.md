@@ -5,7 +5,7 @@ returns one deterministic JSON value on stdout, writes a run directory with `run
 `events.jsonl` containing no credentials and no ANSI, and `braze api POST /users/track --input
 @x.json` refuses to send without `--confirm`.
 
-Status: **step 1 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
+Status: **steps 1 and 2 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
 `CORE-1`…`CORE-12` and `CLI-1`…`CLI-13` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §14–§48.
 
@@ -48,7 +48,7 @@ things it settled that the next steps must respect:
   logic.** A dropped connection looks identical to the client either way, so `CORE-7` cannot
   branch on it — see step 3.
 
-### Step 2 — one request, end to end `CORE-1` `CORE-2` `CORE-3` `CORE-8`
+### Step 2 — one request, end to end `CORE-1` `CORE-2` `CORE-3` `CORE-8` ✅
 
 `BrazeClient` taking `{ fetch, sleep, clock, random, logger, endpoint, apiKey }`, building a
 request from path params and query, sending it, and timing out at 30 s per attempt through
@@ -58,6 +58,22 @@ can.
 ⚠ **The client composes its own `AbortController` and schedules the abort through an injected
 timer — not `AbortSignal.timeout(ms)`.** The obvious API makes every timeout test wait in real
 time, which is how a timeout suite stops being run. Step 1's mock was built assuming this.
+
+**Built**, 20 tests. Three things step 3 inherits:
+
+- **`send` is one attempt and never classifies.** Any HTTP status comes back as a `Response`,
+  500 included. It throws only `timeout`, `cancelled` and `network_error` — the three outcomes
+  with no response to classify. Retry and status mapping are `execute`'s, and must not migrate
+  into `send` because it is convenient.
+- **The timeout timer is cancelled in a `finally`**, along with the listener on the caller's
+  signal. `Promise.race` does not cancel the loser; without this it is a pending timer and a
+  listener per request, invisible at one and fatal at ten thousand.
+- **Which abort fired is tracked by a flag set before aborting**, never by inspecting the error:
+  our timeout and the caller's cancellation both arrive from `fetch` as an `AbortError`.
+
+Left open on purpose: array query parameters throw `validation_error` rather than guessing a
+serialization Braze is inconsistent about. The generated catalog settles it per operation
+(`CAT-3`).
 
 ### Step 3 — the safety rules `CORE-4` `CORE-5` `CORE-6` `CORE-7` `CORE-9`
 

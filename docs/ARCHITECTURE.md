@@ -82,12 +82,21 @@ the **second runtime**, and `pnpm smoke:bun` actually executes core under it.
 `BrazeClient` takes its environment as plain functions:
 
 ```ts
-new BrazeClient({ fetch, sleep, clock, random, logger })
+new BrazeClient({ endpoint, apiKey, fetch, sleep, clock, now, random, logger })
 ```
 
-Defaults are `globalThis.fetch`, a real `setTimeout` sleep, `Date.now`, `Math.random` and
-`noopLogger`. That is the whole mechanism — there is no container, no decorator, no registry. It
-exists so retry and backoff can be tested without waiting, and so a Worker can pass its own fetch.
+Defaults are `globalThis.fetch`, a `setTimeout`-backed sleep, `performance.now`, `new Date`,
+`Math.random` and `noopLogger`. That is the whole mechanism — no container, no decorator, no
+registry. It exists so retry and timeout can be tested without waiting, and so a Worker can pass
+its own fetch.
+
+**Two clocks, deliberately not one.** `clock` is monotonic and every duration comes from it — a
+wall clock can step backwards and make a duration negative. `now` is wall time, and every
+timestamp a person or another system will read comes from it.
+
+**`sleep(ms, signal)` is the only time primitive**, and it serves both the per-attempt timeout and
+the retry backoff. A test passes a sleep that resolves at once to force a timeout, or one that
+never settles to rule one out. Nothing in the test suite waits.
 
 ## 5. Logging is not rendering
 

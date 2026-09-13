@@ -1,12 +1,28 @@
-// Second runtime. Core claims to run outside Node; this proves one non-Node runtime
-// actually imports and executes it. Run: `bun run scripts/smoke-core.ts`.
-import { BrazeError, errorCodes, noopLogger } from "../packages/core/src/index.js"
+// Second runtime. Core claims to run outside Node; this proves one non-Node runtime imports it,
+// builds a request and handles a response. Run: `pnpm smoke:bun`.
+import { BrazeClient } from "../packages/core/src/index.js"
+import { brazeResponses, mockBraze } from "../packages/core/src/testing/index.js"
 
-const error = new BrazeError("timeout", "smoke", { attempts: 2 })
-noopLogger.info({ event: "smoke" })
+const braze = mockBraze([brazeResponses.rateLimited({ retryAfterSeconds: 2 }), brazeResponses.ok()])
 
-if (error.code !== "timeout" || errorCodes.length === 0) {
-  throw new Error("core did not behave under this runtime")
+const client = new BrazeClient({
+  endpoint: "https://rest.fra-01.braze.eu",
+  apiKey: "smoke",
+  fetch: braze.fetch,
+  sleep: () => new Promise(() => {}),
+})
+
+const limited = await client.send({ method: "GET", path: "/campaigns/list", query: { page: 0 } })
+const ok = await client.send({ method: "POST", path: "/users/track", body: { attributes: [] } })
+
+if (limited.response.status !== 429 || ok.response.status !== 200) {
+  throw new Error(`unexpected statuses: ${limited.response.status}, ${ok.response.status}`)
+}
+if (braze.lastRequest().headers.get("authorization") !== "Bearer smoke") {
+  throw new Error("the client did not authenticate the request")
 }
 
-console.log(`core runs under ${typeof Bun !== "undefined" ? `bun ${Bun.version}` : "an unknown runtime"}`)
+const runtime = typeof Bun !== "undefined" ? `bun ${Bun.version}` : "an unknown runtime"
+console.log(
+  `core sent ${braze.requests.length} requests under ${runtime}, ${limited.requestId.length}-char request ids`,
+)

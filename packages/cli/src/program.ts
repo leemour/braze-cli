@@ -5,9 +5,11 @@ import { apiCommand } from "./commands/api.js"
 import { commandsCommand } from "./commands/commands.js"
 import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
-import { OUTPUT_FORMATS } from "./config/file.js"
+import { emptyConfig, loadConfig, OUTPUT_FORMATS } from "./config/file.js"
+import { resolvePaths } from "./config/paths.js"
 import { exitCodeFor, GENERIC_FAILURE } from "./exit-codes.js"
 import { processStreams, type Streams } from "./output/stream.js"
+import { type GlobalFlags, resolveOutputFormat } from "./settings.js"
 import { VERSION } from "./version.js"
 
 export interface ProgramOptions {
@@ -47,19 +49,49 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
  */
 export const run = async (argv: string[], options: ProgramOptions = {}): Promise<number> => {
   const streams = options.streams ?? processStreams
+  const program = buildProgram(options)
 
   try {
-    await buildProgram(options).parseAsync(argv, { from: "user" })
+    await program.parseAsync(argv, { from: "user" })
     return 0
   } catch (error) {
     if (error instanceof BrazeError) {
-      streams.diagnostic(`${error.code}: ${error.message}`)
+      report(program, options, streams, { code: error.code, message: error.message, ...error.details })
       return exitCodeFor(error.code)
     }
     if (isCommanderExit(error)) return error.exitCode
-    streams.diagnostic(error instanceof Error ? error.message : String(error))
+
+    const message = error instanceof Error ? error.message : String(error)
+    report(program, options, streams, { code: "generic_failure", message })
     return GENERIC_FAILURE
   }
+}
+
+interface ReportedError {
+  code: string
+  message: string
+  [detail: string]: unknown
+}
+
+/**
+ * A machine mode gets the failure as JSON, because an exit code says which kind of thing went
+ * wrong and nothing about which record or how long to wait. It goes to **stderr**: stdout is
+ * data, and an agent reading it must never mistake a refusal for a result.
+ */
+const report = (program: Command, options: ProgramOptions, streams: Streams, error: ReportedError): void => {
+  const env = options.env ?? process.env
+
+  let config = emptyConfig()
+  try {
+    config = loadConfig(resolvePaths(env).config)
+  } catch {
+    // Reporting a failure must not depend on the configuration, which may be the failure.
+  }
+
+  const isTty = options.isTty ?? process.stdout.isTTY === true
+  const format = resolveOutputFormat(program.opts<GlobalFlags>(), env, config, isTty)
+
+  streams.diagnostic(format === "pretty" ? `${error.code}: ${error.message}` : JSON.stringify({ error }))
 }
 
 interface CommanderExit {

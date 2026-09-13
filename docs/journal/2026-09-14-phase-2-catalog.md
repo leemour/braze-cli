@@ -42,6 +42,35 @@ quickly add to make it more usable for ai agent, don't overcomplicate, can impro
 «работает сегодня», и добавлен раздел «For an agent», который честно говорит, что пути
 эндпоинтов агенту всё ещё надо подсказывать руками.
 
+**TASK-10 · Машинные ошибки в JSON-режиме и указатель на список эндпоинтов Braze**
+Статус: сделано. 163 теста (было 159).
+
+Слава ответил на `NEED-16`: «1 А» — ошибка уходит в **stderr** одним JSON-объектом. Записано
+в `DECISIONS.md`. И спросил: «can we for now point to the docs in help etc?»
+
+**Ошибки.** `run()` в `packages/cli/src/program.ts` теперь держит ссылку на program и в
+catch резолвит формат вывода тем же `resolveOutputFormat`, что и команды, — не вторым
+правилом, которое разошлось бы с первым. В машинном режиме печатается
+`{"error":{code, message, ...details}}`, в pretty — прежняя строка `code: message`.
+
+Важное, что даёт `BrazeErrorDetails` даром: `retryable`, `retryAfterMs`, `httpStatus`,
+`attempts`, `requestId`, `runId`. Проверено на живом 404 от Braze — приходит
+`{"code":"not_found","httpStatus":404,"retryable":false,"attempts":1,"requestId":"…"}`.
+Агенту этого хватает, чтобы решить, повторять ли, и через сколько, — кода возврата не хватало.
+
+**stdout при отказе пуст** — проверено на настоящем бинарнике (`wc -c` = 0), тест в
+`tests/machine-output.test.ts` это держит.
+
+**Указатель на документацию.** Заведён `packages/cli/src/documentation.ts` — один источник
+ссылок, чтобы help и `braze commands` не разъехались. Ссылка ведёт на
+https://www.braze.com/docs/api/home: проверено curl'ом, что это страница «Braze API Guide» и
+в ней действительно перечислены пути (`/campaigns/list`, `/users/track`, `/canvas/list`).
+Соседний `/docs/api/endpoints` отдаёт 974 байта заглушки — не туда.
+
+Видно в двух местах: хвост `braze api --help` и блок `endpoints` в `braze commands --json`,
+где прямо сказано `discoverable: false` и почему. Когда каталог приедет, этот блок — то, что
+надо будет поменять на список.
+
 ## 2. Вопросы Славы
 
 **ASK-1 · «<его вопрос дословно>»**

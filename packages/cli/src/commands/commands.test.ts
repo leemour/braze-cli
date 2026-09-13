@@ -85,6 +85,15 @@ describe("braze commands", () => {
     expect(surface.commands.length).toBeGreaterThan(0)
   })
 
+  it("says the endpoint paths are not discoverable yet, and where to read them", async () => {
+    const { surface } = await discover()
+
+    expect(surface.endpoints).toMatchObject({
+      discoverable: false,
+      documentation: "https://www.braze.com/docs/api/home",
+    })
+  })
+
   it("renders a flat table for a terminal instead of the whole tree", async () => {
     const code = await run(["commands", "--output", "pretty"], {
       env: { BRAZE_CONFIG_DIR: configDir },

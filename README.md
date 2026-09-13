@@ -63,6 +63,9 @@ braze schema users.track                 # one operation's input contract
 
 ### For an agent
 
+**There is a ready-made prompt in [`docs/agent-prompt.md`](docs/agent-prompt.md)** — copy it into
+the agent's instructions and replace one path.
+
 Start with `braze commands --json`. It returns every command, its arguments and its options —
 including which options take a value and which must be given — plus the exit code for each kind of
 failure, so a caller branches on `$?` rather than parsing a message. It reads the live command

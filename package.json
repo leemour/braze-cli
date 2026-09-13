@@ -17,6 +17,8 @@
     "portability:core": "node scripts/check-core-portability.mjs",
     "spec:sync": "node scripts/sync-spec.mjs",
     "spec:check": "node scripts/sync-spec.mjs --check",
+    "catalog:generate": "node scripts/generate-catalog.mjs",
+    "catalog:check": "node scripts/generate-catalog.mjs --check",
     "smoke:bun": "bun run scripts/smoke-core.ts",
     "prepare": "lefthook install || true"
   },

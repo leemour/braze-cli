@@ -9,7 +9,8 @@
       "!spec/*.json",
       "!.claude",
       "!pnpm-lock.yaml",
-      "!tests/fixtures/spec"
+      "!tests/fixtures/spec",
+      "!tests/fixtures/catalog"
     ]
   },
   "formatter": {

@@ -71,12 +71,37 @@ Three decisions taken while building it:
 `spec:check` deliberately does **not** gate pull requests: it reaches the network, and CI that
 depends on Postman's uptime buys flakiness, not safety.
 
-### Step 3 — the normalizer `CAT-3`
-Collection → an array of `Operation` (`packages/core/src/operation.ts:14` — the shape already
-exists and Phase 1 uses it). Stable ids: Postman request id, falling back to method + normalized
-path. **Never drop an endpoint silently** — an unrecognised one is an entry with a reason, not
-an omission. `FIND-15` is the concrete case: four endpoints share a `METHOD + path` with another,
-so identity must come from the Postman id and a collision must fail loudly.
+### Step 3 — the normalizer `CAT-3` ✅
+Done 2026-09-14. `pnpm catalog:generate` (`scripts/generate-catalog.mjs`) turns the snapshot into
+`packages/core/src/operations/generated.ts`: **99 requests → 95 operations**, 42 read and 53 write.
+Read it through `catalog` from `packages/core/src/operations/index.js`, never the generated file —
+that is where `CAT-4` merges overrides on top.
+
+Four decisions, and the reasoning that picked each:
+
+- **The id is `path.with.by-id.markers.verb`, always** — `campaigns.list.get`,
+  `catalogs.by-id.items.by-id.get`. Four schemes were measured over the real 99 requests and this
+  is the only one with no collision between two different endpoints. A prettier "shortest unique
+  id" scheme was rejected outright: `Operation.id` is promised stable across regenerations, and
+  shortest-unique silently **renames** `users.track` the day Braze adds a second method on that
+  path.
+- **The command escalates in three tiers** — bare path, then a verb, then the marked path — each
+  used only when the tier before it collides. The third tier is the id's own shape, so it is unique
+  by construction and the escalation terminates. 21 of the 95 needed a tier above the first, and
+  `command` carries no stability promise because §10 makes names an override's job.
+- **No singularisation.** `braze campaign list` in the brief and `["users", "track"]` in its own
+  override example disagree, and naive plural-stripping turns `canvas` into `canva`. Paths go
+  through as they are, and singular aliases are overrides, one at a time.
+- **The generator is plain JS; its output is the typed thing.** `tsc` checks
+  `generated.ts` when it builds core, so a generator bug that produces a bad field fails the build
+  rather than a test nobody wrote.
+
+**Nothing is dropped in silence.** The four endpoints Braze documents twice (`FIND-15`) merge into
+one operation each and are named in the run's output; two *different* endpoints deriving one id
+aborts the generator with both paths printed.
+
+`/users/export/ids` is still generated as a write, because access comes from the HTTP method here
+(`FIND-13`). A test pins that, so `CAT-4` flipping it will be visible rather than silent.
 
 ### Step 4 — overrides and coverage `CAT-4` `CAT-5` `CORE-10`
 Handwritten corrections merged over the generated catalog. The first three, already known:

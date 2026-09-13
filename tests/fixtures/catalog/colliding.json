@@ -1,0 +1,7 @@
+{
+  "info": { "name": "Colliding", "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json" },
+  "item": [
+    { "name": "By name", "id": "c1", "request": { "method": "GET", "url": "{{instance_url}}/thing/{name}" } },
+    { "name": "By number", "id": "c2", "request": { "method": "GET", "url": "{{instance_url}}/thing/{number}" } }
+  ]
+}

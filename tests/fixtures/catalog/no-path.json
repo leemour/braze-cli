@@ -1,0 +1,4 @@
+{
+  "info": { "name": "No path", "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json" },
+  "item": [{ "name": "Pathless", "id": "c1", "request": { "method": "GET", "url": "{{instance_url}}" } }]
+}

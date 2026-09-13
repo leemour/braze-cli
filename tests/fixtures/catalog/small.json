@@ -1,0 +1,20 @@
+{
+  "info": { "name": "Small", "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json" },
+  "item": [
+    {
+      "name": "Catalogs",
+      "item": [
+        { "name": "List catalogs", "id": "s1", "request": { "method": "GET", "url": "{{instance_url}}/catalogs" } },
+        { "name": "Create catalog", "id": "s2", "request": { "method": "POST", "url": "{{instance_url}}/catalogs" } },
+        { "name": "Get item", "id": "s3", "request": { "method": "GET", "url": "{{instance_url}}/catalogs/{catalog_name}/items/{item_id}" } },
+        { "name": "List items", "id": "s4", "request": { "method": "GET", "url": "{{instance_url}}/catalogs/{catalog_name}/items" } }
+      ]
+    },
+    {
+      "name": "Export",
+      "item": [
+        { "name": "List campaigns", "id": "s5", "request": { "method": "GET", "url": "{{instance_url}}/campaigns/list?page=0", "query": [{ "key": "page", "value": "0", "description": "0-indexed page" }] } }
+      ]
+    }
+  ]
+}

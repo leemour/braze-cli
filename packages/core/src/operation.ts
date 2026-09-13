@@ -26,6 +26,22 @@ export interface Operation {
   batch?: Readonly<Record<string, number>>
   description?: string
   documentationUrl?: string
+  /**
+   * Placeholders in `path`, in the order they appear: `["catalog_name", "item_id"]`. Named rather
+   * than counted, because this is what an agent has to be told in order to call the operation at
+   * all — `braze commands --json` has nothing else to offer it.
+   */
+  pathParameters?: readonly string[]
+  /** Query keys the collection documents. Not exhaustive: Postman examples are not a schema. */
+  queryParameters?: readonly QueryParameter[]
+  /** The Postman request this was generated from, for matching an operation across regenerations. */
+  sourceId?: string
+}
+
+export interface QueryParameter {
+  name: string
+  description?: string
+  example?: string
 }
 
 export interface OperationDefinition extends Omit<Operation, "retryPolicy"> {

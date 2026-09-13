@@ -7,10 +7,14 @@ one timed, cancellable attempt (`send`) under a policy layer that classifies, re
 refuses to guess about writes (`execute`). The CLI has profiles, keyring storage, output modes,
 run artifacts and `braze api`. 152 tests.
 
-⚠ **Not built, and load-bearing for everything that follows:** the generated operation catalog
-(§6). Until it exists there are no typed commands — every call goes through `braze api`, which
-classifies by HTTP method and therefore treats a read like `POST /users/export/ids` as a write.
-That is Phase 2.
+**The catalog exists as of 2026-09-14** (`CAT-2`, `CAT-3`): `spec/braze.postman.json` is the
+committed snapshot and `packages/core/src/operations/generated.ts` holds 95 operations generated
+from it. Read it through `catalog` in `packages/core/src/operations/index.ts`.
+
+⚠ **Nothing is wired to it yet.** No command is registered from the catalog, so every call still
+goes through `braze api`, which classifies by HTTP method and therefore treats a read like
+`POST /users/export/ids` as a write. Overrides (`CAT-4`) fix the classification; command
+registration is `CAT-6`.
 
 Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 

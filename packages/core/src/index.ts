@@ -15,9 +15,11 @@ export {
   type Operation,
   type OperationDefinition,
   type PaginationStyle,
+  type QueryParameter,
   type RetryPolicy,
   rawOperation,
 } from "./operation.js"
+export { catalog, findByCommand, findOperation } from "./operations/index.js"
 export {
   buildQuery,
   buildUrl,

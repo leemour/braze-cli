@@ -1,27 +1,47 @@
 # spec/
 
-The committed snapshot of Braze's API collection. **Still empty — `CAT-2` puts the file here.**
+The committed snapshot of Braze's API collection, and where every generated operation comes from.
 
-`braze.postman.json` arrives through `pnpm spec:sync`, an explicit dev-time step and never
-something the CLI does at startup. The point is that a change on Braze's side shows up as a
-reviewable Git diff instead of silently changing the behaviour of an installed CLI.
+| File | What it is |
+|---|---|
+| `braze.postman.json` | Braze's collection, reformatted for a readable diff. 99 requests in 32 folders |
+| `provenance.json` | where it came from, when, and two hashes |
 
-**The source is settled** (2026-09-14, `NEED-13` in [`../docs/DECISIONS.md`](../docs/DECISIONS.md)):
+**Nothing here is fetched at runtime.** The snapshot ships with the CLI, so a change on Braze's
+side arrives as a reviewable Git diff instead of silently changing the behaviour of an installed
+CLI (`REQUIREMENTS.md` §6–§8).
 
-```text
-https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG
+## Updating it
+
+```sh
+pnpm spec:sync      # fetch, validate, and write only if something changed
+pnpm spec:check     # fail if the snapshot is behind; writes nothing
 ```
 
-This is the collection behind the page [Braze's own documentation links
-to](https://www.braze.com/docs/api/postman_collection). It answers `200` with the full collection
-as JSON, with no Postman account and no token: 99 requests, 32 folders, schema v2.0.0. Three
-consecutive downloads were byte-identical, so a diff here means Braze changed something.
+The source is settled (`NEED-13` in [`../docs/DECISIONS.md`](../docs/DECISIONS.md)):
+`https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG`, the collection behind the
+page [Braze's own documentation links to](https://www.braze.com/docs/api/postman_collection). No
+Postman account and no token.
 
-⚠ The address is Postman's internal API rather than a published one and may move without notice
-(`RISK-2`). That is survivable — the snapshot in this directory is what ships, so a dead address
-stops `pnpm spec:sync` and leaves the installed CLI untouched. It does mean `spec:sync` must check
-that what it received is a collection before overwriting anything here; writing an HTML error page
-into this directory is the one failure that would actually hurt.
+**An unchanged sync writes nothing at all**, timestamp included. A diff in this directory
+therefore always means Braze changed something, which is the only way the review is worth doing.
 
-The snapshot carries its provenance alongside it: source URL, sync timestamp, collection id and a
-sha256 of the file.
+## Two things worth knowing before you touch this
+
+**The snapshot is reformatted, not stored as received.** Braze serves it as one 565 KB line, and a
+one-line diff tells a reviewer nothing. That is why there are two hashes: `sourceSha256` is of the
+bytes as received and is what detects an upstream change; `sha256` is of the formatted file here,
+so the committed artifact can be verified on its own.
+
+**`spec:sync` refuses anything that is not a collection** — markup, invalid JSON, a body with no
+Postman schema, an empty collection, folders containing no requests — and writes nothing when it
+refuses. The address is Postman's internal API and may move without notice (`RISK-2`); the failure
+that would actually hurt is committing an HTML error page as the catalog.
+
+If that address ever does move, `pnpm spec:sync --from <export.json>` validates and records a
+manual export instead. The snapshot's shape does not change, so nothing downstream is rewritten —
+that is the fallback the phase plan kept in reserve.
+
+**`spec:check` is not a pull request gate.** It reaches the network, and making every PR depend on
+Postman's uptime would buy flakiness rather than safety. Run it deliberately. The gate that fails
+CI when an operation vanishes is `catalog:check`, and it works off the committed snapshot (`CAT-5`).

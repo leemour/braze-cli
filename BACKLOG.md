@@ -107,7 +107,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | Number | Task | P |
 |---|---|---|
 | `CAT-1` | ✅ Done 2026-09-14. The source is Braze's own Postman documenter, fetched anonymously — `NEED-13` in [`docs/DECISIONS.md`](docs/DECISIONS.md) | P1 |
-| `CAT-2` | `spec:sync` writing `spec/braze.postman.json` plus source, timestamp, collection id and sha256 | P1 |
+| `CAT-2` | ✅ Done 2026-09-14. `pnpm spec:sync` writes `spec/braze.postman.json` (99 requests) and `spec/provenance.json`; refuses anything that is not a collection, and writes nothing when nothing changed | P1 |
 | `CAT-3` | Normalizer: collection → operation catalog with stable ids (Postman request id, falling back to method + normalized path) | P1 |
 | `CAT-4` | `overrides.ts` and its merge — command name, access, permission, schema, batch limits, retry policy, PII fields, ignored state | P1 |
 | `CAT-5` | Coverage report and `catalog:check`, failing CI when an operation vanishes or an unclassified one appears | P1 |

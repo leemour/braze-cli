@@ -18,7 +18,13 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "brazecli-core": "workspace:*"
+    "@clack/prompts": "^1.8.0",
+    "@napi-rs/keyring": "^2.0.0",
+    "brazecli-core": "workspace:*",
+    "commander": "^15.0.0",
+    "env-paths": "^4.0.0",
+    "picocolors": "^1.1.1",
+    "valibot": "^1.5.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1"

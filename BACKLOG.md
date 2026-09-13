@@ -51,12 +51,12 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Phase 1, steps 1–3 of 5 done**, all on 2026-09-13. Core is finished apart from validation
-> (`CORE-10`) and the user-agent string (`CORE-11`): the mock Braze, `send` for one attempt, and
-> `execute` for the policy — classification, one retry for reads, rate-limit headers, and
-> `outcome_unknown` for a write that produced no response. 68 tests.
+> **Phase 1, steps 1–4 of 5 done**, all on 2026-09-13. Core does one safe request end to end;
+> the CLI has its flags, its config hierarchy, `braze profile add/list/remove` with keyring
+> storage, and `@file`/stdin input. 112 tests.
 >
-> Step 4 is next — the CLI shell: `CLI-1`, `CLI-2`, `CLI-3`, `CLI-4`, `CLI-11`.
+> Step 5 is the last — what a command actually prints and leaves behind: `CLI-5`, `CLI-6`,
+> `CLI-7`, `CLI-8`, `CLI-9`, `CLI-10`.
 
 **Open thread:** Phase 1 foundation —
 [`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
@@ -86,18 +86,13 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 
 | Number | Task | P |
 |---|---|---|
-| `CLI-1` | Commander bootstrap and global flags: `--profile`, `--json`, `--no-color`, `--dry-run`, `--confirm`, `--runs-dir`, `--version` | P1 |
-| `CLI-2` | Configuration hierarchy — CLI option > environment > profile config > global config > default — with `env-paths` for locations | P1 |
-| `CLI-3` | `braze profile add/list/remove`, interactive via Clack, resolution `--profile` > `BRAZE_PROFILE` > default | P1 |
-| `CLI-4` | Credential storage: OS keyring first, warn and fall back to a permission-restricted file; `auto`/`keyring`/`file` | P1 |
 | `CLI-5` | Output modes `auto`/`pretty`/`json`/`jsonl`, **and the test that stdout carries only data in machine modes** | P1 |
 | `CLI-6` | Pretty renderer: tables for lists, key/value sections for objects, pretty JSON as the fallback — a handful of renderers, not dozens | P2 |
 | `CLI-7` | Pino adapter to core's `Logger`, redaction list, one `events.jsonl` per run, no ANSI anywhere in it | P1 |
 | `CLI-8` | Run directories and `run.json`, finalized atomically, never carrying the API key or a full request body | P1 |
 | `CLI-9` | `braze api <METHOD> <path>` raw escape hatch, relative Braze paths only, writes requiring `--confirm` | P1 |
 | `CLI-10` | `--dry-run` for every write: resolve, validate, batch, count, construct — and send nothing | P1 |
-| `CLI-11` | Input handling: `--input @file`, `--input -` for stdin, JSON parsed and validated before anything is sent | P1 |
-| `CLI-12` | Process exit codes mapped from the error code, so a script can branch without parsing text | P2 |
+| `CLI-12` | 🟡 The mapping exists in `packages/cli/src/exit-codes.ts` and `run` applies it; every new command has to route its failures through a `BrazeError` for it to hold | P2 |
 | `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit — the scaffolding bulk needs later | P2 |
 
 ## Phase 2 — the generated API catalog

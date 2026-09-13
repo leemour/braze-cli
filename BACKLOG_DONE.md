@@ -5,6 +5,11 @@ is ever removed from this file.
 
 | Number | Task | Closed | Commit |
 |---|---|---|---|
+| `CLI-11` | Input from `@file`, `-` for stdin, or inline JSON — parsed and refused before a command can half-send it | 2026-09-13 | see `git log -- packages/cli/src/input` |
+| `CLI-4` | Credentials: OS keyring first with a single warned fallback to a `0600` file in a `0700` directory, written atomically. The keyring is reached through one injected seam, so no test can touch a real keychain | 2026-09-13 | see `git log -- packages/cli/src/auth` |
+| `CLI-3` | `braze profile add/list/remove`. The key is never a command line argument and never printed, masked or otherwise | 2026-09-13 | see `git log -- packages/cli/src/commands/profile.ts` |
+| `CLI-2` | Configuration hierarchy in one function — CLI option > environment > profile > global > default — with `env-paths` for locations and a valibot schema that names the offending field | 2026-09-13 | see `git log -- packages/cli/src/settings.ts` |
+| `CLI-1` | Commander bootstrap, the global flags, and failures turned into one stable exit code per error code | 2026-09-13 | see `git log -- packages/cli/src/program.ts` |
 | `CORE-9` | Operation metadata — access, permission, `retryPolicy`, batch limits, pagination style; `rawOperation` for `braze api`. Retry branches on the policy alone, so there is one source of truth | 2026-09-13 | see `git log -- packages/core/src/operation.ts` |
 | `CORE-7` | Ambiguous writes: a write that produced no response becomes `outcome_unknown` with `retryable: false` stated explicitly, never `failed` | 2026-09-13 | see `git log -- packages/core/src/client.ts` |
 | `CORE-6` | Rate limits: `Retry-After` in both its forms and `X-RateLimit-Reset` beat our backoff; beyond 30 s a structured `rate_limited` comes back instead of a blocked caller | 2026-09-13 | see `git log -- packages/core/src/retry.ts` |

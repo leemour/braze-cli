@@ -1,6 +1,6 @@
 # Testing
 
-**Status (2026-09-13):** green — 68 tests, 6 files. The layers below
+**Status (2026-09-13):** green — 112 tests, 11 files. The layers below
 that do not exist yet are marked *not built*. Nothing here describes a test that has not been run.
 
 ```sh
@@ -28,7 +28,7 @@ a claim, and it has to be true.
 | Layer | Location | Runner | State |
 |---|---|---|---|
 | Core unit | `packages/core/src/**/*.test.ts` | vitest | 64 tests |
-| CLI unit | `packages/cli/src/**/*.test.ts` | vitest | *not built* |
+| CLI unit | `packages/cli/src/**/*.test.ts` | vitest | 44 tests |
 | Cross-cutting | `tests/**/*.test.ts` | vitest | 1 test (portability gate) |
 | Generator | `tests/generator/**` against committed fixtures | vitest | *not built* |
 | Live Braze | `pnpm test:live` | vitest | *not built* |
@@ -51,9 +51,19 @@ To check a gate still bites, put this in `packages/core/src/__canary.ts`, export
 export const home = () => process.env.HOME
 ```
 
+### No test may reach a real keychain
+
+The OS keyring is behind one injected function (`packages/cli/src/auth/keyring.ts`), defaulted to
+the real `Entry` and replaced by `memoryKeyring()` or `brokenKeyring()` in every test. Setting
+`credentialStorage: "file"` in a test config would be necessary but not sufficient — one test that
+forgets it writes to the developer's actual keychain. The seam makes it impossible rather than
+discouraged.
+
 ### The machine-output invariant
 
-*Not built — lands with the output module in Phase 1.* In `--json` and `--jsonl` modes,
+*Partly built.* `packages/cli/src/output/stream.ts` splits the two halves and
+`profile.test.ts` asserts that stdout parses as JSON while the diagnostics land on stderr. The
+whole-command test lands with the renderer in step 5. In `--json` and `--jsonl` modes,
 **stdout carries data and nothing else**: no spinner frame, no `✓`, no warning, no progress bar,
 no ANSI. Diagnostics go to stderr. The test pipes a real command and asserts stdout parses as a
 single JSON value with a byte-for-byte match on the serialized form.

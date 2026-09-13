@@ -57,7 +57,7 @@ recommended command line argument and never reaches a log.
 idempotency key. A request whose connection died after it was sent is reported as
 `outcome_unknown`, not as a failure.
 
-**Run artifacts** live in the platform state directory (`~/.local/state/brazecli/runs/` on Linux),
+**Run artifacts** live in the platform state directory (`~/.local/share/brazecli/runs/` on Linux),
 one directory per invocation: `run.json`, `events.jsonl`, and `records.csv` whenever more than one
 logical record was touched.
 

@@ -5,7 +5,7 @@ returns one deterministic JSON value on stdout, writes a run directory with `run
 `events.jsonl` containing no credentials and no ANSI, and `braze api POST /users/track --input
 @x.json` refuses to send without `--confirm`.
 
-Status: **steps 1–3 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
+Status: **steps 1–4 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
 `CORE-1`…`CORE-12` and `CLI-1`…`CLI-13` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §14–§48.
 
@@ -103,13 +103,29 @@ The part that makes this worth building rather than reaching for `curl`:
   test has to tell them apart; without it a recorded wait list mixes an attempt's deadline with
   the delay between attempts and can assert on neither.
 
-### Step 4 — the CLI shell `CLI-1` `CLI-2` `CLI-3` `CLI-4` `CLI-11`
+### Step 4 — the CLI shell `CLI-1` `CLI-2` `CLI-3` `CLI-4` `CLI-11` ✅
 
 Commander with global flags; configuration resolving CLI > environment > profile > global >
 default; `braze profile add/list/remove` through Clack; credentials from the OS keyring with a
 warned file fallback; `--input @file` and stdin.
 
 **`BRAZE_API_KEY` is read here and nowhere else.** Core receives it as a constructor argument.
+
+**Built**, 44 tests. What step 5 inherits:
+
+- **The keyring is reached through one injected seam**, defaulted to the real `Entry` and
+  replaced in every test. "No test touched a real keychain" is a property of the code, not a
+  hope that each test remembered to opt out.
+- **`auto` does not probe.** It attempts the operation, and on failure warns **once** to stderr
+  and writes the file instead. A probe would touch the user's keychain for nothing and could
+  still succeed where the real operation fails.
+- **The file fallback is `0600` inside a `0700` directory, written atomically** through a temp
+  file and a rename — a partial `credentials.json` loses every profile's key, not just the one
+  being written, and the window for that is a Ctrl+C during `profile add`. ⚠ Both modes are
+  ignored on Windows.
+- **`packages/cli/src/output/stream.ts` is the seam step 5 builds on**: two functions, data to
+  stdout and everything else to stderr, with no formatting decisions in it. The moment it grows
+  a table it has become the renderer early.
 
 ### Step 5 — the observable surface `CLI-5` `CLI-7` `CLI-8` `CLI-9` `CLI-10`
 

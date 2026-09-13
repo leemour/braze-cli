@@ -1,0 +1,11 @@
+{
+  "source": "https://documenter.getpostman.com/api/collections/4689407/SVYrsdsG",
+  "syncedAt": "2026-09-13T23:29:24.260Z",
+  "sourceCollectionId": "29829c45-e619-4c12-910f-564ec8ccfda9",
+  "collectionName": "Braze Endpoints",
+  "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+  "requests": 99,
+  "folders": 32,
+  "sourceSha256": "a55735628a0882478d31bb8aa354aab4cd5443099b203a1a8757919ea5905840",
+  "sha256": "e64c492ed4c8bb428d1edf3bfb58554b395fa9262a25716ddf8ea6a249ea2e28"
+}

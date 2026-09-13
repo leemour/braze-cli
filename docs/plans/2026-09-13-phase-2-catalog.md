@@ -4,7 +4,7 @@
 `campaign` command, `braze commands --json` lists the whole surface for an agent, and CI fails
 if an endpoint silently disappears from Braze's collection.
 
-Status: **`CAT-1` done, the rest not started.** Written 2026-09-13 against `622ef9f`, with Phase 1
+Status: **`CAT-1` and `CAT-2` done; `CAT-3` is next.** Written 2026-09-13 against `622ef9f`, with Phase 1
 closed and verified live; §1 answered 2026-09-14 and rewritten in place. Backlog items
 `CAT-1`…`CAT-11` plus `CORE-10` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §6–§13, §49–§51, §56, §58.
@@ -54,10 +54,22 @@ Each step ends green — lint, typecheck, tests, portability — and is committa
 Done — §1 above. Its output was a decision record (`NEED-13`), not a feature. Nothing was committed
 into `spec/`; that is Step 2's job.
 
-### Step 2 — a committed snapshot `CAT-2`
-`spec/braze.postman.json` plus provenance: source, timestamp, collection id, sha256. The point
-(§7) is that a change on Braze's side arrives as a reviewable diff, never as a silent change in
-an installed CLI.
+### Step 2 — a committed snapshot `CAT-2` ✅
+Done 2026-09-14. `pnpm spec:sync` (`scripts/sync-spec.mjs`) writes `spec/braze.postman.json` —
+99 requests, reformatted so the diff is readable — and `spec/provenance.json` beside it.
+
+Three decisions taken while building it:
+- **Two hashes, not one.** `sourceSha256` is of the bytes as received and is what detects an
+  upstream change; `sha256` is of the formatted file, so the committed artifact verifies alone.
+- **An unchanged sync writes nothing**, `syncedAt` included, so a diff here always means Braze
+  moved. A timestamp rewritten on every run would have made the diff worthless, which is the
+  thing §7 is asking for.
+- **`--from <export.json>`** validates a manual export instead of fetching. That is the plan's
+  row-2 fallback for `RISK-2`, and it is also the seam the tests use, so no test touches the
+  network.
+
+`spec:check` deliberately does **not** gate pull requests: it reaches the network, and CI that
+depends on Postman's uptime buys flakiness, not safety.
 
 ### Step 3 — the normalizer `CAT-3`
 Collection → an array of `Operation` (`packages/core/src/operation.ts:14` — the shape already

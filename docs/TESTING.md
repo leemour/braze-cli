@@ -1,6 +1,6 @@
 # Testing
 
-**Status (2026-09-13):** the harness is in place and green — 3 tests, 2 files. The layers below
+**Status (2026-09-13):** the harness is in place and green — 17 tests, 3 files. The layers below
 that do not exist yet are marked *not built*. Nothing here describes a test that has not been run.
 
 ```sh
@@ -27,7 +27,7 @@ a claim, and it has to be true.
 
 | Layer | Location | Runner | State |
 |---|---|---|---|
-| Core unit | `packages/core/src/**/*.test.ts` | vitest | 2 tests |
+| Core unit | `packages/core/src/**/*.test.ts` | vitest | 13 tests |
 | CLI unit | `packages/cli/src/**/*.test.ts` | vitest | *not built* |
 | Cross-cutting | `tests/**/*.test.ts` | vitest | 1 test (portability gate) |
 | Generator | `tests/generator/**` against committed fixtures | vitest | *not built* |
@@ -63,7 +63,23 @@ This is the invariant agents depend on, so it is tested rather than trusted.
 
 ### Braze is never contacted by the normal suite
 
-*Not built.* Unit tests inject a fake `fetch`; integration tests use a mock HTTP layer. A suite
+Unit tests inject a fake `fetch` — `mockBraze` from `brazecli-core/testing`, which scripts
+success, every status the brief names, invalid JSON, a network failure, a connection dropped
+after the request was sent, and a request that hangs until the caller aborts:
+
+```ts
+import { brazeResponses, mockBraze } from "brazecli-core/testing"
+
+const braze = mockBraze([brazeResponses.rateLimited({ retryAfterSeconds: 2 }), brazeResponses.ok()])
+const client = new BrazeClient({ fetch: braze.fetch, sleep: noSleep })
+
+expect(braze.requests).toHaveLength(2)
+```
+
+It has no delay option and touches no clock: `hangsUntilAborted` settles when the caller's signal
+fires, so a timeout test costs nothing. A call past the end of the script is counted in
+`braze.unexpectedCalls` and rejected with an obviously-not-Braze error, so a client that retries
+too often cannot make a test pass for the wrong reason. A suite
 that reaches the real Braze fails for reasons that have nothing to do with the change under test.
 `pnpm test:live` is separate, opt-in, and **read-only** — a live write needs a second explicit
 opt-in and a dedicated profile, if it is ever introduced at all.

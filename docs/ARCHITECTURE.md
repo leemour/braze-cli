@@ -58,6 +58,9 @@ a TTY is, or which profile is selected.
 | `"types": []` | `packages/core/tsconfig.json` | `process` typechecking clean because `@types/node` leaked in through the workspace | runtime-only usage |
 | neutral bundle | `scripts/check-core-portability.mjs` | a **dependency** importing a Node builtin — there is no source of ours to lint | nothing so far |
 
+The bundle checks **every published entry of core**, `.` and `./testing`. The test kit is the file
+most likely to reach for a timer or a Node builtin, and it ships to consumers like the rest.
+
 All three were verified on 2026-09-13 by putting a canary
 (`export const home = () => process.env.HOME`) into `packages/core/src` and confirming each one
 goes red. Run them with `pnpm lint`, `pnpm typecheck`, `pnpm portability:core`.

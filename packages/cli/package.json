@@ -8,13 +8,14 @@
     "braze": "./dist/bin/braze.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.test.*"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "brazecli-core": "workspace:*"

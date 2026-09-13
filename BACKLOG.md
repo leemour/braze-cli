@@ -51,11 +51,11 @@ current phase: [`docs/plans/`](docs/plans/).
 
 ## In progress
 
-> **Nothing open.** The scaffold (`OPS-1`) landed 2026-09-13; Phase 1 is planned but not started.
+> **Phase 1, step 1 of 5 done.** `CORE-12` (the mock Braze) landed 2026-09-13 and is published as
+> `brazecli-core/testing`. Step 2 is next: `CORE-1`, `CORE-2`, `CORE-3`, `CORE-8`.
 
-**Next thread:** Phase 1 foundation —
+**Open thread:** Phase 1 foundation —
 [`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
-Start with `CORE-1`.
 
 ## Blocked on the owner
 
@@ -86,7 +86,6 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CORE-9` | Operation metadata type: read/write access, Braze permission, `retryPolicy` of `read-safe`/`idempotent`/`never`, batch limits, pagination style | P1 |
 | `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough` | P2 |
 | `CORE-11` | User-Agent: `braze-cli/<version> runtime/<runtime> platform/<platform>`, overridable by a non-CLI caller, carrying nothing that identifies a machine | P3 |
-| `CORE-12` | Mock Braze test kit: a fake `fetch` covering success, 400/401/403/404/408/429/5xx, invalid JSON, network failure, timeout, delayed response, `Retry-After`, and a connection dying after submission | P1 |
 
 ### CLI — the Node side
 

@@ -24,32 +24,41 @@ const bannedUsage = [
   { name: "__filename", pattern: /\b__filename\b/ },
 ]
 
-// An explicit entry point lets the fixtures in tests/fixtures/portability check that this
-// gate still fires, and still stays quiet on prose that merely contains the word.
-const entry = process.argv[2] ?? "packages/core/src/index.ts"
+// Every published entry of core, including the test kit — a mock reaching for a timer or a
+// Node builtin is exactly the regression this exists for, and it is the file most likely to.
+// Explicit entries also let the fixtures in tests/fixtures/portability check that this gate
+// still fires, and still stays quiet on prose that merely contains the word.
+const entries =
+  process.argv.length > 2 ? process.argv.slice(2) : ["packages/core/src/index.ts", "packages/core/src/testing/index.ts"]
 
-const result = await build({
-  entryPoints: [entry],
-  bundle: true,
-  platform: "neutral",
-  format: "esm",
-  target: "es2023",
-  write: false,
-  logLevel: "silent",
-}).catch((error) => {
-  console.error("core does not bundle for a neutral runtime:\n")
-  console.error(error.message)
-  process.exit(1)
-})
-
-const code = result.outputFiles[0].text
-const found = [...new Set(bannedUsage.filter(({ pattern }) => pattern.test(code)).map(({ name }) => name))]
-
-if (found.length > 0) {
-  console.error(`core bundle uses Node-only globals: ${found.join(", ")}`)
-  console.error("They belong in packages/cli. See docs/ARCHITECTURE.md.")
-  process.exit(1)
+for (const entry of entries) {
+  await check(entry)
 }
 
-const bytes = new TextEncoder().encode(code).length
-console.log(`${entry} bundles for a neutral runtime: ${bytes} bytes, no Node globals`)
+async function check(entry) {
+  const result = await build({
+    entryPoints: [entry],
+    bundle: true,
+    platform: "neutral",
+    format: "esm",
+    target: "es2023",
+    write: false,
+    logLevel: "silent",
+  }).catch((error) => {
+    console.error(`${entry} does not bundle for a neutral runtime:\n`)
+    console.error(error.message)
+    process.exit(1)
+  })
+
+  const code = result.outputFiles[0].text
+  const found = [...new Set(bannedUsage.filter(({ pattern }) => pattern.test(code)).map(({ name }) => name))]
+
+  if (found.length > 0) {
+    console.error(`${entry} uses Node-only globals: ${found.join(", ")}`)
+    console.error("They belong in packages/cli. See docs/ARCHITECTURE.md.")
+    process.exit(1)
+  }
+
+  const bytes = new TextEncoder().encode(code).length
+  console.log(`${entry} bundles for a neutral runtime: ${bytes} bytes, no Node globals`)
+}

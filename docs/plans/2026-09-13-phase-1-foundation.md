@@ -5,7 +5,7 @@ returns one deterministic JSON value on stdout, writes a run directory with `run
 `events.jsonl` containing no credentials and no ANSI, and `braze api POST /users/track --input
 @x.json` refuses to send without `--confirm`.
 
-Status: **not started.** Written 2026-09-13 against the scaffold commit. Backlog items
+Status: **step 1 of 5 done** (2026-09-13). Written against the scaffold commit. Backlog items
 `CORE-1`…`CORE-12` and `CLI-1`…`CLI-13` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §14–§48.
 
@@ -26,7 +26,7 @@ Everything below is new code. No Braze call has ever been made from this reposit
 Five steps. Each one ends green — lint, typecheck, tests, portability — and is committable on its
 own. **Step 1 comes first because everything else is tested through it.**
 
-### Step 1 — the mock Braze, before the client `CORE-12`
+### Step 1 — the mock Braze, before the client `CORE-12` ✅
 
 A fake `fetch` factory covering the behaviours in [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §57:
 success, 400/401/403/404/408/429/500/502/503, invalid JSON, network failure, timeout, delayed
@@ -38,12 +38,26 @@ Written first on purpose: the retry, timeout and ambiguous-write rules are only 
 it, and writing it afterwards tends to produce a mock shaped to match whatever the client already
 does.
 
+**Built.** `packages/core/src/testing/`, published as `brazecli-core/testing`, 11 tests. Two
+things it settled that the next steps must respect:
+
+- **`hangsUntilAborted` settles only when the caller's signal fires, and there is no delay
+  option at all.** A real delay in a mock is a sleep in the test suite. This is what makes step
+  2's timeout tests instant — and it is a constraint on step 2, not a convenience.
+- **`reachedServer` on a recorded request is for reading a test, never an input to client
+  logic.** A dropped connection looks identical to the client either way, so `CORE-7` cannot
+  branch on it — see step 3.
+
 ### Step 2 — one request, end to end `CORE-1` `CORE-2` `CORE-3` `CORE-8`
 
 `BrazeClient` taking `{ fetch, sleep, clock, random, logger, endpoint, apiKey }`, building a
 request from path params and query, sending it, and timing out at 30 s per attempt through
 `AbortController`. No retries yet. At the end of this step core can talk to Braze and nothing else
 can.
+
+⚠ **The client composes its own `AbortController` and schedules the abort through an injected
+timer — not `AbortSignal.timeout(ms)`.** The obvious API makes every timeout test wait in real
+time, which is how a timeout suite stops being run. Step 1's mock was built assuming this.
 
 ### Step 3 — the safety rules `CORE-4` `CORE-5` `CORE-6` `CORE-7` `CORE-9`
 
@@ -55,7 +69,9 @@ The part that makes this worth building rather than reaching for `curl`:
 - `Retry-After` and `X-RateLimit-Reset` beat our own backoff; wait is capped at 30 s; beyond that
   a structured `rate_limited` comes back rather than a blocked agent.
 - A write whose connection died after the request left becomes `outcome_unknown` — never
-  `failed`. This is the single most important behaviour in the phase.
+  `failed`. This is the single most important behaviour in the phase. **The discriminator is
+  whether the operation was a write, not whether the request arrived** — nothing at the fetch
+  boundary can tell us it arrived, which is exactly why the state exists.
 - Operation metadata carries access, permission, `retryPolicy`, batch limits and pagination style,
   so Phase 2's generated catalog has a shape to fill.
 

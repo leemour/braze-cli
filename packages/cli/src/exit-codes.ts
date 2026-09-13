@@ -6,7 +6,7 @@ import type { ErrorCode } from "brazecli-core"
  *
  * 130 for a cancellation is the shell's convention for SIGINT.
  */
-const EXIT_CODES: Record<ErrorCode, number> = {
+export const EXIT_CODES: Record<ErrorCode, number> = {
   validation_error: 2,
   configuration_error: 3,
   authentication_error: 4,

@@ -67,7 +67,7 @@ export const runsCommand = (context: RunsContext = {}): Command => {
 
   command
     .command("show")
-    .argument("<run-id>")
+    .argument("<run-id>", "id from `braze runs list`")
     .description("everything recorded about one run")
     .action(function (this: Command, id: string) {
       const { paths, renderer } = setup(this)
@@ -79,7 +79,7 @@ export const runsCommand = (context: RunsContext = {}): Command => {
 
   command
     .command("path")
-    .argument("<run-id>")
+    .argument("<run-id>", "id from `braze runs list`")
     .description("the directory holding a run's artifacts")
     .action(function (this: Command, id: string) {
       const { paths, streams } = setup(this)

@@ -112,7 +112,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-4` | `overrides.ts` and its merge — command name, access, permission, schema, batch limits, retry policy, PII fields, ignored state | P1 |
 | `CAT-5` | Coverage report and `catalog:check`, failing CI when an operation vanishes or an unclassified one appears | P1 |
 | `CAT-6` | Register Commander commands from the catalog at startup, rather than by hand per endpoint | P1 |
-| `CAT-7` | `braze commands --json` and `braze schema <operation>` — the discovery surface an agent uses instead of `--help` | P1 |
+| `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-9` | Contract tests over **every** generated operation: unique id, valid method and path, unique command, known access, resolvable path variables, constructible request | P1 |
 | `CAT-10` | Smoke tests generated from the collection's own examples — broad coverage, not a substitute for hand-written tests on important endpoints | P3 |

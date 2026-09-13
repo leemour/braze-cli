@@ -33,6 +33,25 @@ pnpm build
 
 Requires Node 22+ (24 in CI) and pnpm 11+.
 
+### Install it locally
+
+Nothing is published to npm yet (`OPS-2`), so `braze` gets onto your `PATH` by symlink. `pnpm
+build` marks the entry point executable, which is what makes this work:
+
+```sh
+pnpm build
+ln -sfn "$PWD/packages/cli/dist/bin/braze.js" "${PNPM_HOME:-$HOME/.local/share/pnpm}/bin/braze"
+
+braze --version
+```
+
+Any directory already on your `PATH` will do; `$PNPM_HOME/bin` is used above because pnpm has
+already put it there. The link points into this checkout, so `pnpm build` updates the command in
+place — and moving or deleting the checkout breaks it.
+
+`pnpm link --global` is not the way: pnpm 11 removed it, and `pnpm link` now only links a package
+*into* another project.
+
 ## Usage
 
 Working today:

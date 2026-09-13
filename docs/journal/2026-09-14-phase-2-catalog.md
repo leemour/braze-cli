@@ -93,6 +93,35 @@ https://www.braze.com/docs/api/home: проверено curl'ом, что это
 - `braze api POST /users/export/ids` → `permission_error`, то есть грабля на месте;
 - `braze runs show <id>` на настоящем id из `runs list` → код 0.
 
+**TASK-12 · braze как настоящая команда в PATH; pnpm 11 убрал link --global**
+Статус: сделано. Слава: «I need braze installed as cli locally».
+
+Два препятствия, оба замерены, а не предположены:
+
+1. **`pnpm link --global` в pnpm 11 больше нет.** `pnpm link --help` (версия 11.20.0) говорит
+   `Usage: pnpm link <dir>` и флага `--global` не содержит вовсе; попытка отдаёт
+   `ERR_PNPM_LINK_BAD_PARAMS`. Теперь `pnpm link` линкует пакет ВНУТРЬ другого проекта, а не
+   наружу в PATH. Это ровно та же ловушка, что `BUG-2`: рецепт из памяти устарел, а ошибка
+   выглядит как опечатка в параметрах.
+
+2. **`tsc` не ставит бит исполнения.** `dist/bin/braze.js` выходил как `-rw-rw-r--`, хотя
+   шебанг `#!/usr/bin/env node` в нём есть. По симлинку из PATH такой файл не запускается.
+
+Сделано:
+- в `packages/cli/package.json` шаг сборки дописан: после `tsc` — `chmodSync(..., 0o755)`
+  через node, а не `chmod`, чтобы не сломать сборку на Windows. Важно, что это в сборке:
+  иначе бит терялся бы при каждом `pnpm build`, и команда ломалась бы молча;
+- симлинк `~/.local/share/pnpm/bin/braze` → `dist/bin/braze.js`. `$PNPM_HOME/bin` уже был в
+  PATH, новый каталог не заводился.
+
+Проверено из `/tmp`, то есть вне репозитория: `braze --version` → `0.0.0`,
+`braze commands --json` → код 0, `braze api GET /campaigns/list --query page=0 --json` →
+настоящие кампании из боевого Braze, `braze api GET /nope --json` → структурированная ошибка
+с `requestId`. То есть `brazecli-core` через workspace-симлинки резолвится и по глобальной
+ссылке тоже.
+
+Записано в README разделом «Install it locally», промпт для агента переписан на голое `braze`.
+
 ## 2. Вопросы Славы
 
 **ASK-1 · «<его вопрос дословно>»**

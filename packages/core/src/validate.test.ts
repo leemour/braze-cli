@@ -216,6 +216,17 @@ describe("checking one record of a batch", () => {
     expect(list && checkRecord(list, "anything", { whatever: true })).toBeUndefined()
   })
 
+  /**
+   * The field check reads the catalog, so it covers the two batching operations that have no
+   * per-record schema of their own — and says nothing about what is inside their records.
+   */
+  it("checks the field against whichever operation is batching", () => {
+    const subscriptions = findOperation("v2.subscription.status.set.create")
+
+    expect(subscriptions && checkRecord(subscriptions, "attributes", {})).toContain("subscription_groups")
+    expect(subscriptions && checkRecord(subscriptions, "subscription_groups", { anything: true })).toBeUndefined()
+  })
+
   it("keeps a per-record schema only where the operation is strict and batches that field", () => {
     for (const [id, fields] of Object.entries(recordSchemas)) {
       const operation = findOperation(id)

@@ -4,7 +4,21 @@ import type { CredentialStorage } from "../config/file.js"
 import { writeSecurely } from "../config/file.js"
 import { type KeyringStore, systemKeyring } from "./keyring.js"
 
-export const KEYRING_SERVICE = "brazecli"
+const KEYRING_SERVICE = "brazecli"
+
+/**
+ * The keyring service name, scoped to the configuration directory whenever it is not the real one.
+ *
+ * The OS keyring is global: an entry is addressed by service and profile name and knows nothing
+ * about which config directory asked for it. So `BRAZE_CONFIG_DIR=/tmp/x braze profile add staging`
+ * looks isolated and is not — it overwrites the REAL key for `staging`. That happened here on
+ * 2026-09-14 and destroyed two working keys, which cannot be read back out of a keyring.
+ *
+ * Deriving the service name from the directory makes a throwaway config directory a throwaway
+ * keyring namespace too, so the isolation people already assume they have is real.
+ */
+export const keyringService = (configDir: string, env: NodeJS.ProcessEnv = process.env): string =>
+  env.BRAZE_CONFIG_DIR === undefined ? KEYRING_SERVICE : `${KEYRING_SERVICE}:${configDir}`
 
 export type CredentialSource = "environment" | "keyring" | "file"
 
@@ -50,6 +64,7 @@ export class Credentials {
   readonly #storage: CredentialStorage
   readonly #keyring: KeyringStore
   readonly #env: NodeJS.ProcessEnv
+  readonly #service: string
   readonly #warn: (message: string) => void
   #warned = false
 
@@ -59,6 +74,7 @@ export class Credentials {
     this.#keyring = options.keyring ?? systemKeyring
     this.#env = options.env ?? process.env
     this.#warn = options.warn ?? ((message) => process.stderr.write(`${message}\n`))
+    this.#service = keyringService(options.configDir, this.#env)
   }
 
   read(profile: string): StoredCredential | undefined {
@@ -66,7 +82,7 @@ export class Credentials {
     if (fromEnv) return { apiKey: fromEnv, source: "environment" }
 
     if (this.#storage !== "file") {
-      const fromKeyring = this.#tryKeyring(() => this.#keyring.get(KEYRING_SERVICE, profile))
+      const fromKeyring = this.#tryKeyring(() => this.#keyring.get(this.#service, profile))
       if (fromKeyring) return { apiKey: fromKeyring, source: "keyring" }
     }
 
@@ -77,7 +93,7 @@ export class Credentials {
   write(profile: string, apiKey: string): CredentialSource {
     if (this.#storage !== "file") {
       const stored = this.#tryKeyring(() => {
-        this.#keyring.set(KEYRING_SERVICE, profile, apiKey)
+        this.#keyring.set(this.#service, profile, apiKey)
         return true
       })
       if (stored) return "keyring"
@@ -92,7 +108,7 @@ export class Credentials {
   remove(profile: string): CredentialSource[] {
     const removed: CredentialSource[] = []
 
-    if (this.#storage !== "file" && this.#tryKeyring(() => this.#keyring.delete(KEYRING_SERVICE, profile))) {
+    if (this.#storage !== "file" && this.#tryKeyring(() => this.#keyring.delete(this.#service, profile))) {
       removed.push("keyring")
     }
 

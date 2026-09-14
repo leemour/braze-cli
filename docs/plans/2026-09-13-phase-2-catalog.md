@@ -361,10 +361,15 @@ announce "last page" at a boundary it does not know.
 - **The gate is a test, not `catalog:check`.** The generator reads `overrides.ts` as text and
   cannot see what an override *declares*, only which ids exist. The test has the real merged
   catalog. Both run in CI, so the guarantee is identical.
-- **`itemsKey` is specified above and was not built.** The single-array-key rule covers every paged
-  endpoint Braze documents — confirmed from their docs for `segments`, `events` and `products` —
-  and a response with two lists refuses by name rather than guessing. Adding a field nothing sets
-  would be speculative; the refusal is what makes it safe to omit.
+- **`itemsKey` is specified above and was not built** — and a live check of all six shapes
+  afterwards (`FIND-21`) confirmed it is not needed: every paged endpoint answers with exactly one
+  top-level array. A response with two lists still refuses by name rather than guessing.
+- **A third thing, found only by running it.** This section said the page note "degrades to a row
+  count" without a documented page size. It did not — `paginationNote` returned nothing at all, so
+  `FIND-19`'s classification helped `--paginate` and left the person at the terminal where they
+  started. The mocked tests could not see it, because they only covered operations that have a
+  page size. Fixed the same day; it now prints the page and the row count and calls an empty page
+  empty.
 
 The original plan for it:
 
@@ -410,12 +415,11 @@ not a bare array, so "accumulate" needs a rule:
 - **More than one array-valued key and no `itemsKey`: refuse, naming them.** Guessing which one is
   "the rows" is how a walk silently returns a third of the data. This is `buildQuery`'s house style
   for repeated parameters, applied to the same class of problem.
-- ⚠ **The response shapes are not known, and the snapshot cannot tell us** (`FIND-20`). The
-  collection carries **zero response examples — 0 of 99 requests.** One shape is verified, from
-  Phase 1's live runs: `/campaigns/list` answers `{"campaigns":[…],"message":"success"}`. The
-  other five paged endpoints are **unverified**, which is why `itemsKey` exists rather than a
-  heuristic trusted on its own. Settling them is six GET requests against the sandbox, and it
-  should happen before `--paginate` is written, not after.
+- ✅ **Settled 2026-09-14** (`FIND-21`). The snapshot could not tell us — the collection carries
+  **zero response examples, 0 of 99** (`FIND-20`) — so all six were read from the sandbox with
+  read-only GETs. **Every one answers with exactly one top-level array**: `campaigns`, `canvases`,
+  `segments`, `events`, `products`, `cards`, each beside a scalar `message`. The single-array rule
+  is therefore measured, not assumed, and `itemsKey` is confirmed unnecessary.
 - **The page count goes to stderr as a note, never into the payload.** stdout stays byte-identical
   in shape to what Braze returned, which is rule 3 and what `paginationNote` already does. No
   `_pages` key injected into someone else's response.

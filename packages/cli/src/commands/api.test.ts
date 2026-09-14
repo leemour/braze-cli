@@ -23,7 +23,12 @@ const configure = (readOnly: boolean) => {
 
 const braze = (argv: string[], braze: ReturnType<typeof mockBraze>) =>
   run(argv, {
-    env: { BRAZE_CONFIG_DIR: configDir, BRAZE_RUNS_DIR: runsDir, BRAZE_API_KEY: "test-key" },
+    env: {
+      BRAZE_CONFIG_DIR: configDir,
+      BRAZE_RUNS_DIR: runsDir,
+      BRAZE_API_KEY: "test-key",
+      BRAZE_PROFILE: "production",
+    },
     keyring,
     streams,
     isTty: false,

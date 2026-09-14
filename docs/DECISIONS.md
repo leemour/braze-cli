@@ -197,3 +197,47 @@ with it; a contradicted ceiling is never written, because that would stamp "this
 onto the large one. An exact fingerprint over campaign or segment ids was rejected: it breaks the
 first time anyone adds one, and a check that cries wolf is a check people learn to skip.
 
+
+**NEED-26 · Does clearer help jump ahead of pagination, since that is what the owner noticed?**
+**Yes — `CAT-13` goes straight after `CAT-9` (option A).** «1 A». The order of Step 5 is therefore
+`CAT-9` → `CAT-13` → `CAT-7` → `CAT-11`.
+
+The owner looked at `braze campaigns list --help`, saw `--page <value>  query parameter (e.g. 0)`,
+and read it as the flag being absent. It is not absent; it is undescribed, along with the other
+133 (`UX-5`). A flag documented as "query parameter" is worse than an undocumented one, because it
+looks like the documentation already happened.
+
+It jumps the queue because it is small and it is the thing that was actually noticed: the 134
+parameter slots are only **43 distinct names**, so one glossary keyed by parameter name describes
+every flag on all 95 commands. Keyed by name and not by operation — `page` means the same thing
+everywhere, and 134 per-operation overrides would be the bloat the owner warned against in the
+same breath.
+
+`CAT-11` explicitly does **not** come first: it needs response shapes nobody has measured
+(`FIND-20`), so putting it ahead would block on live requests.
+
+**NEED-27 · Contract tests before `braze schema`, against the backlog's "then `CAT-7`"?**
+**Yes — `CAT-9` first (option A).** «2 A».
+
+`braze schema` publishes `pathParameters`, `queryParameters` and access classification to an agent
+as a contract. Nothing currently asserts that `pathParameters` matches the placeholders in `path`,
+that every command builds under Commander, or that no command name is also a group. Publishing a
+contract before anything checks it is true is the wrong way round, and `CAT-9` needs no new
+production code — it extends `packages/core/src/operations/catalog.test.ts`, already green.
+
+`BACKLOG.md`'s "then `CAT-7`" pointer is replaced by a link to Step 5 of the phase plan, so the
+order lives in exactly one place. Two answers to "what is next" is the failure the backlog's own
+rules describe.
+
+**NEED-28 · `CAT-10` cannot be built as written — reword it or close it?**
+**Reword it to "the request builds" (option A).** «3 A». Priority stays P3, after Step 5.
+
+`CAT-10` was written as "smoke tests generated from the collection's own examples". The collection
+carries **zero response examples — 0 of all 99 requests** (`FIND-20`), so there is nothing to
+generate a response assertion from. It does carry **48 request-body examples**, 32 of them real
+placeholder-free JSON (`FIND-17`), which support a different and still worthwhile test: that every
+operation with a documented body can be turned into a request that builds.
+
+Taking the shapes from live Braze instead was rejected: 95 live requests to capture fixtures that
+go stale the first time Braze changes a response is a maintenance cost with no matching benefit.
+The 🚩 is cleared.

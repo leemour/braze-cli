@@ -65,8 +65,8 @@ current phase: [`docs/plans/`](docs/plans/).
 committed, 95 operations are generated from it, and every one is registered as a command.
 **Start with [`docs/plans/2026-09-14-phase-2-handoff.md`](docs/plans/2026-09-14-phase-2-handoff.md)**,
 then Step 5 of [the phase plan](docs/plans/2026-09-13-phase-2-catalog.md), which owns the order of
-what is left — `CAT-9`, `CAT-7`, `CAT-11`, `CAT-13` — and says why it is not the order of the rows
-below.
+what is left: **`CAT-9` → `CAT-13` → `CAT-7` → `CAT-11`**, ruled by the owner on 2026-09-14
+(`NEED-26`, `NEED-27` in [`docs/DECISIONS.md`](docs/DECISIONS.md)).
 
 ## Blocked on the owner
 
@@ -117,7 +117,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-9` | Contract tests over **every** generated operation: unique id, valid method and path, unique command, known access, resolvable path variables, constructible request | P1 |
-| `CAT-10` | 🚩 Smoke tests generated from the collection's own examples — **the collection carries 0 response examples across all 99 requests (`FIND-20`), so this cannot be built as written.** The 48 request-body examples (`FIND-17`) would support "the request builds" tests, which is a different task. Needs rewording or closing | P3 |
+| `CAT-10` | Every operation with a documented request body builds a request from it — driven by the collection's 48 body examples, 32 of them real JSON (`FIND-17`). Reworded 2026-09-14 per `NEED-28`: it said "smoke tests generated from the collection's own examples", and the collection has 0 response examples across all 99 requests (`FIND-20`) | P3 |
 | `CAT-11` | Pagination: `none`/`page`/`offset`/`cursor` metadata plus `--paginate`, `--max-pages`, `--max-items`, always bounded | P2 |
 | `CAT-13` | Help text that informs: one glossary of the 43 distinct query-parameter names covering all 134 slots, so no flag reads `query parameter` (`UX-5`); plus the override for Braze's own wrong description on `catalogs items update-many` (`BUG-6`) | P2 |
 

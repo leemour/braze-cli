@@ -264,3 +264,30 @@ describe("--paginate", () => {
     expect(streams.stderr.join("\n")).toContain("more than one list")
   })
 })
+
+/**
+ * Braze documents no page size for `/purchases/product_list` or `/feed/list`, so there is no way
+ * to tell a full page from the last one. Verified live against the sandbox on 2026-09-14: both
+ * answer `{<rows>: [...], "message": ...}` and neither documents a size.
+ */
+describe("paging an endpoint whose page size Braze does not document", () => {
+  it("still says which page and how many rows, without claiming to know the end", async () => {
+    const mock = mockBraze(brazeResponses.ok({ products: ["a", "b"], message: "success" }))
+
+    await braze(["purchases", "product-list", "--json"], mock)
+
+    const note = streams.stderr.join("\n")
+    expect(note).toContain("page 0 · 2 rows")
+    expect(note).toContain("no page size")
+    // The claim it cannot support, and must not make.
+    expect(note).not.toContain("last page")
+  })
+
+  it("calls an empty page empty, which is the one thing it can conclude", async () => {
+    const mock = mockBraze(brazeResponses.ok({ products: [], message: "success" }))
+
+    await braze(["purchases", "product-list", "--json"], mock)
+
+    expect(streams.stderr.join("\n")).toContain("nothing after it")
+  })
+})

@@ -81,7 +81,10 @@ attributes an error inside a 2xx; Step 4 settles it against the sandbox).
 
 ## Blocked on the owner
 
-**Nothing.** `NEED-30` and `NEED-31` were answered on 2026-09-15 and are rulings in
+**One.** `NEED-32` — what exit code does a bulk run give when some records failed but the run
+completed? It is in §7.1 of the Phase 3 plan and blocks nothing before Step 6.
+
+`NEED-30` and `NEED-31` were answered on 2026-09-15 and are rulings in
 [`docs/DECISIONS.md`](docs/DECISIONS.md): bulk is a `--records` flag on the existing command, not a
 second command tree; and every record carries an identifier of ours, with required fields checked
 before the request rather than after Braze refuses it.
@@ -147,6 +150,7 @@ Expected to ship with the first practically useful release, not after it.
 | `BULK-8` | Ctrl+C mid-run flushes the audit CSV and finalizes `run.json` without corrupting a row | P1 |
 | `BULK-9` | A synthetic million-record run proving memory stays bounded, without making a million HTTP calls | P2 |
 | `BULK-10` | `braze runs cleanup` with an explicit retention setting — opt-in, never a default (`NEED-3`) | P3 |
+| `BULK-12` | End-of-run summary as the **result** of a bulk run — one count per §34 status, on stdout in both modes, with `invalid` (refused here) kept distinct from `failed` (refused by Braze). `RunMetadata` gains `invalidRecords` and `skippedRecords`, the two of the six it never reserved | P1 |
 
 ## Phase 4 — when real usage asks for it
 

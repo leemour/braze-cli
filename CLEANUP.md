@@ -18,3 +18,4 @@ task at hand.
 | branch `feat/cat-4-overrides` (local and on origin) | Merged into `main` by rebase in PR #4 on 2026-09-14; its commits are in `main`'s history | 2026-09-14 |
 | branch `feat/cat-5-coverage-gate` (local and on origin) | Merged into `main` by rebase in PR #5 on 2026-09-14 | 2026-09-14 |
 | branch `feat/cat-6-generated-commands` (local and on origin) | Merged into `main` by rebase in PR #6 on 2026-09-14 | 2026-09-14 |
+| branch `fix/profile-update-one-field` (local and on origin) | Merged into `main` by rebase in PR #7 on 2026-09-14 | 2026-09-14 |

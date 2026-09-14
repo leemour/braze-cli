@@ -95,11 +95,14 @@ export const commandsCommand = (context: CommandsContext = {}): Command => {
       globalOptions: root.options.filter((option) => !option.hidden).map(describeOption),
       commands,
       exitCodes: { ok: 0, generic_failure: GENERIC_FAILURE, ...EXIT_CODES },
-      // Named rather than described: an agent that cannot find a path has to be able to go and
-      // read one, and until the catalog lands this CLI cannot list them itself.
+      // Every catalog operation is a command in the tree above, so an agent needs nothing else to
+      // call one. The escape hatch and the documentation stay named for the endpoints the
+      // collection does not carry.
       endpoints: {
-        discoverable: false,
-        reason: "the generated catalog is not built yet; send requests with `braze api <method> <path>`",
+        discoverable: true,
+        // Leaves, so `profile` and `campaigns` do not count but `profile add` and `campaigns list` do.
+        runnableCommands: root.commands.reduce(countLeaves, 0),
+        escapeHatch: "braze api <method> <path> --json, for anything the catalog does not carry",
         documentation: DOCUMENTATION.endpoints,
         apiBasics: DOCUMENTATION.basics,
       },
@@ -155,3 +158,7 @@ const describeOption = (option: Command["options"][number]): OptionInfo => ({
 
 const flatten = (commands: readonly CommandInfo[]): CommandInfo[] =>
   commands.flatMap((command) => [command, ...flatten(command.commands)])
+
+/** A group is scaffolding; only a command that runs something counts as an operation. */
+const countLeaves = (total: number, command: Command): number =>
+  command.commands.length === 0 ? total + 1 : command.commands.reduce(countLeaves, total)

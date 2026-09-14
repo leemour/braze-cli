@@ -189,8 +189,11 @@ function normalize(requests) {
 
   for (const operation of operations) operation.command = commands.get(operation.id)
 
-  const names = new Set(operations.map((operation) => operation.command.join(" ")))
-  if (names.size !== operations.length) fail("two operations ended up with the same command name")
+  const names = operations.map((operation) => operation.command.join(" "))
+  if (new Set(names).size !== names.length) fail("two operations ended up with the same command name")
+
+  const shadowed = names.filter((name) => names.some((other) => other.startsWith(`${name} `)))
+  if (shadowed.length > 0) fail(`a command cannot also be a group: ${shadowed.join(", ")}`)
 
   return {
     operations,
@@ -233,6 +236,7 @@ function assignCommands(operations) {
   const tiers = [
     (operation) => withoutParameters(operation),
     (operation) => [...withoutParameters(operation), VERBS[operation.method]],
+    (operation) => [...withoutParameters(operation), countedVerb(operation)],
     (operation) => [...marked(operation), VERBS[operation.method]],
   ]
 
@@ -258,13 +262,49 @@ function assignCommands(operations) {
     }
 
     remaining = stillColliding
-    if (remaining.length === 0) return { commands, escalated }
+    if (remaining.length === 0) return resolvePrefixes(operations, commands, escalated)
   }
 
   fail(
     "these operations cannot be told apart by command name even with their parameters marked:\n" +
       remaining.map((operation) => `  ${operation.id} — ${operation.method} ${operation.path}`).join("\n"),
   )
+}
+
+/**
+ * A command that is a strict prefix of another cannot be registered: `sms invalid-phone-numbers`
+ * would have to be a command AND the group holding `sms invalid-phone-numbers remove`, which
+ * Commander refuses outright. The shorter one takes its verb.
+ */
+function resolvePrefixes(operations, commands, escalated) {
+  for (let pass = 0; pass < 4; pass += 1) {
+    const names = new Map([...commands].map(([id, words]) => [words.join(" "), id]))
+    let changed = false
+
+    for (const [name, id] of names) {
+      const shadowed = [...names.keys()].some((other) => other.startsWith(`${name} `))
+      if (!shadowed) continue
+
+      const operation = operations.find((candidate) => candidate.id === id)
+      commands.set(id, [...commands.get(id), VERBS[operation.method]])
+      escalated.add(id)
+      changed = true
+    }
+    if (!changed) return { commands, escalated }
+  }
+  fail("command names could not be made free of prefixes")
+}
+
+/**
+ * What separates `/catalogs/{name}/items` from `/catalogs/{name}/items/{id}` is one versus many,
+ * and that is how a CLI should say it: `items list` and `items get`, not two `items get`s told
+ * apart by a `by-id` word nobody wants to type. Only reached when the plain verb collided.
+ */
+function countedVerb(operation) {
+  const endsWithParameter = isParameter(operation.path.split("/").filter(Boolean).at(-1) ?? "")
+  if (endsWithParameter) return VERBS[operation.method]
+
+  return operation.method === "GET" ? "list" : `${VERBS[operation.method]}-many`
 }
 
 function withoutParameters(operation) {

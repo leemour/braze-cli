@@ -111,7 +111,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-3` | ✅ Done 2026-09-14. `pnpm catalog:generate` → `packages/core/src/operations/generated.ts`, 95 operations from 99 requests; ids are deterministic and collisions fail the build | P1 |
 | `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CAT-10` | P1 |
 | `CAT-5` | ✅ Done 2026-09-14. `docs/catalog-coverage.md` is generated with the catalog; `pnpm catalog:check` runs in CI and fails on a stale catalog or an unclassified endpoint | P1 |
-| `CAT-6` | Register Commander commands from the catalog at startup, rather than by hand per endpoint | P1 |
+| `CAT-6` | ✅ Done 2026-09-14. 95 operations registered in a loop; `braze campaigns list --json` returns the same bytes as the raw call | P1 |
 | `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-9` | Contract tests over **every** generated operation: unique id, valid method and path, unique command, known access, resolvable path variables, constructible request | P1 |

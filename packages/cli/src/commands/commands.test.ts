@@ -41,17 +41,24 @@ describe("braze commands", () => {
 
   it("lists every registered command, nested, with the argv path already split", async () => {
     const { surface } = await discover()
+    const names = surface.commands.map((command: DiscoveredCommand) => command.name)
 
-    expect(surface.commands.map((command: DiscoveredCommand) => command.name)).toEqual([
-      "profile",
-      "api",
-      "runs",
-      "commands",
-    ])
+    // The handwritten four come first, then one group per catalog resource — registered in a loop,
+    // so this list grows on its own when Braze's collection does.
+    expect(names.slice(0, 4)).toEqual(["profile", "api", "runs", "commands"])
+    expect(names).toContain("campaigns")
 
     const list = find(find(surface.commands, "runs").commands, "list")
     expect(list.path).toEqual(["runs", "list"])
     expect(list.usage).toBe("braze runs list [options]")
+  })
+
+  it("carries a catalog command with its path already split and its options named", async () => {
+    const { surface } = await discover()
+    const list = find(find(surface.commands, "campaigns").commands, "list")
+
+    expect(list.path).toEqual(["campaigns", "list"])
+    expect(list.usage).toBe("braze campaigns list [options]")
   })
 
   it("says which options take a value, and separately which must be given", async () => {
@@ -85,13 +92,16 @@ describe("braze commands", () => {
     expect(surface.commands.length).toBeGreaterThan(0)
   })
 
-  it("says the endpoint paths are not discoverable yet, and where to read them", async () => {
+  it("says the endpoints are discoverable, counts them, and still names the escape hatch", async () => {
     const { surface } = await discover()
 
     expect(surface.endpoints).toMatchObject({
-      discoverable: false,
+      discoverable: true,
       documentation: "https://www.braze.com/docs/api/home",
     })
+    // Leaves only: `campaigns` is scaffolding, `campaigns list` is a thing you can run.
+    expect(surface.endpoints.runnableCommands).toBeGreaterThan(90)
+    expect(surface.endpoints.escapeHatch).toContain("braze api")
   })
 
   it("renders a flat table for a terminal instead of the whole tree", async () => {

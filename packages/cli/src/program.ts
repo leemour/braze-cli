@@ -2,6 +2,7 @@ import { BrazeError } from "brazecli-core"
 import { Command, Option } from "commander"
 import type { KeyringStore } from "./auth/keyring.js"
 import { apiCommand } from "./commands/api.js"
+import { catalogCommands } from "./commands/catalog.js"
 import { commandsCommand } from "./commands/commands.js"
 import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
@@ -54,6 +55,10 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
   program.addCommand(apiCommand(options))
   program.addCommand(runsCommand(options))
   program.addCommand(commandsCommand(options))
+
+  // §13: registered in a loop, never as a hundred nearly identical files. After the handwritten
+  // ones, so a name collision would be visible rather than silently shadowing `profile` or `runs`.
+  for (const command of catalogCommands(options)) program.addCommand(command)
 
   return program
 }

@@ -46,9 +46,9 @@ Rules that will otherwise waste your turns:
   with permission_error. This is intended. Do not try to work around it, and do not edit the
   config to remove it. Report it and ask.
 - Use --dry-run to check a write without sending it. It works on a read-only profile.
-- `braze api` decides read-versus-write by HTTP method, so a read that Braze implemented as a
-  POST — /users/export/ids is the one that matters — is refused as if it were a write. That is
-  a known gap, not something you should route around.
+- Do NOT send anything but a GET to a production profile without asking the person first, even
+  when the tool allows it. Use --dry-run, which needs no permission, and report what you would
+  have sent.
 - --query is repeatable for DIFFERENT keys. Repeating the SAME key is refused rather than
   guessed at. If you need that, stop and say so.
 - Never put an API key on the command line. It comes from the keyring or BRAZE_API_KEY.

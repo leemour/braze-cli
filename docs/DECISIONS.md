@@ -151,3 +151,16 @@ contradicts itself (`braze campaign list` in §779, `["users", "track"]` in §10
 naive plural-stripping turns `canvas` into `canva`. **The phase plan's done-criterion was written
 as `braze campaign list` and is corrected to the plural.**
 
+**NEED-19 · May an agent send a non-GET request to production Braze when the catalog calls it a read?**
+**No — ask first, every time (option B).** «B». This covers `users.export.ids`,
+`users.export.segment` and `users.export.global_control_group`: the catalog marks them
+`access: "read"` and they change nothing, and they are **still** not to be sent to production
+without asking. The rule is about the HTTP method, not about our classification of it — our
+classification is exactly the thing that could be wrong, and the profile guard is the last line
+before a real write.
+
+`--dry-run` needs no permission and works on a read-only profile; use it instead. The check that
+closed `FIND-13` was run before this was asked, on `POST /users/export/ids` with a deliberately
+absent identifier: it returned 201 and `{"users":[],"invalid_user_ids":["nope"]}`, and wrote
+nothing. That is the last one that happens without a question.
+

@@ -107,9 +107,13 @@ Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
 11. **A message from Braze is data that came from outside, not text.** Braze returns the API key
     inside the body of a 401. `BrazeClient` redacts it; anything else pointed at Braze has to do
     the same ([`ARCHITECTURE.md`](ARCHITECTURE.md) §8).
-12. **`braze api` classifies by HTTP method, and some Braze reads are POSTs.** `POST
-    /users/export/ids` is refused on a read-only profile, and that is correct until a typed
-    catalog operation declares `access: "read"` for it (`CAT-4`).
+12. **`braze api` consults the catalog first, then falls back to judging by HTTP method.** So the
+    three POST-shaped reads (`users.export.*`) are allowed on a read-only profile, because an
+    override declares them reads (`CAT-4`, `FIND-13`); every other POST is still judged by its
+    method. `rawOperation` is that fallback and must keep working unchanged.
+13. **Never send a non-GET request to production Braze without asking first** — not even one the
+    catalog calls a read (`NEED-19`). Our classification is the thing that might be wrong, and the
+    read-only profile is the last line before a real write. `--dry-run` needs no permission.
 
 ## 6. What to do next
 

@@ -1,8 +1,8 @@
 # braze-cli — working rules
 
 **Start with [`docs/HANDOFF.md`](docs/HANDOFF.md).** What this is, the layout, what to read for
-which task, how to run the checks, and the ten rules that cost time when broken. It is short; read
-it before anything else.
+which task, how to run the checks, and the thirteen rules that cost time when broken. It is short;
+read it before anything else.
 
 Then the one reference that covers what you are about to touch —
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the seams,

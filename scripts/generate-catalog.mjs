@@ -332,8 +332,18 @@ function isParameter(segment) {
   return segment.startsWith("{") || segment.startsWith(":")
 }
 
+/**
+ * Lower-cased, because a path segment becomes both an id and a word the user types. Braze's SCIM
+ * paths are `/scim/v2/Users` with the capital the SCIM spec requires, and passing that through
+ * made `braze scim v2 users list` show the group's help instead of running — Commander matches
+ * case-sensitively and answers a near miss with help rather than an error (`UX-6`). The path
+ * itself keeps Braze's exact spelling; only the name does not.
+ */
 function slug(segment) {
-  return segment.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "")
+  return segment
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase()
 }
 
 function isRead(method) {

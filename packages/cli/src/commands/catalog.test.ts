@@ -146,4 +146,34 @@ describe("the shape of the generated command tree", () => {
   it("keeps the id's disambiguation marker out of the words a person types", () => {
     expect(catalog.filter((operation) => operation.command.includes("by-id"))).toHaveLength(0)
   })
+
+  /**
+   * CAT-9. The same failure as the group/leaf collision above, across the seam between the
+   * handwritten commands and the generated ones: `program.ts` adds the catalog AFTER `profile`,
+   * `api`, `runs` and `commands`, so a catalog operation claiming one of those names would
+   * shadow it rather than error. `profile add` already refuses a profile named after a command
+   * (NEED-25); this is the other half of the same guarantee.
+   */
+  it("claims no top-level name the handwritten commands already own", () => {
+    const handwritten = new Set(["api", "profile", "runs", "commands", "schema", "help"])
+    const claimed = catalog.map((operation) => operation.command[0]).filter((word) => handwritten.has(word as string))
+
+    expect(claimed).toEqual([])
+  })
+
+  /**
+   * UX-6. Braze's SCIM paths carry the capital the SCIM spec requires — `/scim/v2/Users` — and
+   * passing that through to the command made `braze scim v2 users list` print the group's help
+   * instead of running: Commander matches case-sensitively and answers a near miss with help
+   * rather than an error, so the wrong spelling failed silently. The path keeps Braze's casing.
+   */
+  it("gives every command a name that can be typed in lower case, whatever Braze's path looks like", () => {
+    for (const operation of catalog) {
+      expect(operation.command.join(" "), operation.id).toBe(operation.command.join(" ").toLowerCase())
+    }
+
+    const scim = catalog.find((operation) => operation.id === "scim.v2.users.get")
+    expect(scim?.command).toEqual(["scim", "v2", "users", "list"])
+    expect(scim?.path).toBe("/scim/v2/Users")
+  })
 })

@@ -65,6 +65,14 @@ export const overrides: Readonly<Record<string, OperationOverride>> = {
     batch: { subscription_groups: 50 },
     reason: "The v1 form of the same endpoint, with the same 50-user cap.",
   },
+  "catalogs.by-id.items.update": {
+    description: "Use this endpoint to edit multiple items in your catalog.",
+    reason:
+      "Braze's collection describes this PATCH with the sentence for the DELETE on the same path — " +
+      "'Use this endpoint to delete multiple items in your catalog.' Their own copy-paste, and it " +
+      "reaches --help, `braze commands --json` and the generated docs, so an agent picking a " +
+      "command by description reads 'delete' for the endpoint that edits (BUG-6).",
+  },
   "campaigns.list.get": {
     pagination: "page",
     pageSize: 100,

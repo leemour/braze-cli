@@ -6,6 +6,7 @@ import { executeBulk } from "./execute.js"
 import type { BulkOutcome, BulkRecord } from "./types.js"
 
 const ENDPOINT = "https://rest.fra-01.braze.eu"
+const RUN = "20260915-120000-ab12"
 const track = findOperation("users.track.create")
 
 const client = (mock: ReturnType<typeof mockBraze>) =>
@@ -39,7 +40,7 @@ describe("batching", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const { records } = counted(150)
 
-    const outcomes = await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(track?.batchTotal).toBe(75)
     expect(mock.requests).toHaveLength(2)
@@ -50,7 +51,7 @@ describe("batching", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const { records } = counted(75)
 
-    const outcomes = await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(mock.requests).toHaveLength(1)
     expect(outcomes).toHaveLength(75)
@@ -62,7 +63,7 @@ describe("batching", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const { records } = counted(80)
 
-    await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(mock.requests).toHaveLength(2)
     expect(JSON.parse(mock.requests[1]?.body as string).attributes).toHaveLength(5)
@@ -72,10 +73,10 @@ describe("batching", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const records = (async function* () {
       yield { row: 1, field: "attributes", value: { external_id: "a" } }
-      yield { row: 2, field: "events", value: { name: "e" } }
+      yield { row: 2, field: "events", value: { external_id: "b", name: "e", time: "2026-09-15T10:00:00Z" } }
     })()
 
-    await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     const body = JSON.parse(mock.requests[0]?.body as string)
     expect(body.attributes).toHaveLength(1)
@@ -93,7 +94,7 @@ describe("backpressure", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const { state, records } = counted(100_000)
 
-    const outcomes = executeBulk(client(mock), track as never, records, { concurrency: 2 })
+    const outcomes = executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 2 })
 
     // Take one outcome and stop. Everything the executor read, it read to get this far.
     const first = await outcomes.next()
@@ -127,7 +128,7 @@ describe("backpressure", () => {
     })
     const { records } = counted(750)
 
-    await drain(executeBulk(slow, track as never, records, { concurrency: 3 }))
+    await drain(executeBulk(slow, track as never, records, { runId: RUN, concurrency: 3 }))
 
     expect(mock.requests).toHaveLength(10)
     expect(peak).toBeLessThanOrEqual(3)
@@ -144,7 +145,7 @@ describe("backpressure", () => {
       }
     })()
 
-    const outcomes = executeBulk(client(mock), track as never, records, { concurrency: 1 })
+    const outcomes = executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 })
     await outcomes.next()
     await outcomes.return(undefined as never)
 
@@ -157,7 +158,7 @@ describe("what an outcome says happened", () => {
     const mock = mockBraze(() => brazeResponses.created())
     const { records } = counted(3)
 
-    const outcomes = await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(outcomes.every((outcome) => outcome.status === "submitted")).toBe(true)
     expect(outcomes[0]?.httpStatus).toBe(201)
@@ -167,7 +168,7 @@ describe("what an outcome says happened", () => {
     const mock = mockBraze(() => brazeResponses.error(400, "Bad Request"))
     const { records } = counted(3)
 
-    const outcomes = await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(outcomes).toHaveLength(3)
     expect(outcomes.every((outcome) => outcome.status === "failed")).toBe(true)
@@ -182,7 +183,7 @@ describe("what an outcome says happened", () => {
     const mock = mockBraze(() => brazeResponses.droppedAfterSend())
     const { records } = counted(2)
 
-    const outcomes = await drain(executeBulk(client(mock), track as never, records, { concurrency: 1 }))
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
 
     expect(outcomes.every((outcome) => outcome.status === "unknown")).toBe(true)
     expect(outcomes[0]?.errorCode).toBe("outcome_unknown")
@@ -199,7 +200,7 @@ describe("cancellation", () => {
     const { records } = counted(500)
 
     const outcomes = await drain(
-      executeBulk(client(mock), track as never, records, { concurrency: 1, signal: controller.signal }),
+      executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1, signal: controller.signal }),
     )
 
     const skipped = outcomes.filter((outcome) => outcome.status === "skipped")
@@ -207,5 +208,156 @@ describe("cancellation", () => {
     expect(outcomes).toHaveLength(500)
     // Everything is accounted for: nothing silently disappears when a run is interrupted.
     expect(new Set(outcomes.map((outcome) => outcome.row)).size).toBe(500)
+  })
+})
+
+describe("who a record is", () => {
+  it("names every record, generating an id where the input gave none", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const { records } = counted(2)
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcomes.map((outcome) => outcome.recordId)).toEqual([`${RUN}-1`, `${RUN}-2`])
+    expect(outcomes.every((outcome) => outcome.recordIdSource === "generated")).toBe(true)
+  })
+
+  it("keeps the input's own id, and says it was the input's", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 1, recordId: "crm-4471", field: "attributes", value: { external_id: "a" } }
+    })()
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.recordId).toBe("crm-4471")
+    expect(outcome?.recordIdSource).toBe("input")
+  })
+
+  /** A CSV column that happens to be empty is not an id, and an audit row nobody can act on is not an audit. */
+  it("treats a blank id from the input as no id at all", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 7, recordId: "   ", field: "attributes", value: { external_id: "a" } }
+    })()
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.recordId).toBe(`${RUN}-7`)
+    expect(outcome?.recordIdSource).toBe("generated")
+  })
+
+  /** The interrupted run is when somebody most needs to know which records to re-send. */
+  it("names the records it never sent, too", async () => {
+    const controller = new AbortController()
+    const mock = mockBraze(() => {
+      controller.abort()
+      return brazeResponses.created()
+    })
+    const { records } = counted(200)
+
+    const outcomes = await drain(
+      executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1, signal: controller.signal }),
+    )
+
+    const skipped = outcomes.filter((outcome) => outcome.status === "skipped")
+    expect(skipped.length).toBeGreaterThan(0)
+    expect(skipped.every((outcome) => outcome.recordId === `${RUN}-${outcome.row}`)).toBe(true)
+  })
+
+  /** §35: the audit names the user and keeps nothing else. What goes to Braze is untouched. */
+  it("carries the identifiers into the outcome without reducing what is sent", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield {
+        row: 1,
+        field: "attributes",
+        value: { external_id: "u1", email: "a@example.com", favourite_colour: "amber" },
+      }
+    })()
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.identity).toEqual({ external_id: "u1", email: "a@example.com" })
+    expect(JSON.parse(mock.requests[0]?.body as string).attributes[0].favourite_colour).toBe("amber")
+  })
+})
+
+describe("a record refused before it is sent", () => {
+  const sent = (mock: ReturnType<typeof mockBraze>): unknown[] =>
+    mock.requests.flatMap((request) => JSON.parse(request.body as string).attributes ?? [])
+
+  it("refuses a record that names no user, and never spends a request finding out", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 1, field: "attributes", value: { favourite_colour: "amber" } }
+    })()
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.status).toBe("invalid")
+    expect(outcome?.errorCode).toBe("validation_error")
+    expect(outcome?.errorMessage).toContain("external_id")
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  /**
+   * The whole reason validation is per record and not per body: `validateRequest` would refuse the
+   * assembled request and take 74 good records down with the one bad one.
+   */
+  it("leaves the other 74 of a batch submitted", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      for (let row = 1; row <= 75; row += 1) {
+        yield { row, field: "attributes", value: row === 13 ? { colour: "amber" } : { external_id: `u${row}` } }
+      }
+    })()
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcomes).toHaveLength(75)
+    expect(outcomes.filter((outcome) => outcome.status === "invalid").map((outcome) => outcome.row)).toEqual([13])
+    expect(outcomes.filter((outcome) => outcome.status === "submitted")).toHaveLength(74)
+    expect(sent(mock)).toHaveLength(74)
+  })
+
+  it("refuses a record for a field the operation does not batch, and keeps going", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 1, field: "attribute", value: { external_id: "u1" } }
+      yield { row: 2, field: "attributes", value: { external_id: "u2" } }
+    })()
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcomes.find((outcome) => outcome.row === 1)?.status).toBe("invalid")
+    expect(outcomes.find((outcome) => outcome.row === 2)?.status).toBe("submitted")
+    expect(sent(mock)).toHaveLength(1)
+  })
+
+  /** One `invalid` row here is 75 `unknown` ones avoided: Braze rejects such an object inside a 2xx (`RISK-3`). */
+  it("refuses a record carrying two primary identifiers", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 1, field: "attributes", value: { external_id: "u1", braze_id: "b1" } }
+    })()
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.status).toBe("invalid")
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  it("still accounts for every record when the whole input is refused", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      for (let row = 1; row <= 200; row += 1) yield { row, field: "attributes", value: { colour: "amber" } }
+    })()
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcomes).toHaveLength(200)
+    expect(outcomes.every((outcome) => outcome.status === "invalid")).toBe(true)
+    expect(mock.requests).toHaveLength(0)
   })
 })

@@ -118,7 +118,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-10` | Every operation with a documented request body builds a request from it — driven by the collection's 48 body examples, 32 of them real JSON (`FIND-17`). Reworded 2026-09-14 per `NEED-28`: it said "smoke tests generated from the collection's own examples", and the collection has 0 response examples across all 99 requests (`FIND-20`) | P3 |
 | `CAT-11` | Pagination: `none`/`page`/`offset`/`cursor` metadata plus `--paginate`, `--max-pages`, `--max-items`, always bounded | P2 |
-| `CAT-13` | Help text that informs: one glossary of the 43 distinct query-parameter names covering all 134 slots, so no flag reads `query parameter` (`UX-5`); plus the override for Braze's own wrong description on `catalogs items update-many` (`BUG-6`) | P2 |
+| `CAT-13` | 🟡 Help text that informs: one glossary of the 43 distinct query-parameter names covering all 134 slots, so no flag reads `query parameter` (`UX-5`). The `BUG-6` half — Braze's wrong description on `catalogs items update-many` — landed with `CAT-9`, because the gate that catches it is `CAT-9`'s | P2 |
 
 ## Phase 3 — bulk and audit
 

@@ -42,9 +42,17 @@ seed="$dir/.counters"
 allocate() {
   # Записи — источник истины: счётчик лишь не даёт переиспользовать номер, который выдан,
   # но ещё не записан. Если счётчик потерян, максимум из записей восстанавливает его.
-  scanned=$(find "$dir" -maxdepth 1 -name '*.md' ! -name 'README.md' ! -name '_*' \
-              -exec cat {} + 2>/dev/null \
-            | grep -oE "\b${prefix}-[0-9]+" | sed "s/^${prefix}-//" | sort -n | tail -1)
+  # Журнал — НЕ единственное место, где живут номера: собранный `NEED` уезжает в DECISIONS.md,
+  # находка — в BACKLOG.md или ARCHITECTURE.md, а запись в журнале при этом удаляется. Скан
+  # только по `$dir/*.md` этого не видит и выдаёт номер повторно: 14.09.2026 так были выданы
+  # NEED-17, 18 и 19, уже занятые рулингами в DECISIONS.md (`BUG-7`). Поэтому скан идёт по всем
+  # отслеживаемым markdown-файлам репозитория, а `find` остаётся запасным путём для журнала,
+  # скопированного вне git.
+  scanned=$(
+    { git -C "$dir" grep -hoE "\b${prefix}-[0-9]+" -- '*.md' 2>/dev/null \
+      || find "$dir" -maxdepth 1 -name '*.md' ! -name 'README.md' ! -name '_*' \
+           -exec cat {} + 2>/dev/null | grep -oE "\b${prefix}-[0-9]+"
+    } | sed "s/^${prefix}-//" | sort -n | tail -1)
   stored=$(awk -v p="$prefix" '$1 == p { print $2 }' "$counters" 2>/dev/null | tail -1)
   # Зерно из отслеживаемого `.counters` — только пока общий счётчик его ещё не обогнал.
   seeded=$(awk -v p="$prefix" '$1 == p { print $2 }' "$seed" 2>/dev/null | tail -1)

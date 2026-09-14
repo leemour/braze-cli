@@ -6,6 +6,7 @@ import { brazeResponses, mockBraze } from "brazecli-core/testing"
 import { beforeEach, describe, expect, it } from "vitest"
 import { memoryKeyring } from "../auth/keyring.js"
 import { emptyConfig, saveConfig } from "../config/file.js"
+import { DEFAULT_MAX_PAGES } from "../execute.js"
 import { captureStreams } from "../output/stream.js"
 import { run } from "../program.js"
 
@@ -175,5 +176,91 @@ describe("the shape of the generated command tree", () => {
     const scim = catalog.find((operation) => operation.id === "scim.v2.users.get")
     expect(scim?.command).toEqual(["scim", "v2", "users", "list"])
     expect(scim?.path).toBe("/scim/v2/Users")
+  })
+})
+
+/**
+ * CAT-11. Braze pages with a bare `page` number and gives no total and no "next" marker, so a walk
+ * has to decide for itself when to stop — and must always stop.
+ */
+describe("--paginate", () => {
+  /** A full page of 100 campaigns, so the walk has a reason to ask for another. */
+  const fullPage = (n: number) =>
+    brazeResponses.ok({ campaigns: Array.from({ length: 100 }, (_, i) => ({ id: `p${n}-${i}` })), message: "success" })
+  const shortPage = brazeResponses.ok({ campaigns: [{ id: "last" }], message: "success" })
+
+  it("returns every page as ONE json value, in Braze's own shape", async () => {
+    const mock = mockBraze([fullPage(0), fullPage(1), shortPage])
+
+    const code = await braze(["campaigns", "list", "--paginate", "--json"], mock)
+
+    expect(code).toBe(0)
+    const data = JSON.parse(streams.stdout.join("\n"))
+    expect(mock.requests).toHaveLength(3)
+    expect(data.campaigns).toHaveLength(201)
+    // The shape Braze returned, with no page count injected into it — that goes to stderr.
+    expect(Object.keys(data).sort()).toEqual(["campaigns", "message"])
+    expect(streams.stderr.join("\n")).toContain("3 pages")
+  })
+
+  it("asks for each page in turn, starting at the one it was given", async () => {
+    const mock = mockBraze([fullPage(5), shortPage])
+
+    await braze(["campaigns", "list", "--paginate", "--page", "5", "--json"], mock)
+
+    expect(mock.requests[0]?.url).toContain("page=5")
+    expect(mock.requests[1]?.url).toContain("page=6")
+  })
+
+  it("stops at --max-pages and says so, rather than walking to the end", async () => {
+    const mock = mockBraze((_request, index) => fullPage(index))
+
+    await braze(["campaigns", "list", "--paginate", "--max-pages", "2", "--json"], mock)
+
+    expect(mock.requests).toHaveLength(2)
+    expect(streams.stderr.join("\n")).toContain("--max-pages 2")
+  })
+
+  // The one that matters: a mistyped filter must not become nine hundred requests to production.
+  it("stops at a default ceiling when no bound was given at all", async () => {
+    const mock = mockBraze((_request, index) => fullPage(index))
+
+    await braze(["campaigns", "list", "--paginate", "--json"], mock)
+
+    expect(mock.requests).toHaveLength(DEFAULT_MAX_PAGES)
+    expect(streams.stderr.join("\n")).toContain("default ceiling")
+  })
+
+  it("stops once --max-items rows are collected", async () => {
+    const mock = mockBraze((_request, index) => fullPage(index))
+
+    await braze(["campaigns", "list", "--paginate", "--max-items", "150", "--json"], mock)
+
+    expect(mock.requests).toHaveLength(2)
+    expect(streams.stderr.join("\n")).toContain("--max-items 150")
+  })
+
+  it("refuses on an operation that does not page, rather than quietly ignoring the flag", async () => {
+    const mock = mockBraze(brazeResponses.ok({ catalogs: [] }))
+
+    const code = await braze(["catalogs", "get", "--paginate", "--json"], mock)
+
+    expect(code).not.toBe(0)
+    expect(mock.requests).toHaveLength(0)
+    expect(streams.stderr.join("\n")).toContain("not paged")
+  })
+
+  /**
+   * Braze answers `{"campaigns":[…],"message":"success"}`, so one array key is the row list. Two
+   * array keys and there is no way to tell which is which — guessing would silently return a
+   * fraction of the data, so it refuses and names them.
+   */
+  it("refuses to guess when a response carries two lists", async () => {
+    const mock = mockBraze(brazeResponses.ok({ campaigns: [{ id: "a" }], warnings: [{ code: "x" }] }))
+
+    const code = await braze(["campaigns", "list", "--paginate", "--json"], mock)
+
+    expect(code).not.toBe(0)
+    expect(streams.stderr.join("\n")).toContain("more than one list")
   })
 })

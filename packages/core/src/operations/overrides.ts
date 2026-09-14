@@ -87,6 +87,28 @@ export const overrides: Readonly<Record<string, OperationOverride>> = {
     permission: "canvas.list",
     reason: "Paged like campaigns.list.",
   },
+  "events.list.get": {
+    pagination: "page",
+    pageSize: 250,
+    permission: "events.list",
+    reason:
+      "Paged like campaigns.list but with a different page size — Braze documents 250 event names " +
+      "per page, not 100. FIND-19: this had no pagination at all, so the CLI could not tell a full " +
+      "page from the last one, and --paginate would have done nothing.",
+  },
+  "purchases.product-list.get": {
+    pagination: "page",
+    permission: "purchases.product_list",
+    reason:
+      "Paged, but Braze documents no page size for it — so there is deliberately no pageSize here. " +
+      "Guessing 100 would make the CLI claim 'that is all of them' at a boundary it does not know. " +
+      "Without it the page note degrades to a row count, which is honest (FIND-19).",
+  },
+  "feed.list.get": {
+    pagination: "page",
+    permission: "feed.list",
+    reason: "Paged, with no documented page size, same as purchases.product-list (FIND-19).",
+  },
   "segments.list.get": {
     pagination: "page",
     pageSize: 100,

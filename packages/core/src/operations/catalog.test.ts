@@ -289,3 +289,40 @@ describe("what each query parameter means", () => {
     expect(describeParameters(operations, {})[0]?.queryParameters?.[0]?.description).toBeUndefined()
   })
 })
+
+/**
+ * CAT-11 / FIND-19. Six operations carry a `page` parameter; for a long time only the three with
+ * a handwritten override declared `pagination`, so `paginationNote` stayed silent on the other
+ * three and `--paginate` would have done nothing on half the paged surface — silently, because
+ * nothing checked.
+ *
+ * The plan put this gate in `catalog:check`. It lives here instead: the generator reads
+ * `overrides.ts` as text and cannot see what an override declares, while a test has the real
+ * merged catalog. Both run in CI, so the guarantee is the same.
+ */
+describe("pagination, declared wherever Braze pages", () => {
+  it("declares pagination on every operation that takes a page parameter", () => {
+    const unclassified = catalog
+      .filter((operation) => (operation.queryParameters ?? []).some((parameter) => parameter.name === "page"))
+      .filter((operation) => !operation.pagination || operation.pagination === "none")
+      .map((operation) => `${operation.id} — ${operation.method} ${operation.path}`)
+
+    expect(unclassified).toEqual([])
+  })
+
+  /**
+   * Braze documents 100 per page for campaigns, Canvases and segments, 250 for event names, and
+   * nothing at all for product lists and news feed cards. An operation with no documented size
+   * carries none: inventing 100 would make the CLI claim "last page" at a boundary it cannot know.
+   */
+  it("carries a page size only where Braze documents one", () => {
+    expect(findOperation("campaigns.list.get")?.pageSize).toBe(100)
+    expect(findOperation("events.list.get")?.pageSize).toBe(250)
+
+    for (const id of ["purchases.product-list.get", "feed.list.get"]) {
+      const operation = findOperation(id)
+      expect(operation?.pagination, id).toBe("page")
+      expect(operation?.pageSize, id).toBeUndefined()
+    }
+  })
+})

@@ -16,6 +16,9 @@ export interface GlobalFlags {
   retries?: number
   dryRun?: boolean
   confirm?: boolean
+  paginate?: boolean
+  maxPages?: number
+  maxItems?: number
 }
 
 export interface Settings {
@@ -34,6 +37,10 @@ export interface Settings {
   retries: number | undefined
   dryRun: boolean
   confirm: boolean
+  paginate: boolean
+  /** Undefined means "the default ceiling", never "unbounded" — `execute.ts` supplies the number. */
+  maxPages: number | undefined
+  maxItems: number | undefined
 }
 
 export interface ResolveOptions {
@@ -112,6 +119,9 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
     retries: flags.retries ?? config.http.retries,
     dryRun: flags.dryRun === true,
     confirm: flags.confirm === true,
+    paginate: flags.paginate === true,
+    maxPages: flags.maxPages,
+    maxItems: flags.maxItems,
   }
 }
 

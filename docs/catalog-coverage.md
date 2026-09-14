@@ -12,7 +12,7 @@ Source: [`spec/braze.postman.json`](../spec/braze.postman.json), whose provenanc
 | operations generated | 95 |
 | reads | 42 |
 | writes | 53 |
-| corrected by an override | 10 |
+| corrected by an override | 13 |
 | unclassified or ambiguous | 0 |
 
 **`unclassified or ambiguous` must stay at zero** — `pnpm catalog:check` fails CI otherwise. It
@@ -56,6 +56,9 @@ These carry a fact the Postman collection does not. Each one's reason is in
 - `campaigns.list.get`
 - `canvas.list.get`
 - `catalogs.by-id.items.update`
+- `events.list.get`
+- `feed.list.get`
+- `purchases.product-list.get`
 - `segments.list.get`
 - `subscription.status.set.create`
 - `users.export.global-control-group.create`

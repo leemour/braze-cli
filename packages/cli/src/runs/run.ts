@@ -42,6 +42,14 @@ export interface Run {
   dir: string
   logger: RunLogger
   /**
+   * Aborted when the run is cancelled. Passed to `client.execute`, which already turns an abort
+   * into `cancelled` — or into `outcome_unknown` for a write that may have reached Braze, which is
+   * the distinction rule 4 exists for.
+   */
+  signal: AbortSignal
+  /** Stops work in flight. Safe to call more than once. */
+  cancel(): void
+  /**
    * Writes the final `run.json` and closes the log. **Must run on every path** — success, a
    * refusal, a signal. A directory holding `events.jsonl` and no `run.json` is a special case
    * `runs list` would have to carry forever.
@@ -75,11 +83,16 @@ export const startRun = (options: StartRunOptions): Run => {
   writeRunFile(dir, metadata)
 
   let finished = false
+  const controller = new AbortController()
 
   return {
     id,
     dir,
     logger,
+    signal: controller.signal,
+    cancel: () => {
+      if (!controller.signal.aborted) controller.abort()
+    },
     finish: async (status, extra = {}) => {
       if (finished) return
       finished = true

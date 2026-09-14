@@ -321,3 +321,31 @@ describe("paging an endpoint whose page size Braze does not document", () => {
     expect(streams.stderr.join("\n")).toContain("nothing after it")
   })
 })
+
+/**
+ * CLI-13. The client has supported an AbortSignal since Phase 1 and the CLI never passed one, so a
+ * Ctrl+C killed the process mid-request and left `run.json` saying `"status": "running"`. The
+ * signal now comes from the run itself, which is what lets a signal handler finalize it.
+ */
+describe("a run that is cancelled", () => {
+  it("passes its abort signal down, so the client can turn it into a cancellation", async () => {
+    const mock = mockBraze(brazeResponses.ok({ campaigns: [] }))
+    const seen: (AbortSignal | undefined)[] = []
+    const config = emptyConfig()
+    config.profiles.production = { restEndpoint: "https://rest.iad-01.braze.com", readOnly: false }
+    saveConfig(configDir, config)
+
+    await run(["campaigns", "list", "--json"], {
+      env: { BRAZE_CONFIG_DIR: configDir, BRAZE_RUNS_DIR: runsDir, BRAZE_API_KEY: "k", BRAZE_PROFILE: "production" },
+      keyring: memoryKeyring(),
+      streams,
+      isTty: false,
+      fetch: (input, init) => {
+        seen.push(init?.signal ?? undefined)
+        return mock.fetch(input, init)
+      },
+    })
+
+    expect(seen[0]).toBeInstanceOf(AbortSignal)
+  })
+})

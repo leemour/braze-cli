@@ -17,6 +17,7 @@ interface DiscoveredCommand {
   name: string
   path: string[]
   usage: string
+  operationId?: string
   commands: DiscoveredCommand[]
 }
 
@@ -114,5 +115,33 @@ describe("braze commands", () => {
     expect(code).toBe(0)
     expect(streams.stdout.join("\n")).toContain("braze api <method> <path> [options]")
     expect(streams.stdout.join("\n")).not.toContain("takesValue")
+  })
+})
+
+/**
+ * CAT-7. `braze schema` is addressable by operation id, and before this the discovery surface
+ * named no id anywhere — so that half of its addressing was reachable only by reading the
+ * generated catalog. An agent reads `commands --json`; the id has to be in there.
+ */
+describe("the operation id on the discovery surface", () => {
+  const leaves = (commands: DiscoveredCommand[]): DiscoveredCommand[] =>
+    commands.flatMap((command) => (command.commands.length === 0 ? [command] : leaves(command.commands)))
+
+  it("marks every generated command with the id braze schema takes", async () => {
+    const { surface } = await discover()
+    const withId = leaves(surface.commands).filter((command) => "operationId" in command)
+
+    expect(withId.length).toBe(95)
+  })
+
+  it("marks none of the handwritten commands, which describe no Braze operation", async () => {
+    const { surface } = await discover()
+    const handwritten = ["profile", "api", "runs", "commands", "schema"]
+
+    for (const name of handwritten) {
+      const command = find(surface.commands, name)
+      const tagged = leaves([command]).filter((leaf) => "operationId" in leaf)
+      expect(tagged, name).toEqual([])
+    }
   })
 })

@@ -7,6 +7,7 @@ import { catalogCommands } from "./commands/catalog.js"
 import { commandsCommand } from "./commands/commands.js"
 import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
+import { schemaCommand } from "./commands/schema.js"
 import { emptyConfig, loadConfig, OUTPUT_FORMATS } from "./config/file.js"
 import { resolvePaths } from "./config/paths.js"
 import { DOCUMENTATION, firstProfileHint } from "./documentation.js"
@@ -43,6 +44,7 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
   program.addCommand(apiCommand(options))
   program.addCommand(runsCommand(options))
   program.addCommand(commandsCommand(options))
+  program.addCommand(schemaCommand(options))
 
   // §13: registered in a loop, never as a hundred nearly identical files. After the handwritten
   // ones, so a name collision would be visible rather than silently shadowing `profile` or `runs`.

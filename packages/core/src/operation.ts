@@ -40,6 +40,8 @@ export interface Operation {
   pathParameters?: readonly string[]
   /** Query keys the collection documents. Not exhaustive: Postman examples are not a schema. */
   queryParameters?: readonly QueryParameter[]
+  /** What the collection says the body looks like. An example or prose — never a schema. */
+  requestBody?: RequestBodyDoc
   /** The Postman request this was generated from, for matching an operation across regenerations. */
   sourceId?: string
 }
@@ -48,6 +50,26 @@ export interface QueryParameter {
   name: string
   description?: string
   example?: string
+}
+
+/**
+ * Braze documents a request body in two ways, and which one it used decides what the text is good
+ * for — so the flavour is carried, not flattened away.
+ *
+ * `example` is real JSON from the collection and can be sent as-is. `annotated` is Braze writing
+ * documentation into the value position — `"name": (required, string) Must be less than 100
+ * characters,` — which reads well and parses as nothing.
+ *
+ * **Neither is a schema, and neither validates anything.** Postman examples are not contracts, and
+ * refusing a valid request because it does not match an example is the failure the three
+ * validation levels exist to avoid (`CORE-10`).
+ */
+export interface RequestBodyDoc {
+  source: "example" | "annotated"
+  /** Present when `source` is `example`: a payload that can be sent unchanged. */
+  example?: unknown
+  /** Present when `source` is `annotated`: Braze's prose, verbatim, for a person to read. */
+  text?: string
 }
 
 export interface OperationDefinition extends Omit<Operation, "retryPolicy"> {

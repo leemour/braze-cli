@@ -5,6 +5,12 @@ import { readInput } from "../input/read.js"
 import type { GlobalFlags } from "../settings.js"
 
 /**
+ * The operation each generated command came from. A WeakMap rather than a property on the Command:
+ * Commander owns that object, and a stray field on it is a collision waiting for a future version.
+ */
+export const operationIds = new WeakMap<Command, string>()
+
+/**
  * Every catalog operation, registered as a command. §13: a loop, not a hundred nearly identical
  * files. Core never learns what Commander is — it hands over data, and the shaping happens here.
  */
@@ -47,6 +53,11 @@ const build = (operation: Operation, context: ExecutionContext): Command => {
   const command = new Command(operation.command.at(-1) as string).description(
     operation.description ?? `${operation.method} ${operation.path}`,
   )
+
+  // What `braze commands --json` prints as `operationId`, and what `braze schema` is addressed by.
+  // Without it the discovery surface names no id at all, so half of `schema`'s addressing would be
+  // reachable only by reading the generated catalog (CAT-7).
+  operationIds.set(command, operation.id)
 
   // A path placeholder becomes a REQUIRED named option rather than a positional argument: an agent
   // building a call out of `braze commands --json` then never has to know the order, and `--help`

@@ -8,6 +8,7 @@ import { createRenderer } from "../output/renderer.js"
 import { processStreams, type Streams } from "../output/stream.js"
 import { type GlobalFlags, resolveColor, resolveOutputFormat } from "../settings.js"
 import { VERSION } from "../version.js"
+import { operationIds } from "./catalog.js"
 
 export interface CommandsContext {
   env?: NodeJS.ProcessEnv
@@ -43,6 +44,8 @@ interface OptionInfo {
 interface CommandInfo {
   /** What to pass to the CLI, already split: `["runs", "list"]`. */
   path: readonly string[]
+  /** Present on a command generated from the catalog — what `braze schema` is addressed by. */
+  operationId?: string
   name: string
   description: string
   usage: string
@@ -128,6 +131,7 @@ const describe = (command: Command, cli: string, parents: readonly string[]): Co
 
   return {
     path,
+    ...(operationIds.get(command) ? { operationId: operationIds.get(command) as string } : {}),
     name: command.name(),
     description: command.description(),
     usage,

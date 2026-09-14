@@ -16,7 +16,7 @@ export interface CommandsContext {
   isTty?: boolean
 }
 
-interface ArgumentInfo {
+export interface ArgumentInfo {
   name: string
   required: boolean
   variadic: boolean
@@ -25,7 +25,7 @@ interface ArgumentInfo {
   default?: unknown
 }
 
-interface OptionInfo {
+export interface OptionInfo {
   flags: string
   description: string
   /** False for a plain switch like `--json`, so an agent knows not to look for a value. */
@@ -41,7 +41,7 @@ interface OptionInfo {
   env?: string
 }
 
-interface CommandInfo {
+export interface CommandInfo {
   /** What to pass to the CLI, already split: `["runs", "list"]`. */
   path: readonly string[]
   /** Present on a command generated from the catalog — what `braze schema` is addressed by. */
@@ -84,7 +84,7 @@ export const commandsCommand = (context: CommandsContext = {}): Command => {
       streams,
     })
 
-    const commands = root.commands.map((child) => describe(child, root.name(), []))
+    const commands = describeProgram(root)
 
     if (format === "pretty") {
       renderer.result(flatten(commands).map(({ usage, description }) => ({ command: usage, description })))
@@ -114,6 +114,17 @@ export const commandsCommand = (context: CommandsContext = {}): Command => {
 
   return command
 }
+
+/**
+ * The whole command tree as data — what `braze commands --json` prints, and what
+ * `docs/commands.md` is rendered from (`CAT-8`).
+ *
+ * Exported so the generated documentation walks **this** tree rather than a second traversal of
+ * its own. Two walks would drift the first time one learned something the other did not, and
+ * "what commands exist" is exactly the fact this repository refuses to keep in two places.
+ */
+export const describeProgram = (root: Command): CommandInfo[] =>
+  root.commands.map((child) => describe(child, root.name(), []))
 
 const describe = (command: Command, cli: string, parents: readonly string[]): CommandInfo => {
   const path = [...parents, command.name()]

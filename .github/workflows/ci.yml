@@ -45,6 +45,10 @@ jobs:
       # to come from, or when an endpoint arrives that nobody has classified (§12).
       - run: pnpm catalog:check
 
+      # Rendered from the built CLI, so it must run after `pnpm build` above. Fails when someone
+      # adds or renames a command and `docs/commands.md` still describes last week's CLI.
+      - run: pnpm docs:check
+
   portability:
     name: Core runs outside Node
     runs-on: ubuntu-latest

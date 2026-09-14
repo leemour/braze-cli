@@ -531,9 +531,36 @@ Gates for the step: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, th
   Cheap to add via `findByRequest`, but it needs a method to disambiguate `/catalogs`, which has
   both a GET and a POST. Left out unless asked.
 
-### Step 6 — generated documentation `CAT-8`
-`docs/commands.md` and `docs/catalog-coverage.md` from the same catalog, with `docs:check`
-failing CI when they go stale.
+### Step 6 — generated documentation `CAT-8` — ✅ done 2026-09-14
+
+`pnpm docs:generate` writes [`../commands.md`](../commands.md) — 105 runnable commands, 1 286
+lines — and `pnpm docs:check` fails CI when it goes stale, naming the first line that differs
+rather than saying the file changed. 362 tests.
+
+**Rendered from the live Commander tree, not from the snapshot.** The snapshot knows the 95 catalog
+operations; it does not know that `braze profile add` exists, that every generated command also
+takes `--query`, or that a path placeholder became a required option. Only the built program knows
+what a person can type — and `braze commands --json` already walks it, so the document renders the
+**same `describeProgram` tree** rather than traversing anything of its own. Two walks would drift
+the first time one learned something the other did not.
+
+The cost is that `docs:generate` needs `pnpm build` first. CI already builds before its gates, so
+`docs:check` sits immediately after `catalog:check`.
+
+**Two deviations from the backlog line, both deliberate:**
+
+- **`docs:generate` does not write `docs/catalog-coverage.md`**, though the backlog row says it
+  should. `catalog:generate` already writes that file and `catalog:check` already gates it. Two
+  producers for one file is precisely the fault corrected three times over in this session
+  (`FIND-18`, and the `CORE-10` duplicate rows). Coverage stays where it is; `docs:generate` owns
+  `commands.md` alone.
+- **The document prints `braze <profile> campaigns list`, not `braze campaigns list`.** There is no
+  default profile (`NEED-25`), so the shorter form is a command that fails with
+  `configuration_error`. The `operationId` marker added in `CAT-7` is what distinguishes a command
+  that reaches Braze from one that does not, and a test pins both directions.
+
+`--out` exists on the generator so a test can point the gate at a file it controls: proving a gate
+fails by corrupting the committed document is not a test anyone reruns.
 
 ## 3. What will bite
 

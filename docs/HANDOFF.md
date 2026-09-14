@@ -53,6 +53,7 @@ Take your row. Do not read the rest.
 | Anything in core | [`ARCHITECTURE.md`](ARCHITECTURE.md) §2–§4, `packages/core/src/client.ts` |
 | A request, a retry, an error code | `packages/core/src/{client,retry,errors}.ts` |
 | Anything that prints | [`ARCHITECTURE.md`](ARCHITECTURE.md) §5, [`TESTING.md`](TESTING.md) — the machine-output invariant |
+| What a command takes | [`commands.md`](commands.md) — generated from the CLI; `braze schema <operation>` for one |
 | The API catalog | [`ARCHITECTURE.md`](ARCHITECTURE.md) §6, [`REQUIREMENTS.md`](REQUIREMENTS.md) §6–§13 |
 | Writing a test against Braze | `packages/core/src/testing/mock-braze.ts` — never the real thing |
 | Why something odd is the way it is | [`DECISIONS.md`](DECISIONS.md) **before** you "fix" it |
@@ -67,6 +68,7 @@ pnpm test                 # vitest
 pnpm build
 pnpm portability:core     # core bundles for a runtime with no builtins
 pnpm smoke:bun            # core actually executes under bun
+pnpm docs:check           # docs/commands.md still matches the CLI (needs `pnpm build` first)
 ```
 
 CI runs all of them on every pull request —
@@ -148,6 +150,8 @@ structure exists to prevent.
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | how it is built **now** | it stopped being true — corrected in place |
 | [`CONVENTIONS.md`](CONVENTIONS.md) | how code and docs are written here | — |
 | [`TESTING.md`](TESTING.md) | how to check it yourself | — |
+| [`commands.md`](commands.md) | what every command takes | generated — never edited, `pnpm docs:generate` |
+| [`catalog-coverage.md`](catalog-coverage.md) | how much of Braze is covered | generated — never edited, `pnpm catalog:generate` |
 | [`plans/`](plans/) | how an **open** thread will be done | the work landed — the plan is deleted |
 | [`journal/`](journal/) | the trail of a day: asked, found, decided | after a week, once harvested |
 | [`../CLEANUP.md`](../CLEANUP.md) | what to remove, and why | after the removal |

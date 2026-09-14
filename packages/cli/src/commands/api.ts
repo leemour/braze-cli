@@ -40,7 +40,14 @@ export const apiCommand = (context: ApiContext = {}): Command =>
         // The catalog first: a Braze read implemented as a POST is corrected by its catalog entry
         // (FIND-13), not by guessing here. `rawOperation` remains the escape hatch for every path
         // the catalog does not carry, and judges by method.
-        const operation = findByRequest(method, path) ?? rawOperation(method, path)
+        //
+        // **The classification is taken; the validation level is not.** §11 of the brief ends with
+        // "`braze api` remains the final escape hatch", and a handwritten schema that refuses a
+        // request Braze would have accepted must leave the caller somewhere to go. That somewhere
+        // is here, so a raw call is always `passthrough` however strict its catalog entry is. The
+        // read-only and `--confirm` guards are untouched — those are about whether to send at all.
+        const known = findByRequest(method, path)
+        const operation = known ? { ...known, validation: "passthrough" as const } : rawOperation(method, path)
 
         await runOperation(
           {

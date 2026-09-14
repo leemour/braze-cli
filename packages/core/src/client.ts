@@ -13,6 +13,7 @@ import {
   statusToCode,
 } from "./retry.js"
 import { type MonotonicClock, monotonic, realSleep, type SleepLike, type WallClock, wallClock } from "./time.js"
+import { validateRequest } from "./validate.js"
 
 export const DEFAULT_TIMEOUT_MS = 30_000
 
@@ -241,6 +242,9 @@ export class BrazeClient {
     if (options.signal?.aborted) {
       throw new BrazeError("cancelled", "cancelled before the request was sent", { retryable: false })
     }
+
+    // Before the loop, so a request that cannot succeed costs zero attempts rather than one.
+    validateRequest(operation, input)
 
     const spec: RequestSpec = { method: operation.method, path: operation.path, ...input }
     const maxAttempts = (options.retries ?? this.#retry.retries) + 1

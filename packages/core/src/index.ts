@@ -19,6 +19,7 @@ export {
   type RequestBodyDoc,
   type RetryPolicy,
   rawOperation,
+  type ValidationLevel,
 } from "./operation.js"
 export {
   applyOverrides,
@@ -30,6 +31,7 @@ export {
 } from "./operations/index.js"
 export type { OperationOverride } from "./operations/overrides.js"
 export { parameterDescriptions } from "./operations/parameters.js"
+export { schemas } from "./operations/schemas.js"
 export {
   buildQuery,
   buildUrl,
@@ -59,3 +61,4 @@ export {
   type WallClock,
   wallClock,
 } from "./time.js"
+export { type ValidatableInput, validateRequest } from "./validate.js"

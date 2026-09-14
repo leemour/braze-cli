@@ -96,6 +96,13 @@ const score = (tokens: readonly string[], operation: Operation): number => {
   return tokens.filter((token) => words.some((word) => word.startsWith(token) || token.startsWith(word))).length
 }
 
+const CHECKS: Record<string, string> = {
+  strict: "a handwritten schema checks the body's fields before anything is sent",
+  generated:
+    "the body is checked only for being the same JSON kind as Braze's example — an example is not a schema, so unknown fields pass",
+  passthrough: "the body is not inspected at all; Braze documents it as prose rather than JSON",
+}
+
 const describe = (operation: Operation) => ({
   id: operation.id,
   command: operation.command,
@@ -112,9 +119,19 @@ const describe = (operation: Operation) => ({
   ...(operation.pagination ? { pagination: operation.pagination } : {}),
   ...(operation.pageSize === undefined ? {} : { pageSize: operation.pageSize }),
   ...(operation.batch ? { batch: operation.batch } : {}),
+  // The binding limit, and it must travel with `batch` rather than beside it: Braze caps
+  // /users/track at 75 objects across the three arrays TOGETHER, so an agent reading 75/75/75 and
+  // batching by it sends three times the allowance (BUG-8).
+  ...(operation.batchTotal === undefined ? {} : { batchTotal: operation.batchTotal }),
   pathParameters: operation.pathParameters ?? [],
   queryParameters: operation.queryParameters ?? [],
   requestBody: bodyOf(operation),
+  // What will and will not be checked before the request leaves. An agent that knows its body is
+  // only kind-checked knows not to read a silent acceptance as approval of its fields.
+  validation: {
+    level: operation.validation ?? "generated",
+    checks: CHECKS[operation.validation ?? "generated"],
+  },
   ...(operation.description ? { description: operation.description } : {}),
 })
 

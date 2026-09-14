@@ -2,6 +2,7 @@ import { defineOperation, type Operation } from "../operation.js"
 import { generatedOperations } from "./generated.js"
 import { type OperationOverride, overrides } from "./overrides.js"
 import { parameterDescriptions } from "./parameters.js"
+import { schemas } from "./schemas.js"
 
 /**
  * Applies the handwritten corrections to the generated catalog.
@@ -51,6 +52,11 @@ const assertCoherent = (operation: Operation): void => {
   }
   if (operation.command.length === 0) {
     throw new Error(`override "${operation.id}" leaves the operation with no command`)
+  }
+  // The one way this feature silently becomes a no-op: an operation promises a handwritten schema
+  // and there is none, so every request to it passes unchecked while the catalog says otherwise.
+  if (operation.validation === "strict" && !schemas[operation.id]) {
+    throw new Error(`override "${operation.id}" is marked strict but schemas.ts has no schema for it`)
   }
 }
 

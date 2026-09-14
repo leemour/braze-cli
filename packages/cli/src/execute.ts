@@ -1,4 +1,4 @@
-import { BrazeClient, BrazeError, type Operation, resolvePath } from "brazecli-core"
+import { BrazeClient, BrazeError, type Operation, resolvePath, validateRequest } from "brazecli-core"
 import { assertWriteAllowed } from "./guards.js"
 import { createRenderer, type Renderer } from "./output/renderer.js"
 import { processStreams, type Streams } from "./output/stream.js"
@@ -38,6 +38,11 @@ export const runOperation = async (
   const renderer = createRenderer({ format: settings.outputFormat, color: settings.color, streams })
 
   const path = resolvePath(operation.path, request.pathParams ?? {})
+
+  // Before the guards, not after. `--dry-run` is the tool you reach for on a locked-down profile,
+  // and validating second would make it answer `permission_error` while never mentioning that the
+  // body was malformed — a question nobody asked. Neither check sends anything.
+  validateRequest(operation, { pathParams: request.pathParams, query, body })
   assertWriteAllowed(settings, operation, `${operation.method} ${path}`)
 
   const run = startRun({

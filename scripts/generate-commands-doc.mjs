@@ -25,6 +25,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 // `--out` exists so a test can point the gate at a file it controls. Without it the only way to
 // prove the gate fails is to corrupt the committed document, which is not a test anyone reruns.
 const outFlag = process.argv.indexOf("--out")
+if (outFlag !== -1 && process.argv[outFlag + 1] === undefined) {
+  console.error("--out needs a path after it")
+  process.exit(2)
+}
 const OUT = outFlag === -1 ? join(root, "docs/commands.md") : process.argv[outFlag + 1]
 
 const { buildProgram } = await import(join(root, "packages/cli/dist/program.js"))

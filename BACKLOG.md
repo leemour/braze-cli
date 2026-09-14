@@ -110,13 +110,11 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 | Number | Task | P |
 |---|---|---|
 | `CLI-12` | 🟡 The mapping exists in `packages/cli/src/exit-codes.ts` and `run` applies it; every new command has to route its failures through a `BrazeError` for it to hold | P2 |
-| `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit — the scaffolding bulk needs later | P2 |
 
 ## Left over from Phase 1
 
 | Number | Task | P |
 |---|---|---|
-| `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit. `run.finish` is already idempotent and called on every path, so this is wiring a handler to it | P2 |
 | `CLI-15` | 🟡 `braze profile add` cannot take the key on stdin — only `BRAZE_API_KEY` or a terminal prompt. A CI that has neither is stuck | P3 |
 
 ## Phase 2 — the generated API catalog

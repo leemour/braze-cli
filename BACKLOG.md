@@ -109,7 +109,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-1` | ✅ Done 2026-09-14. The source is Braze's own Postman documenter, fetched anonymously — `NEED-13` in [`docs/DECISIONS.md`](docs/DECISIONS.md) | P1 |
 | `CAT-2` | ✅ Done 2026-09-14. `pnpm spec:sync` writes `spec/braze.postman.json` (99 requests) and `spec/provenance.json`; refuses anything that is not a collection, and writes nothing when nothing changed | P1 |
 | `CAT-3` | ✅ Done 2026-09-14. `pnpm catalog:generate` → `packages/core/src/operations/generated.ts`, 95 operations from 99 requests; ids are deterministic and collisions fail the build | P1 |
-| `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CAT-10` | P1 |
+| `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CORE-10` — corrected 2026-09-14, this said `CAT-10`, which is the smoke tests two rows down (`FIND-18`) | P1 |
 | `CAT-5` | ✅ Done 2026-09-14. `docs/catalog-coverage.md` is generated with the catalog; `pnpm catalog:check` runs in CI and fails on a stale catalog or an unclassified endpoint | P1 |
 | `CAT-6` | ✅ Done 2026-09-14. 95 operations registered in a loop; `braze campaigns list --json` returns the same bytes as the raw call | P1 |
 | `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |

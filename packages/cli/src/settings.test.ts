@@ -2,6 +2,7 @@ import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
+import { keyringService } from "./auth/credentials.js"
 import { memoryKeyring } from "./auth/keyring.js"
 import { emptyConfig, saveConfig } from "./config/file.js"
 import { resolveColor, resolveOutputFormat, resolveSettings } from "./settings.js"
@@ -16,15 +17,22 @@ const configured = () => {
   return dir
 }
 
-const keyring = () => memoryKeyring({ "brazecli:production": "prod-key", "brazecli:staging": "staging-key" })
+// The keyring service is scoped to the config directory whenever BRAZE_CONFIG_DIR is set, which
+// is what stops a throwaway directory from overwriting the real key for a profile.
+const keyring = (dir: string) => {
+  const service = keyringService(dir, { BRAZE_CONFIG_DIR: dir })
+  return memoryKeyring({ [`${service}:production`]: "prod-key", [`${service}:staging`]: "staging-key" })
+}
 
-const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) =>
-  resolveSettings(flags, {
-    env: { BRAZE_CONFIG_DIR: configured(), ...env },
-    keyring: keyring(),
+const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) => {
+  const dir = configured()
+  return resolveSettings(flags, {
+    env: { BRAZE_CONFIG_DIR: dir, ...env },
+    keyring: keyring(dir),
     isTty: false,
     warn: () => {},
   })
+}
 
 describe("which profile", () => {
   it("takes --profile over everything", () => {
@@ -35,8 +43,11 @@ describe("which profile", () => {
     expect(settings({}, { BRAZE_PROFILE: "staging" }).profileName).toBe("staging")
   })
 
-  it("then the configured default", () => {
-    expect(settings().profileName).toBe("production")
+  // NEED-25: there is no default. A default is chosen by omission, and the easiest thing to omit
+  // must not be the workspace with a million people in it.
+  it("refuses to guess when neither is given, and names the profiles that exist", () => {
+    expect(() => settings()).toThrow(/no profile given/)
+    expect(() => settings()).toThrow(/production/)
   })
 
   it("says what to run when the named profile does not exist", () => {
@@ -46,20 +57,20 @@ describe("which profile", () => {
 
 describe("endpoint and key", () => {
   it("lets the environment override the configured endpoint", () => {
-    expect(settings({}, { BRAZE_REST_ENDPOINT: "https://rest.example.braze.eu" }).restEndpoint).toBe(
-      "https://rest.example.braze.eu",
-    )
+    expect(
+      settings({ profile: "production" }, { BRAZE_REST_ENDPOINT: "https://rest.example.braze.eu" }).restEndpoint,
+    ).toBe("https://rest.example.braze.eu")
   })
 
   it("reports where the key came from, so a surprise is visible", () => {
-    expect(settings().apiKeySource).toBe("keyring")
-    expect(settings({}, { BRAZE_API_KEY: "override" }).apiKeySource).toBe("environment")
+    expect(settings({ profile: "production" }).apiKeySource).toBe("keyring")
+    expect(settings({ profile: "production" }, { BRAZE_API_KEY: "override" }).apiKeySource).toBe("environment")
   })
 
   it("says what to run when there is no key at all", () => {
     expect(() =>
       resolveSettings(
-        {},
+        { profile: "production" },
         { env: { BRAZE_CONFIG_DIR: configured() }, keyring: memoryKeyring(), isTty: false, warn: () => {} },
       ),
     ).toThrow(/braze profile add production/)

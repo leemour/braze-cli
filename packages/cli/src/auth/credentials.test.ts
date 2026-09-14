@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it, vi } from "vitest"
-import { Credentials, KEYRING_SERVICE } from "./credentials.js"
+import { Credentials, keyringService } from "./credentials.js"
 import { brokenKeyring, memoryKeyring } from "./keyring.js"
 
 const tempDir = () => mkdtempSync(join(tmpdir(), "brazecli-creds-"))
@@ -13,7 +13,7 @@ const credentials = (overrides: Partial<ConstructorParameters<typeof Credentials
 
 describe("credential resolution", () => {
   it("puts the environment ahead of everything else", () => {
-    const keyring = memoryKeyring({ [`${KEYRING_SERVICE}:production`]: "from-keyring" })
+    const keyring = memoryKeyring({ "brazecli:production": "from-keyring" })
 
     const found = credentials({ keyring, env: { BRAZE_API_KEY: "from-env" } }).read("production")
 
@@ -91,5 +91,21 @@ describe("removal", () => {
     store.remove("production")
 
     expect(JSON.parse(readFileSync(join(dir, "credentials.json"), "utf8"))).toEqual({ staging: { apiKey: "k2" } })
+  })
+})
+
+// 2026-09-14: `BRAZE_CONFIG_DIR=/tmp/x braze profile add staging` looked isolated and was not —
+// the OS keyring is global, so it overwrote the real key for `staging`. Two working keys were
+// destroyed, and a keyring cannot be read back to recover them.
+describe("keyring namespacing", () => {
+  it("uses the plain service name when the config directory is the real one", () => {
+    expect(keyringService("/home/someone/.config/brazecli", {})).toBe("brazecli")
+  })
+
+  it("scopes the service name when BRAZE_CONFIG_DIR points somewhere else", () => {
+    const service = keyringService("/tmp/throwaway", { BRAZE_CONFIG_DIR: "/tmp/throwaway" })
+
+    expect(service).not.toBe("brazecli")
+    expect(service).toContain("/tmp/throwaway")
   })
 })

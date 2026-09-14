@@ -11,6 +11,16 @@ export type RetryPolicy = "read-safe" | "idempotent" | "never"
 
 export type PaginationStyle = "none" | "page" | "offset" | "cursor"
 
+/**
+ * How far a request can be checked before it is sent.
+ *
+ * **Nothing is `strict` unless a human wrote its schema.** Postman examples are not contracts, and
+ * an operation marked strict on a guess starts refusing requests Braze would have accepted — with
+ * no recourse for the caller except `braze api`. The automatic levels can only refuse a request
+ * that could not have worked anyway.
+ */
+export type ValidationLevel = "strict" | "generated" | "passthrough"
+
 export interface Operation {
   /** Stable across catalog regenerations: `users.track`, `campaigns.details`. */
   id: string
@@ -28,8 +38,15 @@ export interface Operation {
    * "that is all of them".
    */
   pageSize?: number
-  /** Braze's per-request limits, by field: `{ attributes: 75, events: 75, purchases: 75 }`. */
+  /** Braze's per-request limit for each field on its own: `{ attributes: 75, events: 75 }`. */
   batch?: Readonly<Record<string, number>>
+  /**
+   * The cap across every `batch` field **combined**, where Braze sets one. This is usually the
+   * binding constraint and the per-field numbers are only its upper bound: `/users/track` allows
+   * 75 objects in total, not 75 of each (`BUG-8`). A pipeline that batched by `batch` alone would
+   * send three times the allowance and have every request refused.
+   */
+  batchTotal?: number
   description?: string
   documentationUrl?: string
   /**
@@ -42,6 +59,12 @@ export interface Operation {
   queryParameters?: readonly QueryParameter[]
   /** What the collection says the body looks like. An example or prose — never a schema. */
   requestBody?: RequestBodyDoc
+  /**
+   * How much this operation's request can be checked before it is sent. `generated` is the
+   * default and can only refuse what could never have worked; `strict` means a human wrote a
+   * schema; `passthrough` means we do not understand the body and say so (§11 of the brief).
+   */
+  validation?: ValidationLevel
   /** The Postman request this was generated from, for matching an operation across regenerations. */
   sourceId?: string
 }
@@ -79,6 +102,7 @@ export interface OperationDefinition extends Omit<Operation, "retryPolicy"> {
 export const defineOperation = (definition: OperationDefinition): Operation => ({
   ...definition,
   retryPolicy: definition.retryPolicy ?? (definition.access === "read" ? "read-safe" : "never"),
+  validation: definition.validation ?? "generated",
 })
 
 /**
@@ -94,6 +118,9 @@ export const rawOperation = (method: HttpMethod, path: string): Operation => {
     path,
     access: read ? "read" : "write",
     retryPolicy: read ? "read-safe" : "never",
+    // Explicit, not left to `defineOperation`'s `generated` default: a raw call has no documented
+    // example to compare a body against, and rule 12 says this escape hatch must keep working.
+    validation: "passthrough",
   }
 }
 

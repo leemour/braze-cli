@@ -86,10 +86,40 @@ describe("commands generated from the catalog", () => {
 
   it("obeys the read-only profile exactly as `braze api` does", async () => {
     const mock = mockBraze(brazeResponses.created())
+    // A body that passes validation, so the read-only guard is what refuses this and not the
+    // schema — CORE-10 validates before the guards, so an invalid body would mask what is tested.
+    const body = '{"attributes":[{"external_id":"u1"}]}'
+
+    const code = await braze(["users", "track", "--input", body, "--confirm", "--json"], mock, true)
+
+    expect(code).toBe(5)
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  // §550 of the brief: a dry run validates. It is the one command whose whole purpose is "tell me
+  // whether this would work", so answering "probably" would make it useless.
+  it("validates on a dry run, which is the command that exists to answer exactly that", async () => {
+    const mock = mockBraze(brazeResponses.created())
+
+    const code = await braze(["users", "track", "--input", "{}", "--dry-run", "--json"], mock)
+
+    expect(code).toBe(2)
+    expect(streams.stderr.join("\n")).toContain("at least one of attributes")
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  /**
+   * CORE-10 §3.7. Validation runs before the write guards on purpose: `--dry-run` is the tool you
+   * reach for on a locked-down profile, and answering `permission_error` while never mentioning
+   * that the body was malformed answers a question nobody asked. Both refusals cost nothing.
+   */
+  it("names a malformed body before it names the profile, since neither sends anything", async () => {
+    const mock = mockBraze(brazeResponses.created())
 
     const code = await braze(["users", "track", "--input", "{}", "--confirm", "--json"], mock, true)
 
-    expect(code).toBe(5)
+    expect(code).toBe(2)
+    expect(streams.stderr.join("\n")).toContain("at least one of attributes")
     expect(mock.requests).toHaveLength(0)
   })
 

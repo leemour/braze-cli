@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import { BrazeClient, type BrazeClientOptions } from "./client.js"
 import { BrazeError } from "./errors.js"
+import type { Operation } from "./operation.js"
+import { findOperation } from "./operations/index.js"
 import { brazeResponses, mockBraze } from "./testing/mock-braze.js"
 import { abortError, type SleepLike } from "./time.js"
 
@@ -242,5 +244,31 @@ describe("BrazeClient.send", () => {
         }),
       ).rejects.toThrow(/not settled yet/)
     })
+  })
+})
+
+describe("validating before the attempt loop", () => {
+  /**
+   * CORE-10. A request that cannot succeed must cost zero attempts, not one — the client is where
+   * retries live, and a malformed write reaching the loop would be sent, refused by Braze and then
+   * counted as a real failure with a real audit row.
+   */
+  it("refuses a body the schema rejects without making a single request", async () => {
+    const mock = mockBraze(brazeResponses.created())
+    const client = new BrazeClient({ endpoint: ENDPOINT, apiKey: "k", fetch: mock.fetch })
+    const track = findOperation("users.track.create")
+
+    await expect(client.execute(track as Operation, { body: {} })).rejects.toMatchObject({ code: "validation_error" })
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  it("sends the request when the body is one Braze documents", async () => {
+    const mock = mockBraze(brazeResponses.created())
+    const client = new BrazeClient({ endpoint: ENDPOINT, apiKey: "k", fetch: mock.fetch })
+    const track = findOperation("users.track.create")
+
+    await client.execute(track as Operation, { body: { attributes: [{ external_id: "u1" }] } })
+
+    expect(mock.requests).toHaveLength(1)
   })
 })

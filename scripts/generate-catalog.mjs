@@ -372,6 +372,17 @@ function slug(segment) {
     .toLowerCase()
 }
 
+/**
+ * How far a request to this operation can be checked before it is sent (§11 of the brief).
+ *
+ * Never `strict` from here: strict means a human wrote a Valibot schema, and an override is what
+ * says so. What the collection can decide is whether there is a documented shape to compare a
+ * body's JSON kind against — a real example gives one, Braze's annotated prose does not.
+ */
+function levelOf(operation) {
+  return operation.requestBody?.source === "annotated" ? "passthrough" : "generated"
+}
+
 function isRead(method) {
   return method === "GET" || method === "HEAD"
 }
@@ -451,6 +462,7 @@ function renderOperation(operation) {
   if (operation.queryParameters.length > 0) fields.push(`queryParameters: ${queryList(operation.queryParameters)}`)
   if (operation.description) fields.push(`description: ${JSON.stringify(operation.description)}`)
   if (operation.requestBody) fields.push(`requestBody: ${JSON.stringify(operation.requestBody)}`)
+  fields.push(`validation: ${JSON.stringify(levelOf(operation))}`)
 
   return `  defineOperation({\n${fields.map((field) => `    ${field},`).join("\n")}\n  })`
 }
@@ -472,12 +484,42 @@ function format(source, outputPath) {
   }
 }
 
+/**
+ * Which overrides declare `validation: "strict"`. Parsed out of the source for the same reason
+ * `overrideIds` is: this file is plain JS and `overrides.ts` is TypeScript. Whether each override
+ * is VALID is checked where it is applied, with a real type.
+ */
+function strictIds() {
+  const source = readOutput(OVERRIDES)
+  if (source === undefined) return new Set()
+
+  const ids = new Set()
+  for (const block of source.split(/^\s{2}"/m).slice(1)) {
+    const id = block.slice(0, block.indexOf('"'))
+    if (/validation:\s*"strict"/.test(block.slice(0, block.indexOf("\n  },")))) ids.add(id)
+  }
+  return ids
+}
+
 function overrideIds() {
   const source = readOutput(OVERRIDES)
   if (source === undefined) return new Set()
 
   // Only the keys of the exported record: `"users.track.create": {`.
   return new Set([...source.matchAll(/^\s{2}"([^"]+)":\s*\{/gm)].map((match) => match[1]))
+}
+
+/**
+ * §12 of the brief asks the report to count the validation levels by name. Read from the generated
+ * level, with the strict overrides counted on top — this file is plain JS and cannot import the
+ * merged catalog, so `strictIds` parses `overrides.ts` the way `overrideIds` does.
+ */
+function countLevel(operations, level) {
+  const strict = strictIds()
+  return operations.filter((operation) => {
+    const actual = strict.has(operation.id) ? "strict" : levelOf(operation)
+    return actual === level
+  }).length
 }
 
 function renderCoverage(operations, merged, report, corrected, unclassified) {
@@ -489,6 +531,9 @@ function renderCoverage(operations, merged, report, corrected, unclassified) {
     ["writes", report.writes],
     ["corrected by an override", corrected.size],
     ["unclassified or ambiguous", unclassified.length],
+    ["strict — a handwritten schema", countLevel(operations, "strict")],
+    ["generated — shape checked from Braze's example", countLevel(operations, "generated")],
+    ["passthrough — body not understood", countLevel(operations, "passthrough")],
   ]
 
   const byResource = new Map()

@@ -1,4 +1,4 @@
-import type { Access, PaginationStyle, RetryPolicy } from "../operation.js"
+import type { Access, PaginationStyle, RetryPolicy, ValidationLevel } from "../operation.js"
 
 /**
  * What a handwritten correction may change. Not `id`, `method` or `path`: those identify the
@@ -7,6 +7,8 @@ import type { Access, PaginationStyle, RetryPolicy } from "../operation.js"
  */
 export interface OperationOverride {
   command?: readonly string[]
+  validation?: ValidationLevel
+  batchTotal?: number
   access?: Access
   retryPolicy?: RetryPolicy
   permission?: string
@@ -52,18 +54,37 @@ export const overrides: Readonly<Record<string, OperationOverride>> = {
   },
   "users.track.create": {
     permission: "users.track",
+    validation: "strict",
     batch: { attributes: 75, events: 75, purchases: 75 },
-    reason: "Braze caps each array in the body at 75 per request (§10). The bulk pipeline needs it in Phase 3.",
+    batchTotal: 75,
+    reason:
+      "Braze caps a request at 75 objects COUNTED TOGETHER across the three arrays, not 75 of each " +
+      "(BUG-8) — their docs name the per-array 75 as a legacy limit. The per-field numbers stay as " +
+      "an upper bound; batchTotal is the binding one, and the Phase 3 pipeline must batch by it or " +
+      "send three times the allowance.",
+  },
+  "users.delete.create": {
+    permission: "users.delete",
+    validation: "strict",
+    batchTotal: 50,
+    reason:
+      "Braze accepts exactly one identifier kind per request and at most 50 of it. Strict because " +
+      "this deletes people: a request that silently deleted by the wrong identifier list is not a " +
+      "mistake anyone can undo.",
   },
   "v2.subscription.status.set.create": {
     permission: "subscription.status.set",
     batch: { subscription_groups: 50 },
-    reason: "Braze's own description caps this at 50 users per request; the collection carries it as prose only.",
+    batchTotal: 50,
+    reason:
+      "Braze caps this at 50 users per request, counted across external_id, email and phone " +
+      "together rather than per identifier kind (BUG-8).",
   },
   "subscription.status.set.create": {
     permission: "subscription.status.set",
     batch: { subscription_groups: 50 },
-    reason: "The v1 form of the same endpoint, with the same 50-user cap.",
+    batchTotal: 50,
+    reason: "The v1 form of the same endpoint, with the same combined 50-user cap.",
   },
   "catalogs.by-id.items.update": {
     description: "Use this endpoint to edit multiple items in your catalog.",

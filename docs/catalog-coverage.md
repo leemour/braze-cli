@@ -12,8 +12,11 @@ Source: [`spec/braze.postman.json`](../spec/braze.postman.json), whose provenanc
 | operations generated | 95 |
 | reads | 42 |
 | writes | 53 |
-| corrected by an override | 13 |
+| corrected by an override | 14 |
 | unclassified or ambiguous | 0 |
+| strict — a handwritten schema | 2 |
+| generated — shape checked from Braze's example | 79 |
+| passthrough — body not understood | 14 |
 
 **`unclassified or ambiguous` must stay at zero** — `pnpm catalog:check` fails CI otherwise. It
 counts operations Braze implements as a write whose path reads like a query (`export`, `list`,
@@ -61,6 +64,7 @@ These carry a fact the Postman collection does not. Each one's reason is in
 - `purchases.product-list.get`
 - `segments.list.get`
 - `subscription.status.set.create`
+- `users.delete.create`
 - `users.export.global-control-group.create`
 - `users.export.ids.create`
 - `users.export.segment.create`

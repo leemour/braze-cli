@@ -15,6 +15,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "c0915a86-797a-4486-8217-24cd1c689d0f",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to delete a catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.get",
@@ -24,6 +25,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "read",
     sourceId: "7d65fb86-ccf7-423f-9eb2-f68ab36df824",
     description: "Use this endpoint to return a list of catalogs in a workspace.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.create",
@@ -33,6 +35,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "af9f3e2d-b7e7-49e7-aa64-f4652892be6e",
     description: "Use this endpoint to create a catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.delete",
@@ -43,6 +46,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "647c82e8-8b38-4df2-bde2-b1d8e19fd332",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to delete multiple items in your catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.update",
@@ -53,6 +57,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "03f3548e-4139-4f60-812d-7e1a695a738a",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to delete multiple items in your catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.create",
@@ -63,6 +68,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "cea18bb3-b83a-4160-81fe-8cd42aa6e7cc",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to create multiple items in your catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.replace",
@@ -86,6 +92,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.delete",
@@ -96,6 +103,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "0dcce797-1346-472f-9384-082f14541689",
     pathParameters: ["catalog_name", "item_id"],
     description: "Use this endpoint to delete an item in your catalog.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.get",
@@ -106,6 +114,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "52c6631c-7366-48e5-9e0e-16de7b6285cc",
     pathParameters: ["catalog_name", "item_id"],
     description: "Use this endpoint to return a catalog item and its content.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.get",
@@ -116,6 +125,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "63a19dd5-10e0-4649-bdf0-097216748bbb",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to return multiple catalog items and their content.",
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.update",
@@ -130,6 +140,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "example",
       example: { items: [{ Name: "Restaurant", Loyalty_Program: false, Open_Time: "2021-09-03T09:03:19.967+00:00" }] },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.create",
@@ -155,6 +166,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.replace",
@@ -178,6 +190,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "email.hard-bounces.get",
@@ -195,6 +208,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to pull a list of email addresses that have “hard bounced” your email messages within a certain time frame.",
+    validation: "generated",
   }),
   defineOperation({
     id: "email.unsubscribes.get",
@@ -213,6 +227,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to return emails that have unsubscribed during the time period from start_date to end_date .",
+    validation: "generated",
   }),
   defineOperation({
     id: "email.status.create",
@@ -223,6 +238,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "be852462-0cda-4a48-b68b-85bd8a9f2147",
     description: "Use this endpoint to set the email subscription state for your users.",
     requestBody: { source: "example", example: { email: "example@braze.com", subscription_state: "subscribed" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "email.bounce.remove.create",
@@ -234,6 +250,7 @@ export const generatedOperations: readonly Operation[] = [
     description:
       "Use this endpoint to remove email addresses from your Braze bounce list and bounce list maintained by your email provider.",
     requestBody: { source: "example", example: { email: "example@braze.com" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "email.spam.remove.create",
@@ -245,6 +262,7 @@ export const generatedOperations: readonly Operation[] = [
     description:
       "Use this endpoint to remove email addresses from your Braze spam list and spam list maintained by your email provider.",
     requestBody: { source: "example", example: { email: "example@braze.com" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "email.blocklist.create",
@@ -255,6 +273,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "d51155a1-a6e8-4dcc-9f2b-88c54ab9e8c6",
     description: "Use this endpoint to unsubscribe a user from email and mark them as hard bounced.",
     requestBody: { source: "example", example: { email: ["blocklist_email1", "blocklist_email2"] } },
+    validation: "generated",
   }),
   defineOperation({
     id: "email.blacklist.create",
@@ -265,6 +284,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "5044c082-6a15-452b-8dc1-7a0ba6b49cad",
     description: "Use this endpoint to unsubscribe a user from email and mark them as hard bounced.",
     requestBody: { source: "example", example: { email: ["blacklist_email1", "blacklist_email2"] } },
+    validation: "generated",
   }),
   defineOperation({
     id: "campaigns.data-series.get",
@@ -279,6 +299,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "ending_at", example: "2020-06-28T23:59:59-5:00" },
     ],
     description: "Use this endpoint to retrieve a daily series of various stats for a campaign over time.",
+    validation: "generated",
   }),
   defineOperation({
     id: "campaigns.details.get",
@@ -290,6 +311,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "campaign_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a specified campaign, which can be identified by the campaign_id .",
+    validation: "generated",
   }),
   defineOperation({
     id: "campaigns.list.get",
@@ -306,6 +328,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to export a list of campaigns, each of which will include its name, campaign API identifier, whether it is an API campaign, and tags associated with the campaign.",
+    validation: "generated",
   }),
   defineOperation({
     id: "sends.data-series.get",
@@ -322,6 +345,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to retrieve a daily series of various stats for a tracked send_id for API campaigns.",
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.data-series.get",
@@ -340,6 +364,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "include_deleted_step_data", example: "true" },
     ],
     description: "Use this endpoint to export time series data for a Canvas.",
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.data-summary.get",
@@ -359,6 +384,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to export rollups of time series data for a Canvas, providing a concise summary of a Canvas’ results.",
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.details.get",
@@ -370,6 +396,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "canvas_id" }],
     description:
       "Use this endpoint to export metadata about a Canvas, such as the name, time created, current status, and more.",
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.list.get",
@@ -386,6 +413,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to export a list of Canvases, including the name, Canvas API identifier and associated tags.",
+    validation: "generated",
   }),
   defineOperation({
     id: "events.list.get",
@@ -396,6 +424,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "93ecd8a5-305d-4b72-ae33-2d74983255c1",
     queryParameters: [{ name: "page", example: "3" }],
     description: "Use this endpoint to export a list of custom events that have been recorded for your app.",
+    validation: "generated",
   }),
   defineOperation({
     id: "events.data-series.get",
@@ -414,6 +443,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to retrieve a series of the number of occurrences of a custom event in your app over a designated time period.",
+    validation: "generated",
   }),
   defineOperation({
     id: "kpi.new-users.data-series.get",
@@ -428,6 +458,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "app_id" },
     ],
     description: "Use this endpoint to retrieve a daily series of the total number of new users on each date.",
+    validation: "generated",
   }),
   defineOperation({
     id: "kpi.dau.data-series.get",
@@ -443,6 +474,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to retrieve a daily series of the total number of unique active users on each date.",
+    validation: "generated",
   }),
   defineOperation({
     id: "kpi.mau.data-series.get",
@@ -458,6 +490,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to retrieve a daily series of the total number of unique active users over a 30-day rolling window.",
+    validation: "generated",
   }),
   defineOperation({
     id: "kpi.uninstalls.data-series.get",
@@ -472,6 +505,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "app_id" },
     ],
     description: "Use this endpoint to retrieve a daily series of the total number of uninstalls on each date.",
+    validation: "generated",
   }),
   defineOperation({
     id: "feed.data-series.get",
@@ -487,6 +521,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
     ],
     description: "Use this endpoint to retrieve a daily series of engagement stats for a card over time.",
+    validation: "generated",
   }),
   defineOperation({
     id: "feed.details.get",
@@ -498,6 +533,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "card_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a card, which can be identified by the card_id .",
+    validation: "generated",
   }),
   defineOperation({
     id: "feed.list.get",
@@ -513,6 +549,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to export a list of News Feed cards, each of which will include its name and card API identifier.",
+    validation: "generated",
   }),
   defineOperation({
     id: "purchases.product-list.get",
@@ -523,6 +560,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "dff4ed40-81f5-451d-9d44-accc0e932285",
     queryParameters: [{ name: "page", example: "1" }],
     description: "Use this endpoint to return a paginated lists of product IDs.",
+    validation: "generated",
   }),
   defineOperation({
     id: "purchases.quantity-series.get",
@@ -539,6 +577,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "product", example: "name" },
     ],
     description: "Use this endpoint to return the total number of purchases in your app over a time range.",
+    validation: "generated",
   }),
   defineOperation({
     id: "purchases.revenue-series.get",
@@ -555,6 +594,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "product", example: "name" },
     ],
     description: "Use this endpoint to return the total money spent in your app over a time range.",
+    validation: "generated",
   }),
   defineOperation({
     id: "segments.list.get",
@@ -569,6 +609,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to export a list of segments, each of which will include its name, Segment API identifier, and whether it has analytics tracking enabled.",
+    validation: "generated",
   }),
   defineOperation({
     id: "segments.data-series.get",
@@ -583,6 +624,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "ending_at", example: "2018-06-27T23:59:59-5:00" },
     ],
     description: "Use this endpoint to retrieve a daily series of the estimated size of a segment over time.",
+    validation: "generated",
   }),
   defineOperation({
     id: "segments.details.get",
@@ -594,6 +636,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "segment_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a segment, which can be identified by the segment_id .",
+    validation: "generated",
   }),
   defineOperation({
     id: "sessions.data-series.get",
@@ -611,6 +654,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to retrieve a series of the number of sessions for your app over a designated time period.",
+    validation: "generated",
   }),
   defineOperation({
     id: "users.export.ids.create",
@@ -632,6 +676,7 @@ export const generatedOperations: readonly Operation[] = [
         fields_to_export: ["first_name", "email", "purchases"],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.export.segment.create",
@@ -650,6 +695,7 @@ export const generatedOperations: readonly Operation[] = [
         output_format: "zip",
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.export.global-control-group.create",
@@ -663,6 +709,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "example",
       example: { callback_endpoint: "", fields_to_export: ["email", "braze_id"], output_format: "zip" },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.live-activity.update.create",
@@ -684,6 +731,7 @@ export const generatedOperations: readonly Operation[] = [
         notification: { alert: { body: "It's halftime! Let's look at the scores", title: "Halftime" } },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.scheduled-broadcasts.get",
@@ -695,6 +743,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "end_time", example: "2018-09-01T00:00:00-04:00" }],
     description:
       "Use this endpoint to return a JSON list of information about scheduled campaigns and entry Canvases between now and a designated end_time specified in the request.",
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.schedule.delete.create",
@@ -705,6 +754,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "5e89355c-0a5d-4d8b-8d89-2fd99bac36b0",
     description: "Use this endpoint to cancel a message that you previously scheduled before it has been sent.",
     requestBody: { source: "example", example: { schedule_id: "schedule_identifier" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.trigger.schedule.delete.create",
@@ -716,6 +766,7 @@ export const generatedOperations: readonly Operation[] = [
     description:
       "Use this endpoint to cancel a Canvas message that you previously scheduled via API-triggered before it has been sent.",
     requestBody: { source: "example", example: { canvas_id: "canvas_identifier", schedule_id: "schedule_identifier" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.delete.create",
@@ -730,6 +781,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "example",
       example: { campaign_id: "campaign_identifier", schedule_id: "schedule_identifier" },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.schedule.create.create",
@@ -744,6 +796,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "broadcast": "false",\n  "external_user_ids": "external_user_identifiers",\n  "user_aliases": {\n    "alias_name" : "example_name",\n    "alias_label" : "example_label"\n  },\n  "segment_id": "segment_identifiers",\n  "audience": {\n    "AND": [\n      {\n        "custom_attribute": {\n          "custom_attribute_name": "eye_color",\n          "comparison": "equals",\n          "value": "blue"\n        }\n      },\n      {\n        "custom_attribute": {\n          "custom_attribute_name": "favorite_foods",\n          "comparison": "includes_value",\n          "value": "pizza"\n        }\n      },\n      {\n        "OR": [\n          {\n            "custom_attribute": {\n              "custom_attribute_name": "last_purchase_time",\n              "comparison": "less_than_x_days_ago",\n              "value": 2\n            }\n          },\n          {\n            "push_subscription_status": {\n              "comparison": "is",\n              "value": "opted_in"\n            }\n          }\n        ]\n      },\n      {\n        "email_subscription_status": {\n          "comparison": "is_not",\n          "value": "subscribed"\n        }\n      },\n      {\n        "last_used_app": {\n          "comparison": "after",\n          "value": "2019-07-22T13:17:55+0000"\n        }\n      }\n    ]\n  },\n  "campaign_id": "campaign_identifier",\n  "send_id": "send_identifier",\n  "override_messaging_limits": false,\n  "recipient_subscription_state": "subscribed",\n  "schedule": {\n    "time": "",\n    "in_local_time": true,\n    "at_optimal_time": true\n  },\n  "messages": {\n    "apple_push": (optional, Apple Push Object),\n    "android_push": (optional, Android Push Object),\n    "windows_push": (optional, Windows Phone 8 Push Object),\n    "windows8_push": (optional, Windows Universal Push Object),\n    "kindle_push": (optional, Kindle/FireOS Push Object),\n    "web_push": (optional, Web Push Object),\n    "email": (optional, Email object)\n    "webhook": (optional, Webhook object)\n    "content_card": (optional, Content Card Object)\n  }\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.create.create",
@@ -793,6 +846,7 @@ export const generatedOperations: readonly Operation[] = [
         schedule: { time: "", in_local_time: false, at_optimal_time: false },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.trigger.schedule.create.create",
@@ -846,6 +900,7 @@ export const generatedOperations: readonly Operation[] = [
         schedule: { time: "", in_local_time: false, at_optimal_time: false },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.schedule.update.create",
@@ -872,6 +927,7 @@ export const generatedOperations: readonly Operation[] = [
         },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.update.create",
@@ -890,6 +946,7 @@ export const generatedOperations: readonly Operation[] = [
         schedule: { time: "2017-05-24T21:30:00Z", in_local_time: true },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.trigger.schedule.update.create",
@@ -907,6 +964,7 @@ export const generatedOperations: readonly Operation[] = [
         schedule: { time: "2017-05-24T21:30:00Z", in_local_time: true },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "sends.id.create.create",
@@ -918,6 +976,7 @@ export const generatedOperations: readonly Operation[] = [
     description:
       "Use this endpoint to create send IDs that can be used to send messages and track message performance programatically, without campaign creation for each send.",
     requestBody: { source: "example", example: { campaign_id: "campaign_identifier", send_id: "send_identifier" } },
+    validation: "generated",
   }),
   defineOperation({
     id: "messages.send.create",
@@ -976,6 +1035,7 @@ export const generatedOperations: readonly Operation[] = [
         },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "transactional.v1.campaigns.by-id.send.create",
@@ -990,6 +1050,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n    "external_send_id" : YOUR_BASE64_COMPATIBLE_ID,\n    "trigger_properties": {\n        "example_string_property": YOUR_EXAMPLE_STRING,\n        "example_integer_property": YOUR_EXAMPLE_INTEGER\n    },\n    "recipient": {\n        "external_user_id": TARGETED_USER_ID_STRING\n    }\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "campaigns.trigger.send.create",
@@ -1043,6 +1104,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "canvas.trigger.send.create",
@@ -1096,6 +1158,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "preference-center.v1.by-id.url.by-id.get",
@@ -1107,6 +1170,7 @@ export const generatedOperations: readonly Operation[] = [
     pathParameters: ["PreferenceCenterExternalID", "UserID"],
     queryParameters: [{ name: "preference_center_api_id" }, { name: "external_id" }],
     description: "Use this endpoint to generate a URL for a preference center.",
+    validation: "generated",
   }),
   defineOperation({
     id: "preference-center.v1.list.get",
@@ -1116,6 +1180,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "read",
     sourceId: "dd8f6667-5eba-4e19-a29e-ba74644c0b8e",
     description: "Use this endpoint to list your available preference centers.",
+    validation: "generated",
   }),
   defineOperation({
     id: "preference-center.v1.by-id.get",
@@ -1127,6 +1192,7 @@ export const generatedOperations: readonly Operation[] = [
     pathParameters: ["PreferenceCenterExternalID"],
     description:
       "Use this endpoint to view the details for your preference centers, including when it was created and updated.",
+    validation: "generated",
   }),
   defineOperation({
     id: "preference-center.v1.create",
@@ -1141,6 +1207,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "name": "string",\n  "preference_center_title": "string",\n  "preference_center_page_html": "string",\n  "confirmation_page_html": "string",\n  "state": (optional) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "options": {\n    "meta-viewport-content": "string", (optional) Only the `content` value of the meta tag\n  }\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "preference-center.v1.by-id.replace",
@@ -1155,6 +1222,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "name": "preference_center_name",\n  "preference_center_title": "string",\n  "preference_center_page_html": "string",\n  "confirmation_page_html": "string",\n  "options": {\n    "meta-viewport-content": "string", (optional) Only the `content` value of the meta tag\n  }\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "scim.v2.users.by-id.delete",
@@ -1166,6 +1234,7 @@ export const generatedOperations: readonly Operation[] = [
     pathParameters: ["id"],
     description:
       "Use this endpoint to permanently delete an existing dashboard user by specifying the resource id returned by the SCIM code POST /code method.",
+    validation: "generated",
   }),
   defineOperation({
     id: "scim.v2.users.get",
@@ -1177,6 +1246,7 @@ export const generatedOperations: readonly Operation[] = [
     queryParameters: [{ name: "filter", example: "{userName@example.com}" }],
     description:
       "Use this endpoint to look up an existing dashboard user account by specifying their email in the filter query parameter.",
+    validation: "generated",
   }),
   defineOperation({
     id: "scim.v2.users.by-id.get",
@@ -1188,6 +1258,7 @@ export const generatedOperations: readonly Operation[] = [
     pathParameters: ["id"],
     description:
       "Use this endpoint to look up an existing dashboard user account by specifying the resource id returned by the SCIM code POST /code method.",
+    validation: "generated",
   }),
   defineOperation({
     id: "scim.v2.users.create",
@@ -1217,6 +1288,7 @@ export const generatedOperations: readonly Operation[] = [
         },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "scim.v2.users.by-id.replace",
@@ -1246,6 +1318,7 @@ export const generatedOperations: readonly Operation[] = [
         },
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "sms.invalid-phone-numbers.get",
@@ -1264,6 +1337,7 @@ export const generatedOperations: readonly Operation[] = [
     ],
     description:
       "Use this endpoint to pull a list of phone numbers that have been deemed “invalid” within a certain time frame.",
+    validation: "generated",
   }),
   defineOperation({
     id: "sms.invalid-phone-numbers.remove.create",
@@ -1274,6 +1348,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "76495aac-8c2d-4e1a-8cac-12e3856ab1d3",
     description: "Use this endpoint to remove “invalid” phone numbers from Braze’s invalid list.",
     requestBody: { source: "annotated", text: '{\n  "phone_numbers": (required, array of string in e.164 format)\n}' },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "subscription.status.get.get",
@@ -1288,6 +1363,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "email", example: "example@braze.com" },
     ],
     description: "Use this endpoint to get the subscription state of a user in a subscription group.",
+    validation: "generated",
   }),
   defineOperation({
     id: "subscription.user.status.get",
@@ -1303,6 +1379,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "offset", example: "0" },
     ],
     description: "Use this endpoint to list and get the subscription groups of a certain user.",
+    validation: "generated",
   }),
   defineOperation({
     id: "v2.subscription.status.set.create",
@@ -1316,6 +1393,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '"subscription_groups":[\n    {\n      "subscription_group_id": (required, string),\n      "subscription_state": (required, string)\n      "external_ids": (required*, array of strings),\n      "emails": (required*, array of strings),\n      "phones": (required*, array of strings in E.164 format),\n    }\n  ]',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "subscription.status.set.create",
@@ -1329,6 +1407,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n   "subscription_group_id": (required, string) the id of your subscription group,\n   "subscription_state": (required, string) available values are "unsubscribed" (not in subscription group) or "subscribed" (in subscription group),\n   "external_id": (required*, array of strings) the external ID of the user or users, may include up to 50 IDs,\n   "email": (required*, array of strings) the email address of the user (must include at least one email and at most 50 emails),\n   // Email subscription group - one of external_id or email is required\n   // Note that sending an email address that is linked to multiple profiles will update all relevant profiles\n }',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "content-blocks.list.get",
@@ -1344,6 +1423,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "offset", example: "1" },
     ],
     description: "Use this endpoint to list your existing Content Blocks information.",
+    validation: "generated",
   }),
   defineOperation({
     id: "content-blocks.info.get",
@@ -1354,6 +1434,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "589adda3-0def-4369-9ddc-eae71923c0ee",
     queryParameters: [{ name: "content_block_id" }, { name: "include_inclusion_data", example: "false" }],
     description: "Use this endpoint to call information for your existing Content Blocks .",
+    validation: "generated",
   }),
   defineOperation({
     id: "content-blocks.create.create",
@@ -1367,6 +1448,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "name": (required, string) Must be less than 100 characters,\n  "description": (optional, string) The description of the Content Block. Must be less than 250 character,\n  "content": (required, string) HTML or text content within Content Block,\n  "state": (optional, string) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "tags": (optional, array of strings) Tags must already exist\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "content-blocks.update.create",
@@ -1380,6 +1462,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "content_block_id" : (required, string) Content Block\'s API identifier.\n  "name": (optional, string) Must be less than 100 characters,\n  "description": (optional, string) The description of the Content Block. Must be less than 250 character,\n  "content": (optional, string) HTML or text content within Content Block,\n  "state": (optional, string) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "tags": (optional, array of strings) Tags must already exist\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "templates.email.list.get",
@@ -1395,6 +1478,7 @@ export const generatedOperations: readonly Operation[] = [
       { name: "offset", example: "0" },
     ],
     description: "Use this endpoint to get a list of available templates in your Braze account.",
+    validation: "generated",
   }),
   defineOperation({
     id: "templates.email.info.get",
@@ -1405,6 +1489,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "e98d2d5b-62fe-4358-b391-9fe9e460d0ac",
     queryParameters: [{ name: "email_template_id" }],
     description: "Use this endpoint to get information on your email templates.",
+    validation: "generated",
   }),
   defineOperation({
     id: "templates.email.create.create",
@@ -1427,6 +1512,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n   "template_name": (required, string) The name of your email template,\n   "subject": (required, string) The email template subject line,\n   "body": (required, string) The email template body that may include HTML,\n   "plaintext_body": (optional, string) A plaintext version of the email template body,\n   "preheader": (optional, string) The email preheader used to generate previews in some clients,\n   "tags": (optional, Array of Strings) Tags must already exist,\n   "should_inline_css": (optional, Boolean) If `true`, the `inline_css` feature is used on this template.\n }',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "templates.email.update.create",
@@ -1450,6 +1536,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "email_template_id": (required, string) Your email template\'s API Identifier,\n  "template_name": (optional, string) The name of your email template,\n  "subject": (optional, string) The email template subject line,\n  "body": (optional, string) The email template body that may include HTML,\n  "plaintext_body": (optional, string) A plaintext version of the email template body,\n  "preheader": (optional, string) The email preheader used to generate previews in some clients,\n  "tags": (optional, array of Strings) Tags must already exist,\n  "should_inline_css": (optional, Boolean) If `true`, the `inline_css` feature will be applied to the template.\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "users.external-ids.rename.create",
@@ -1465,6 +1552,7 @@ export const generatedOperations: readonly Operation[] = [
         external_id_renames: [{ current_external_id: "existing_external_id", new_external_id: "new_external_id" }],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.external-ids.remove.create",
@@ -1478,6 +1566,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "external_ids" :[\n    "existing_deprecated_external_id_string",\n    ...\n  ]\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "users.alias.new.create",
@@ -1496,6 +1585,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.alias.update.create",
@@ -1517,6 +1607,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.identify.create",
@@ -1531,6 +1622,7 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "aliases_to_identify": [\n    {\n      "external_id": "external_identifier",\n      "user_alias": {\n        "alias_name" : "example_alias",\n        "alias_label" : "example_label"\n        }\n    }\n  ],\n  "email_addresses": [\n    {\n      "external_id": "external_identifier",\n      "email": "john.smith@example.com"\n      "prioritization": ["unidentified", "most_recently_updated"]\n    }\n  ],\n  "merge_behavior": "merge"\n}',
     },
+    validation: "passthrough",
   }),
   defineOperation({
     id: "users.track.create",
@@ -1590,6 +1682,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.delete.create",
@@ -1610,6 +1703,7 @@ export const generatedOperations: readonly Operation[] = [
         ],
       },
     },
+    validation: "generated",
   }),
   defineOperation({
     id: "users.merge.create",
@@ -1623,5 +1717,6 @@ export const generatedOperations: readonly Operation[] = [
       source: "annotated",
       text: '{\n  "merge_updates": [\n    {\n      "identifier_to_merge": {\n        "external_id": "old-user1"\n      },\n      "identifier_to_keep": {\n        "external_id": "current-user1"\n      }\n    },\n    {\n      "identifier_to_merge": {\n        "email": "user1@braze.com",\n        "prioritization": ["unidentified", "most_recently_updated"]\n      },\n      "identifier_to_keep":  {\n        "email": "user2@braze.com",\n        "prioritization": ["identified", "most_recently_updated"]\n      }\n    },\n    {\n      "identifier_to_merge": {\n        "user_alias": {\n          "alias_name": "old-user2@example.com",\n          "alias_label": "email"\n        }\n      },\n      "identifier_to_keep": {\n        "user_alias": {\n          "alias_name": "current-user2@example.com",\n          "alias_label": "email"\n        }\n      }\n    }\n  ]\n}\'',
     },
+    validation: "passthrough",
   }),
 ]

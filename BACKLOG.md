@@ -68,8 +68,12 @@ closed: 95 operations generated from Braze's own collection and registered as ty
 contract-tested, every flag described, `braze schema` answering for one, `--paginate` bounded, and
 [`docs/commands.md`](docs/commands.md) generated from the CLI with a CI gate. 362 tests.
 
-**What is left is `CORE-10`** — Valibot validation and the three levels — plus `CAT-10` at P3.
-Neither blocks anything. The next substantial thread is **Phase 3, the bulk pipeline**.
+**`CORE-10` closed 2026-09-14**: `validateRequest` refuses what cannot work before it costs an
+HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests. It found `BUG-8`,
+a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
+
+**What is left is `CAT-10` at P3**, which blocks nothing. The next substantial thread is
+**Phase 3, the bulk pipeline** — and `BULK-3` should read `batchTotal`, not `batch`.
 
 ## Blocked on the owner
 
@@ -90,7 +94,6 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 
 | Number | Task | P |
 |---|---|---|
-| `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough` | P2 |
 | `CORE-11` | 🟡 The `userAgent` option exists and core invents no default; the CLI still has to build `brazecli/<version> runtime/<runtime> platform/<platform>` | P3 |
 
 ### CLI — the Node side
@@ -104,7 +107,6 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 
 | Number | Task | P |
 |---|---|---|
-| `CORE-10` | Valibot validation with the three levels — `strict`, `generated`, `passthrough`. Nothing to validate against until the catalog exists, so it moves next to `CAT-4` | P2 |
 | `CLI-13` | `SIGINT`/`SIGTERM` handling: stop scheduling, flush, finalize, exit. `run.finish` is already idempotent and called on every path, so this is wiring a handler to it | P2 |
 | `CLI-15` | 🟡 `braze profile add` cannot take the key on stdin — only `BRAZE_API_KEY` or a terminal prompt. A CI that has neither is stuck | P3 |
 

@@ -1,6 +1,7 @@
 import { defineOperation, type Operation } from "../operation.js"
 import { generatedOperations } from "./generated.js"
 import { type OperationOverride, overrides } from "./overrides.js"
+import { parameterDescriptions } from "./parameters.js"
 
 /**
  * Applies the handwritten corrections to the generated catalog.
@@ -54,10 +55,40 @@ const assertCoherent = (operation: Operation): void => {
 }
 
 /**
+ * Fills in what each query parameter means, where nothing said already.
+ *
+ * The collection carries no descriptions at all, so without this every flag in `--help` reads
+ * "query parameter" — a line that looks like documentation and tells the reader nothing (`UX-5`).
+ * An operation that already carries text keeps it: an override is more specific than the glossary
+ * by definition, and a parameter nobody has described yet keeps its placeholder rather than
+ * getting an invented one.
+ */
+export const describeParameters = (
+  operations: readonly Operation[],
+  descriptions: Readonly<Record<string, string>>,
+): readonly Operation[] =>
+  operations.map((operation) => {
+    if (!operation.queryParameters?.length) return operation
+
+    let changed = false
+    const queryParameters = operation.queryParameters.map((parameter) => {
+      const description = parameter.description ?? descriptions[parameter.name]
+      if (description === undefined || description === parameter.description) return parameter
+      changed = true
+      return { ...parameter, description }
+    })
+
+    return changed ? { ...operation, queryParameters } : operation
+  })
+
+/**
  * Every operation the CLI knows: generated from the committed snapshot, with the handwritten
  * corrections merged on top. Read this, never `generatedOperations`.
  */
-export const catalog: readonly Operation[] = applyOverrides(generatedOperations, overrides)
+export const catalog: readonly Operation[] = describeParameters(
+  applyOverrides(generatedOperations, overrides),
+  parameterDescriptions,
+)
 
 export const findOperation = (id: string): Operation | undefined => catalog.find((operation) => operation.id === id)
 

@@ -19,8 +19,16 @@ export {
   type RetryPolicy,
   rawOperation,
 } from "./operation.js"
-export { applyOverrides, catalog, findByCommand, findByRequest, findOperation } from "./operations/index.js"
+export {
+  applyOverrides,
+  catalog,
+  describeParameters,
+  findByCommand,
+  findByRequest,
+  findOperation,
+} from "./operations/index.js"
 export type { OperationOverride } from "./operations/overrides.js"
+export { parameterDescriptions } from "./operations/parameters.js"
 export {
   buildQuery,
   buildUrl,

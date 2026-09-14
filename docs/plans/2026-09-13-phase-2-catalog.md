@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` `CAT-7` `CAT-11`
+### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` ✅ `CAT-7` `CAT-11`
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -377,7 +377,21 @@ not a bare array, so "accumulate" needs a rule:
 `offset` and `cursor` stay unimplemented: no operation in the collection declares either, and
 building for a shape nothing uses is how it ends up wrong.
 
-#### `CAT-13` — help text that tells the reader something
+#### `CAT-13` — help text that tells the reader something — ✅ done 2026-09-14
+
+**Landed** as `packages/core/src/operations/parameters.ts`: 43 descriptions keyed by parameter
+name, covering all 134 slots. A gate in `catalog.test.ts` fails the build on any parameter with no
+description, so a new one from Braze cannot ship as "query parameter". 335 tests.
+
+**The per-operation escape hatch was not needed and was not built.** The plan expected `length` and
+`ending_at` to mean different things per endpoint. Checked: all 14 users of each are the same
+data-series family, and the meaning is uniform. What *does* vary is the cap — `length` is 1–100 on
+campaign analytics but 1–14 on Canvas, and `limit` is capped at 500 for email lists but 1000 for
+Content Blocks — so the glossary states no single number and says the cap differs by endpoint.
+Both facts come from Braze's own documentation pages, not from the collection, which documents
+neither.
+
+The original plan for it:
 
 Raised by the owner, 2026-09-14: *"I don't see params eg `--page` for list help output … keep
 users informed, don't bloat."* `--page` is in fact there. What it says is the problem:

@@ -64,7 +64,9 @@ current phase: [`docs/plans/`](docs/plans/).
 **Open thread:** Phase 2, the generated catalog. `CAT-1`…`CAT-6` are done — the collection is
 committed, 95 operations are generated from it, and every one is registered as a command.
 **Start with [`docs/plans/2026-09-14-phase-2-handoff.md`](docs/plans/2026-09-14-phase-2-handoff.md)**,
-then `CAT-7`.
+then Step 5 of [the phase plan](docs/plans/2026-09-13-phase-2-catalog.md), which owns the order of
+what is left — `CAT-9`, `CAT-7`, `CAT-11`, `CAT-13` — and says why it is not the order of the rows
+below.
 
 ## Blocked on the owner
 
@@ -117,6 +119,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-9` | Contract tests over **every** generated operation: unique id, valid method and path, unique command, known access, resolvable path variables, constructible request | P1 |
 | `CAT-10` | Smoke tests generated from the collection's own examples — broad coverage, not a substitute for hand-written tests on important endpoints | P3 |
 | `CAT-11` | Pagination: `none`/`page`/`offset`/`cursor` metadata plus `--paginate`, `--max-pages`, `--max-items`, always bounded | P2 |
+| `CAT-13` | Help text that informs: one glossary of the 43 distinct query-parameter names covering all 134 slots, so no flag reads `query parameter` (`UX-5`); plus the override for Braze's own wrong description on `catalogs items update-many` (`BUG-6`) | P2 |
 
 ## Phase 3 — bulk and audit
 

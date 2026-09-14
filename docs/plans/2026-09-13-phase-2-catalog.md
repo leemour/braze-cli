@@ -7,7 +7,7 @@ an agent, and CI fails if an endpoint silently disappears from Braze's collectio
 Status: **Steps 1–4 done (`CAT-1`…`CAT-6`); Step 5 is next, and §2 Step 5 below is the plan for
 it.** Written 2026-09-13 against `622ef9f`, with Phase 1 closed and verified live; §1 answered
 2026-09-14 and rewritten in place; Step 5 planned 2026-09-14 against `25bf4aa`, 228 tests green.
-Backlog items `CAT-1`…`CAT-11` plus `CORE-10` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
+Backlog items `CAT-1`…`CAT-13` plus `CORE-10` in [`../../BACKLOG.md`](../../BACKLOG.md); brief in
 [`../REQUIREMENTS.md`](../REQUIREMENTS.md) §6–§13, §49–§51, §56, §58.
 
 **Correction, 2026-09-14:** this header read "`CAT-1` and `CAT-2` done; `CAT-3` is next" while
@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` `CAT-7` `CAT-11`
+### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` `CAT-7` `CAT-11` `CAT-13`
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -250,6 +250,12 @@ the handoff's §4 warns that a test which "just calls a command" now fails with
 }
 ```
 
+`confirmationRequired` is **computed at print time**, not a field on `Operation` — it is what
+`assertWriteAllowed` (`packages/cli/src/guards.ts`) already derives from `access` and `method`
+under rule 6. Printed because an agent has no other way to learn it needs `--confirm` before it
+gets a `confirmation_required` back; stored nowhere, because two sources of truth for "may this
+be sent" is how one of them ends up wrong.
+
 **Where the request body comes from — `FIND-17` settles it, and it is not where the handoff
 guessed.** The handoff's §6 said the body schema should be handwritten next to the override,
 "because Postman does not give it". Measured against the committed snapshot, Postman gives 32 of
@@ -309,11 +315,96 @@ Three pieces, in order:
 3. **The flags:** `--paginate`, `--max-pages <n>`, `--max-items <n>`, refused on an operation
    that declares no pagination rather than ignored. **Always bounded** — `--paginate` with
    neither bound gets a default ceiling, not an unbounded walk, because an agent that mistypes a
-   filter should not discover it by making 900 requests to production. Pages are emitted as one
-   JSON value on stdout (rule 3), so the walk accumulates and prints once.
+   filter should not discover it by making 900 requests to production.
+
+**Where the loop lives, and what one JSON value means when there are five pages.** Both need
+stating, because an implementer otherwise invents an answer.
+
+*The seam is inside `runOperation`*, wrapped around the `client.execute` call at
+`packages/cli/src/execute.ts:79` — not a loop above it. A page walk is **one run**: one run
+directory, one `run.json`, `httpRequests: 5`. Looping above `runOperation` would open five run
+directories for what the user asked for once, and `runs list` would then show five rows for one
+command. It also keeps the single-path invariant that file's own header insists on — `braze api`
+and every catalog command still go through exactly one place.
+
+*The merge is over the one array-valued key.* Braze answers `{"campaigns":[…],"message":"success"}`,
+not a bare array, so "accumulate" needs a rule:
+
+- Find the single array-valued key — the same logic `countRows` already uses at
+  `packages/cli/src/execute.ts:118`. Concatenate that key across pages; keep the **last** page's
+  other keys. A bare array response concatenates directly.
+- **More than one array-valued key: refuse, naming them.** No operation in the collection does
+  this today, and guessing which one is "the rows" is how a walk silently returns a third of the
+  data. This is `buildQuery`'s house style for repeated parameters, applied to the same class of
+  problem.
+- **The page count goes to stderr as a note, never into the payload.** stdout stays byte-identical
+  in shape to what Braze returned, which is rule 3 and what `paginationNote` already does. No
+  `_pages` key injected into someone else's response.
+- The walk stops on the first short page, at `--max-pages`, at `--max-items`, or at the default
+  ceiling — whichever comes first.
 
 `offset` and `cursor` stay unimplemented: no operation in the collection declares either, and
 building for a shape nothing uses is how it ends up wrong.
+
+#### `CAT-13` — help text that tells the reader something
+
+Raised by the owner, 2026-09-14: *"I don't see params eg `--page` for list help output … keep
+users informed, don't bloat."* `--page` is in fact there. What it says is the problem:
+
+```
+$ braze campaigns list --help
+  --page <value>               query parameter (e.g. 0)
+  --include-archived <value>   query parameter (e.g. false)
+  --sort-direction <value>     query parameter (e.g. desc)
+```
+
+`UX-5`, measured over the built catalog: **134 query parameters, 0 with a description.** 91 carry
+an example value, 43 carry nothing at all. And all 95 operations have an empty `documentationUrl`,
+so there is nowhere to send the reader for the real answer either.
+
+**Not a generator bug.** The collection holds **zero** structured `url.query` entries — Braze puts
+parameters in the raw URL string, which is what `BUG-4` was about, and documents them nowhere in
+the collection. `catalog.ts:60` substitutes the honest placeholder. There is nothing upstream to
+extract.
+
+**The fix that informs without bloating: one glossary keyed by parameter name.** The 134 slots are
+only **43 distinct names**, and 33 of them appear in more than one command, covering 124 of the 134
+slots:
+
+```
+14 x length   14 x ending_at   8 x app_id   6 x limit   6 x offset   6 x page   5 x sort_direction …
+```
+
+So **43 short lines describe every flag on all 95 commands.** Keyed by name rather than by
+operation because `page` means the same thing in `campaigns list` and in `segments list` — 134
+per-operation overrides would be the bloat the owner is warning against, and would drift apart the
+first time one was edited.
+
+- Lives in `packages/core/src/operations/parameters.ts`, merged where overrides already merge
+  (`packages/core/src/operations/index.ts:56`). Data, not formatting — core still knows nothing
+  about a terminal.
+- **Two names need more than a glossary:** `length` and `ending_at`, the two most common (14
+  commands each), mean different things per endpoint. `OperationOverride` gains an optional
+  per-parameter description for those, and the glossary is the default. Check on two commands
+  before promising it covers them.
+- A parameter with neither glossary entry nor override keeps today's text. The gate for this is
+  `CAT-8`'s generated `docs/commands.md`, where an undescribed flag is visible in a diff.
+- **`documentationUrl` stays empty and the help footer keeps pointing at Braze's endpoint index**
+  (`DOCUMENTATION.endpoints`, already in `packages/cli/src/documentation.ts:8`). Deriving a
+  per-operation Braze URL means guessing their URL scheme for 95 pages; a link that 404s is worse
+  than a link to the index. Revisit only if Braze publishes the mapping.
+
+**`BUG-6`, found while measuring, and it ships in help today.** `braze catalogs items update-many`
+— `PATCH /catalogs/{catalog_name}/items` — is described as *"Use this endpoint to delete multiple
+items in your catalog."* That is Braze's own copy-paste in the collection, verified in the snapshot,
+not our generator. An agent picking a command by description reads "delete" for the edit endpoint.
+Fixed by an override with a `reason`.
+
+**One cheap check finds the rest of that class**, and it belongs in `CAT-9`: two operations sharing
+a description **with different HTTP methods**. Run today over the 95, it returns exactly three
+pairs and only one is wrong — `DELETE` vs `PATCH /catalogs/{catalog_name}/items`. The other two
+(`/email/blocklist` with `/email/blacklist`, and the v1/v2 subscription pair) are genuinely the
+same endpoint under two names. No false positives, so it is a gate rather than a report.
 
 #### Test plan
 

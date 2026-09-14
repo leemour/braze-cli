@@ -47,7 +47,12 @@ beforeAll(() => {
   )
 })
 
-const env = () => ({ BRAZE_CONFIG_DIR: configDir, BRAZE_RUNS_DIR: runsDir, BRAZE_API_KEY: "not-a-real-key" })
+const env = () => ({
+  BRAZE_CONFIG_DIR: configDir,
+  BRAZE_RUNS_DIR: runsDir,
+  BRAZE_API_KEY: "not-a-real-key",
+  BRAZE_PROFILE: "t",
+})
 
 describe("the machine-output invariant, on the real binary", () => {
   it("gives exactly one JSON value on stdout and puts the commentary on stderr", () => {

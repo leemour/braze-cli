@@ -111,13 +111,23 @@ export const runOperation = async (
  * which is the only thing that tells them apart.
  */
 const paginationNote = (operation: Operation, query: Record<string, string>, data: unknown): string | undefined => {
-  if (operation.pagination !== "page" || operation.pageSize === undefined) return undefined
+  if (operation.pagination !== "page") return undefined
 
   const rows = countRows(data)
   if (rows === undefined) return undefined
 
   const page = Number.parseInt(query.page ?? "0", 10)
   const shown = Number.isNaN(page) ? 0 : page
+
+  // Braze documents no page size for /purchases/product_list or /feed/list, so there is no way to
+  // tell a full page from the last one. Saying which page this is and how many rows came back is
+  // still worth more than silence — it just stops short of the claim it cannot support.
+  if (operation.pageSize === undefined) {
+    return rows === 0
+      ? `page ${shown} · empty, so there is nothing after it`
+      : `page ${shown} · ${rows} rows · Braze documents no page size here, so try --page ${shown + 1} to see if there is more`
+  }
+
   const where = `page ${shown} · ${rows} of at most ${operation.pageSize}`
 
   return rows < operation.pageSize

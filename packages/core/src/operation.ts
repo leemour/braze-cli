@@ -22,6 +22,12 @@ export interface Operation {
   /** The Braze permission an API key needs, as Braze names it. */
   permission?: string
   pagination?: PaginationStyle
+  /**
+   * How many items one page holds, when Braze documents it. Without this a caller cannot tell a
+   * full page from the last one, and `/campaigns/list` returning 100 rows looks identical to
+   * "that is all of them".
+   */
+  pageSize?: number
   /** Braze's per-request limits, by field: `{ attributes: 75, events: 75, purchases: 75 }`. */
   batch?: Readonly<Record<string, number>>
   description?: string

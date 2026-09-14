@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest"
 
 const generate = (spec: string, extra: string[] = []) => {
   const out = join(mkdtempSync(join(tmpdir(), "brazecli-catalog-")), "generated.ts")
-  const args = ["scripts/generate-catalog.mjs", "--spec", spec, "--out", out, ...extra]
+  const coverage = out.replace("generated.ts", "coverage.md")
+  const args = ["scripts/generate-catalog.mjs", "--spec", spec, "--out", out, "--coverage", coverage, ...extra]
   try {
     return { ok: true, output: execFileSync("node", args, { encoding: "utf8", stdio: "pipe" }), out }
   } catch (error) {
@@ -58,5 +59,31 @@ describe("catalog:check", () => {
 
     expect(result.ok).toBe(false)
     expect(result.output).toContain("out of date")
+  })
+})
+
+// §12: a number nobody blocks on is a number nobody reads.
+describe("the coverage gate", () => {
+  it("refuses a write whose path reads like a query and that no override has ruled on", () => {
+    const result = generate("tests/fixtures/catalog/unclassified.json")
+
+    expect(result.ok).toBe(false)
+    expect(result.output).toContain("no override says either way")
+    expect(result.output).toContain("POST /widgets/export")
+  })
+
+  it("stays quiet about a write that plainly is one", () => {
+    const result = generate("tests/fixtures/catalog/small.json")
+
+    expect(result.ok).toBe(true)
+    expect(result.output).toContain("unclassified:        0")
+  })
+
+  it("writes a coverage report next to the catalog", () => {
+    const result = generate("tests/fixtures/catalog/small.json")
+    const report = readFileSync(result.out.replace("generated.ts", "coverage.md"), "utf8")
+
+    expect(report).toContain("| Braze requests | 5 |")
+    expect(report).toContain("| unclassified or ambiguous | 0 |")
   })
 })

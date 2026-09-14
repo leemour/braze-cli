@@ -54,6 +54,16 @@ export const overrides: Readonly<Record<string, OperationOverride>> = {
     batch: { attributes: 75, events: 75, purchases: 75 },
     reason: "Braze caps each array in the body at 75 per request (§10). The bulk pipeline needs it in Phase 3.",
   },
+  "v2.subscription.status.set.create": {
+    permission: "subscription.status.set",
+    batch: { subscription_groups: 50 },
+    reason: "Braze's own description caps this at 50 users per request; the collection carries it as prose only.",
+  },
+  "subscription.status.set.create": {
+    permission: "subscription.status.set",
+    batch: { subscription_groups: 50 },
+    reason: "The v1 form of the same endpoint, with the same 50-user cap.",
+  },
   "campaigns.list.get": {
     pagination: "page",
     permission: "campaigns.list",

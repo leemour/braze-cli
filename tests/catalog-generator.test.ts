@@ -42,8 +42,9 @@ describe("the generator refusing to lose an operation", () => {
     // /catalogs carries both a GET and a POST, so each needs the verb to stay distinct.
     expect(written).toContain('command: ["catalogs", "get"]')
     expect(written).toContain('command: ["catalogs", "create"]')
-    // Two GETs differing only by a trailing parameter escalate to the marked form.
-    expect(written).toContain('command: ["catalogs", "by-id", "items", "by-id", "get"]')
+    // Two GETs differing only by a trailing parameter become one-versus-many, not a `by-id` word.
+    expect(written).toContain('command: ["catalogs", "items", "get"]')
+    expect(written).toContain('command: ["catalogs", "items", "list"]')
   })
 })
 

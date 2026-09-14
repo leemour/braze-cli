@@ -36,7 +36,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.delete",
-    command: ["catalogs", "by-id", "items", "delete"],
+    command: ["catalogs", "items", "delete-many"],
     method: "DELETE",
     path: "/catalogs/{catalog_name}/items",
     access: "write",
@@ -46,7 +46,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.update",
-    command: ["catalogs", "by-id", "items", "update"],
+    command: ["catalogs", "items", "update-many"],
     method: "PATCH",
     path: "/catalogs/{catalog_name}/items",
     access: "write",
@@ -56,7 +56,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.create",
-    command: ["catalogs", "by-id", "items", "create"],
+    command: ["catalogs", "items", "create-many"],
     method: "POST",
     path: "/catalogs/{catalog_name}/items",
     access: "write",
@@ -66,7 +66,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.replace",
-    command: ["catalogs", "by-id", "items", "replace"],
+    command: ["catalogs", "items", "replace-many"],
     method: "PUT",
     path: "/catalogs/{catalog_name}/items",
     access: "write",
@@ -76,7 +76,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.delete",
-    command: ["catalogs", "by-id", "items", "by-id", "delete"],
+    command: ["catalogs", "items", "delete"],
     method: "DELETE",
     path: "/catalogs/{catalog_name}/items/{item_id}",
     access: "write",
@@ -86,7 +86,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.get",
-    command: ["catalogs", "by-id", "items", "by-id", "get"],
+    command: ["catalogs", "items", "get"],
     method: "GET",
     path: "/catalogs/{catalog_name}/items/{item_id}",
     access: "read",
@@ -96,7 +96,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.get",
-    command: ["catalogs", "by-id", "items", "get"],
+    command: ["catalogs", "items", "list"],
     method: "GET",
     path: "/catalogs/{catalog_name}/items",
     access: "read",
@@ -106,7 +106,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.update",
-    command: ["catalogs", "by-id", "items", "by-id", "update"],
+    command: ["catalogs", "items", "update"],
     method: "PATCH",
     path: "/catalogs/{catalog_name}/items/{item_id}",
     access: "write",
@@ -116,7 +116,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.create",
-    command: ["catalogs", "by-id", "items", "by-id", "create"],
+    command: ["catalogs", "items", "create"],
     method: "POST",
     path: "/catalogs/{catalog_name}/items/{item_id}",
     access: "write",
@@ -126,7 +126,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.replace",
-    command: ["catalogs", "by-id", "items", "by-id", "replace"],
+    command: ["catalogs", "items", "replace"],
     method: "PUT",
     path: "/catalogs/{catalog_name}/items/{item_id}",
     access: "write",
@@ -807,7 +807,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "scim.v2.Users.get",
-    command: ["scim", "v2", "Users", "get"],
+    command: ["scim", "v2", "Users", "list"],
     method: "GET",
     path: "/scim/v2/Users",
     access: "read",
@@ -818,7 +818,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "scim.v2.Users.by-id.get",
-    command: ["scim", "v2", "Users", "by-id", "get"],
+    command: ["scim", "v2", "Users", "get"],
     method: "GET",
     path: "/scim/v2/Users/{id}",
     access: "read",
@@ -850,7 +850,7 @@ export const generatedOperations: readonly Operation[] = [
   }),
   defineOperation({
     id: "sms.invalid-phone-numbers.get",
-    command: ["sms", "invalid-phone-numbers"],
+    command: ["sms", "invalid-phone-numbers", "get"],
     method: "GET",
     path: "/sms/invalid_phone_numbers",
     access: "read",

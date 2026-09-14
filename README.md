@@ -5,9 +5,9 @@ for AI agents and automation first, and for people second.
 
 > **Status: Phase 1 done, verified against live Braze** (2026-09-13). `braze profile`, `braze api`
 > and `braze runs` work; a read returns real data and a write is refused without `--confirm`.
-> **There are no typed commands yet** — `braze campaigns list` and the rest arrive with the
-> generated catalog in Phase 2, and until then everything goes through `braze api`. Follow along
-> in [`BACKLOG.md`](BACKLOG.md).
+> **Typed commands work** — 95 of them, registered from the generated catalog rather than written
+> by hand, and `braze api` remains the escape hatch for anything the catalog does not carry.
+> Follow along in [`BACKLOG.md`](BACKLOG.md).
 
 ## What it is for
 
@@ -72,13 +72,14 @@ braze runs path <run-id>                 # the directory holding its artifacts
 braze commands --json                    # the whole command surface, for an agent
 ```
 
-Arriving with the generated catalog in Phase 2:
-
 ```sh
-braze campaigns list                     # typed commands, registered from the catalog
-braze users track --input @users.jsonl --confirm
-braze schema users.track                 # one operation's input contract
+braze campaigns list --json              # typed, registered from the catalog
+braze campaigns list --page 0 --include-archived false
+braze catalogs items list --catalog-name my-catalog
+braze users track --input @users.json --confirm
 ```
+
+Still to come: `braze schema <id>`, one operation's input contract.
 
 ### For an agent
 
@@ -97,10 +98,10 @@ empty, so a refusal can never be mistaken for a result. The exit code is what to
 (`braze commands --json` publishes the whole table); the object says which record and how long to
 wait.
 
-Until the catalog lands the only way to reach Braze is `braze api <METHOD> <PATH>`, which means
-**an agent has to be told the endpoint paths**. `braze api --help` and the `endpoints` block of
-`braze commands --json` both point at [Braze's endpoint
-index](https://www.braze.com/docs/api/home), which is the list to read in the meantime.
+Every catalog operation is a command in that surface, with its path placeholders as required
+named options and its documented query keys as optional ones — so an agent needs nothing but
+`braze commands --json` to construct a call. `--query key=value` still works on every command,
+because Postman's examples are not a schema and the documented keys are never the whole list.
 
 **A profile can be marked read-only** (`--read-only`), which refuses every write before `--confirm`
 is even considered. `--confirm` guards against a mistyped command; this guards against a correct

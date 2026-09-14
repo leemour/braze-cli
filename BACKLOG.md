@@ -65,7 +65,7 @@ current phase: [`docs/plans/`](docs/plans/).
 committed, 95 operations are generated from it, and every one is registered as a command.
 **Start with [`docs/plans/2026-09-14-phase-2-handoff.md`](docs/plans/2026-09-14-phase-2-handoff.md)**,
 then Step 5 of [the phase plan](docs/plans/2026-09-13-phase-2-catalog.md), which owns the order of
-what is left: **`CAT-9` ✅ → `CAT-13` ✅ → `CAT-7` → `CAT-11`**, ruled by the owner on 2026-09-14
+what is left: **`CAT-9` ✅ → `CAT-13` ✅ → `CAT-7` ✅ → `CAT-11`**, ruled by the owner on 2026-09-14
 (`NEED-26`, `NEED-27` in [`docs/DECISIONS.md`](docs/DECISIONS.md)).
 
 ## Blocked on the owner
@@ -114,7 +114,6 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CORE-10` — corrected 2026-09-14, this said `CAT-10`, which is the smoke tests two rows down (`FIND-18`) | P1 |
 | `CAT-5` | ✅ Done 2026-09-14. `docs/catalog-coverage.md` is generated with the catalog; `pnpm catalog:check` runs in CI and fails on a stale catalog or an unclassified endpoint | P1 |
 | `CAT-6` | ✅ Done 2026-09-14. 95 operations registered in a loop; `braze campaigns list --json` returns the same bytes as the raw call | P1 |
-| `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-10` | Every operation with a documented request body builds a request from it — driven by the collection's 48 body examples, 32 of them real JSON (`FIND-17`). Reworded 2026-09-14 per `NEED-28`: it said "smoke tests generated from the collection's own examples", and the collection has 0 response examples across all 99 requests (`FIND-20`) | P3 |
 | `CAT-11` | Pagination: `none`/`page`/`offset`/`cursor` metadata plus `--paginate`, `--max-pages`, `--max-items`, always bounded | P2 |

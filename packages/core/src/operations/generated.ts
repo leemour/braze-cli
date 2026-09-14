@@ -73,6 +73,19 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "ab30a4fc-60bc-4460-885c-1b92af8bc061",
     pathParameters: ["catalog_name"],
     description: "Use this endpoint to update multiple items in your catalog.",
+    requestBody: {
+      source: "example",
+      example: {
+        items: [
+          {
+            Name: "Restaurant",
+            Loyalty_Program: false,
+            Location: { Latitude: 33.6112, Longitude: -117.8711 },
+            Open_Time: "2021-09-03T09:03:19.967+00:00",
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.delete",
@@ -113,6 +126,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "e35976ae-ff77-42b7-b691-a883c980d8c0",
     pathParameters: ["catalog_name", "item_id"],
     description: "Use this endpoint to edit an item in your catalog.",
+    requestBody: {
+      source: "example",
+      example: { items: [{ Name: "Restaurant", Loyalty_Program: false, Open_Time: "2021-09-03T09:03:19.967+00:00" }] },
+    },
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.create",
@@ -123,6 +140,21 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "820c305b-ea6a-4b71-811a-55003a212a40",
     pathParameters: ["catalog_name", "item_id"],
     description: "Use this endpoint to create an item in your catalog.",
+    requestBody: {
+      source: "example",
+      example: {
+        items: [
+          {
+            Name: "Restaurant1",
+            City: "New York",
+            Cuisine: "American",
+            Rating: 5,
+            Loyalty_Program: true,
+            Created_At: "2022-11-01T09:03:19.967+00:00",
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "catalogs.by-id.items.by-id.replace",
@@ -133,6 +165,19 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "b2871ed7-734e-4a37-b8f1-e11584e569f5",
     pathParameters: ["catalog_name", "item_id"],
     description: "Use this endpoint to update an item in your catalog.",
+    requestBody: {
+      source: "example",
+      example: {
+        items: [
+          {
+            Name: "Restaurant",
+            Loyalty_Program: false,
+            Location: { Latitude: 33.6112, Longitude: -117.8711 },
+            Open_Time: "2021-09-03T09:03:19.967+00:00",
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "email.hard-bounces.get",
@@ -177,6 +222,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "be852462-0cda-4a48-b68b-85bd8a9f2147",
     description: "Use this endpoint to set the email subscription state for your users.",
+    requestBody: { source: "example", example: { email: "example@braze.com", subscription_state: "subscribed" } },
   }),
   defineOperation({
     id: "email.bounce.remove.create",
@@ -187,6 +233,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "7b87a884-fa20-4085-b9f1-18363103575f",
     description:
       "Use this endpoint to remove email addresses from your Braze bounce list and bounce list maintained by your email provider.",
+    requestBody: { source: "example", example: { email: "example@braze.com" } },
   }),
   defineOperation({
     id: "email.spam.remove.create",
@@ -197,6 +244,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "1614a82f-510a-4c37-95a6-8207a125e487",
     description:
       "Use this endpoint to remove email addresses from your Braze spam list and spam list maintained by your email provider.",
+    requestBody: { source: "example", example: { email: "example@braze.com" } },
   }),
   defineOperation({
     id: "email.blocklist.create",
@@ -206,6 +254,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "d51155a1-a6e8-4dcc-9f2b-88c54ab9e8c6",
     description: "Use this endpoint to unsubscribe a user from email and mark them as hard bounced.",
+    requestBody: { source: "example", example: { email: ["blocklist_email1", "blocklist_email2"] } },
   }),
   defineOperation({
     id: "email.blacklist.create",
@@ -215,6 +264,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "5044c082-6a15-452b-8dc1-7a0ba6b49cad",
     description: "Use this endpoint to unsubscribe a user from email and mark them as hard bounced.",
+    requestBody: { source: "example", example: { email: ["blacklist_email1", "blacklist_email2"] } },
   }),
   defineOperation({
     id: "campaigns.data-series.get",
@@ -570,6 +620,18 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "b9750447-9d94-4263-967f-f816f0c76577",
     description: "Use this endpoint to export data from any user profile by specifying a user identifier.",
+    requestBody: {
+      source: "example",
+      example: {
+        external_ids: ["user_identifier1", "user_identifier2"],
+        user_aliases: [{ alias_name: "example_alias", alias_label: "example_label" }],
+        device_id: "1234567",
+        braze_id: "braze_identifier",
+        email_address: "example@braze.com",
+        phone: "+11112223333",
+        fields_to_export: ["first_name", "email", "purchases"],
+      },
+    },
   }),
   defineOperation({
     id: "users.export.segment.create",
@@ -579,6 +641,15 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "cfa6fa98-632c-4f25-8789-6c3f220b9457",
     description: "Use this endpoint to export all the users within a segment.",
+    requestBody: {
+      source: "example",
+      example: {
+        segment_id: "segment_identifier",
+        callback_endpoint: "example_endpoint",
+        fields_to_export: ["first_name", "email", "purchases"],
+        output_format: "zip",
+      },
+    },
   }),
   defineOperation({
     id: "users.export.global-control-group.create",
@@ -588,6 +659,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "aa3d8b90-d984-48f0-9287-57aa30469de2",
     description: "Use this endpoint to export all users within a Global Control Group.",
+    requestBody: {
+      source: "example",
+      example: { callback_endpoint: "", fields_to_export: ["email", "braze_id"], output_format: "zip" },
+    },
   }),
   defineOperation({
     id: "messages.live-activity.update.create",
@@ -597,6 +672,18 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "2300226e-f26a-4154-9bcc-5883f1f294cd",
     description: "Use this endpoint to update and end Live Activities displayed by your iOS app.",
+    requestBody: {
+      source: "example",
+      example: {
+        app_id: "{YOUR-APP-API-IDENTIFIER}",
+        activity_id: "live-activity-1",
+        content_state: { teamOneScore: 2, teamTwoScore: 4 },
+        end_activity: false,
+        dismissal_date: "2023-02-28T00:00:00+0000",
+        stale_date: "2023-02-27T16:55:49+0000",
+        notification: { alert: { body: "It's halftime! Let's look at the scores", title: "Halftime" } },
+      },
+    },
   }),
   defineOperation({
     id: "messages.scheduled-broadcasts.get",
@@ -617,6 +704,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "5e89355c-0a5d-4d8b-8d89-2fd99bac36b0",
     description: "Use this endpoint to cancel a message that you previously scheduled before it has been sent.",
+    requestBody: { source: "example", example: { schedule_id: "schedule_identifier" } },
   }),
   defineOperation({
     id: "canvas.trigger.schedule.delete.create",
@@ -627,6 +715,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "5f655193-ecd4-495a-93cf-40ab1700efd0",
     description:
       "Use this endpoint to cancel a Canvas message that you previously scheduled via API-triggered before it has been sent.",
+    requestBody: { source: "example", example: { canvas_id: "canvas_identifier", schedule_id: "schedule_identifier" } },
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.delete.create",
@@ -637,6 +726,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "7d34037f-4bf2-4fab-bc9c-c972988051a7",
     description:
       "The delete schedule endpoint allows you to cancel a message that you previously scheduled API-triggered Canvases before it has been sent.",
+    requestBody: {
+      source: "example",
+      example: { campaign_id: "campaign_identifier", schedule_id: "schedule_identifier" },
+    },
   }),
   defineOperation({
     id: "messages.schedule.create.create",
@@ -647,6 +740,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "25272fb8-bc39-41df-9a41-07ecfd76cb1d",
     description:
       "Use this endpoint to schedule a campaign, Canvas, or other message to be sent at a designated time and provides you with an identifier to reference that message for updates.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "broadcast": "false",\n  "external_user_ids": "external_user_identifiers",\n  "user_aliases": {\n    "alias_name" : "example_name",\n    "alias_label" : "example_label"\n  },\n  "segment_id": "segment_identifiers",\n  "audience": {\n    "AND": [\n      {\n        "custom_attribute": {\n          "custom_attribute_name": "eye_color",\n          "comparison": "equals",\n          "value": "blue"\n        }\n      },\n      {\n        "custom_attribute": {\n          "custom_attribute_name": "favorite_foods",\n          "comparison": "includes_value",\n          "value": "pizza"\n        }\n      },\n      {\n        "OR": [\n          {\n            "custom_attribute": {\n              "custom_attribute_name": "last_purchase_time",\n              "comparison": "less_than_x_days_ago",\n              "value": 2\n            }\n          },\n          {\n            "push_subscription_status": {\n              "comparison": "is",\n              "value": "opted_in"\n            }\n          }\n        ]\n      },\n      {\n        "email_subscription_status": {\n          "comparison": "is_not",\n          "value": "subscribed"\n        }\n      },\n      {\n        "last_used_app": {\n          "comparison": "after",\n          "value": "2019-07-22T13:17:55+0000"\n        }\n      }\n    ]\n  },\n  "campaign_id": "campaign_identifier",\n  "send_id": "send_identifier",\n  "override_messaging_limits": false,\n  "recipient_subscription_state": "subscribed",\n  "schedule": {\n    "time": "",\n    "in_local_time": true,\n    "at_optimal_time": true\n  },\n  "messages": {\n    "apple_push": (optional, Apple Push Object),\n    "android_push": (optional, Android Push Object),\n    "windows_push": (optional, Windows Phone 8 Push Object),\n    "windows8_push": (optional, Windows Universal Push Object),\n    "kindle_push": (optional, Kindle/FireOS Push Object),\n    "web_push": (optional, Web Push Object),\n    "email": (optional, Email object)\n    "webhook": (optional, Webhook object)\n    "content_card": (optional, Content Card Object)\n  }\n}',
+    },
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.create.create",
@@ -657,6 +754,45 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "b7e61de7-f2c2-49c9-9e46-b85a0aa01bba",
     description:
       "Use this endpoint to send dashboard created campaign messages via API-triggered delivery, allowing you to decide what action should trigger the message to be sent.",
+    requestBody: {
+      source: "example",
+      example: {
+        campaign_id: "campaign_identifier",
+        send_id: "send_identifier",
+        recipients: [
+          { user_alias: "example_alias", external_user_id: "external_user_identifier", trigger_properties: {} },
+        ],
+        audience: {
+          AND: [
+            { custom_attribute: { custom_attribute_name: "eye_color", comparison: "equals", value: "blue" } },
+            {
+              custom_attribute: {
+                custom_attribute_name: "favorite_foods",
+                comparison: "includes_value",
+                value: "pizza",
+              },
+            },
+            {
+              OR: [
+                {
+                  custom_attribute: {
+                    custom_attribute_name: "last_purchase_time",
+                    comparison: "less_than_x_days_ago",
+                    value: 2,
+                  },
+                },
+                { push_subscription_status: { comparison: "is", value: "opted_in" } },
+              ],
+            },
+            { email_subscription_status: { comparison: "is_not", value: "subscribed" } },
+            { last_used_app: { comparison: "after", value: "2019-07-22T13:17:55+0000" } },
+          ],
+        },
+        broadcast: false,
+        trigger_properties: {},
+        schedule: { time: "", in_local_time: false, at_optimal_time: false },
+      },
+    },
   }),
   defineOperation({
     id: "canvas.trigger.schedule.create.create",
@@ -667,6 +803,49 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "4bc75890-b807-405d-b226-5aca284e6b7d",
     description:
       "Use this endpoint to schedule Canvas messages via API-triggered delivery, allowing you to decide what action should trigger the message to be sent.",
+    requestBody: {
+      source: "example",
+      example: {
+        canvas_id: "canvas_identifier",
+        recipients: [
+          {
+            user_alias: "example_alias",
+            external_user_id: "external_user_identifier",
+            trigger_properties: "",
+            canvas_entry_properties: {},
+          },
+        ],
+        audience: {
+          AND: [
+            { custom_attribute: { custom_attribute_name: "eye_color", comparison: "equals", value: "blue" } },
+            {
+              custom_attribute: {
+                custom_attribute_name: "favorite_foods",
+                comparison: "includes_value",
+                value: "pizza",
+              },
+            },
+            {
+              OR: [
+                {
+                  custom_attribute: {
+                    custom_attribute_name: "last_purchase_time",
+                    comparison: "less_than_x_days_ago",
+                    value: 2,
+                  },
+                },
+                { push_subscription_status: { comparison: "is", value: "opted_in" } },
+              ],
+            },
+            { email_subscription_status: { comparison: "is_not", value: "subscribed" } },
+            { last_used_app: { comparison: "after", value: "2019-07-22T13:17:55+0000" } },
+          ],
+        },
+        broadcast: false,
+        canvas_entry_properties: {},
+        schedule: { time: "", in_local_time: false, at_optimal_time: false },
+      },
+    },
   }),
   defineOperation({
     id: "messages.schedule.update.create",
@@ -676,6 +855,23 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "f61edf74-4467-4551-b9c4-a4b8d188cd7a",
     description: "Use this endpoint to update scheduled messages.",
+    requestBody: {
+      source: "example",
+      example: {
+        schedule_id: "schedule_identifier",
+        schedule: { time: "2017-05-24T20:30:36Z" },
+        messages: {
+          apple_push: { alert: "Updated Message!", badge: 1 },
+          android_push: { title: "Updated title!", alert: "Updated message!" },
+          sms: {
+            subscription_group_id: "subscription_group_identifier",
+            message_variation_id: "message_variation_identifier",
+            body: "This is my SMS body.",
+            app_id: "app_identifier",
+          },
+        },
+      },
+    },
   }),
   defineOperation({
     id: "campaigns.trigger.schedule.update.create",
@@ -686,6 +882,14 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "6d2a6e66-9d6f-4ae1-965a-79fa52b86b1d",
     description:
       "Use this endpoint to update scheduled API-triggered campaigns created in the dashboard, allowing you to decide what action should trigger the message to be sent.",
+    requestBody: {
+      source: "example",
+      example: {
+        campaign_id: "campaign_identifier",
+        schedule_id: "schedule_identifier",
+        schedule: { time: "2017-05-24T21:30:00Z", in_local_time: true },
+      },
+    },
   }),
   defineOperation({
     id: "canvas.trigger.schedule.update.create",
@@ -695,6 +899,14 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "8fdf158b-ce20-41d8-80e4-a9300a6706d4",
     description: "Use this endpoint to update scheduled API-triggered Canvases that were created in the dashboard.",
+    requestBody: {
+      source: "example",
+      example: {
+        canvas_id: "canvas_identifier",
+        schedule_id: "schedule_identifier",
+        schedule: { time: "2017-05-24T21:30:00Z", in_local_time: true },
+      },
+    },
   }),
   defineOperation({
     id: "sends.id.create.create",
@@ -705,6 +917,7 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "74a04e53-659f-4473-abc5-0f6f735550ff",
     description:
       "Use this endpoint to create send IDs that can be used to send messages and track message performance programatically, without campaign creation for each send.",
+    requestBody: { source: "example", example: { campaign_id: "campaign_identifier", send_id: "send_identifier" } },
   }),
   defineOperation({
     id: "messages.send.create",
@@ -714,6 +927,55 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "946cb701-96e3-48d7-868c-f079785b6d24",
     description: "Use this endpoint to send immediate messages to designated users via the Braze API.",
+    requestBody: {
+      source: "example",
+      example: {
+        broadcast: "false",
+        external_user_ids: "external_user_identifiers",
+        user_aliases: { alias_name: "example_name", alias_label: "example_label" },
+        segment_id: "segment_identifier",
+        audience: {
+          AND: [
+            { custom_attribute: { custom_attribute_name: "eye_color", comparison: "equals", value: "blue" } },
+            {
+              custom_attribute: {
+                custom_attribute_name: "favorite_foods",
+                comparison: "includes_value",
+                value: "pizza",
+              },
+            },
+            {
+              OR: [
+                {
+                  custom_attribute: {
+                    custom_attribute_name: "last_purchase_time",
+                    comparison: "less_than_x_days_ago",
+                    value: 2,
+                  },
+                },
+                { push_subscription_status: { comparison: "is", value: "opted_in" } },
+              ],
+            },
+            { email_subscription_status: { comparison: "is_not", value: "subscribed" } },
+            { last_used_app: { comparison: "after", value: "2019-07-22T13:17:55+0000" } },
+          ],
+        },
+        campaign_id: "campaign_identifier",
+        send_id: "send_identifier",
+        override_frequency_capping: "false",
+        recipient_subscription_state: "all",
+        messages: {
+          android_push: "(optional, Android Push Object)",
+          apple_push: "(optional, Apple Push Object)",
+          content_card: "(optional, Content Card Object)",
+          email: "(optional, Email Object)",
+          kindle_push: "(optional, Kindle/FireOS Push Object)",
+          web_push: "(optional, Web Push Object)",
+          windows_phone8_push: "(optional, Windows Phone 8 Push Object)",
+          windows_universal_push: "(optional, Windows Universal Push Object)",
+        },
+      },
+    },
   }),
   defineOperation({
     id: "transactional.v1.campaigns.by-id.send.create",
@@ -724,6 +986,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "cec874e1-fa51-42a6-9a8d-7fc57d6a63bc",
     pathParameters: ["campaign_id"],
     description: "Use this endpoint to send immediate, one-off transactional messages to a designated user.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n    "external_send_id" : YOUR_BASE64_COMPATIBLE_ID,\n    "trigger_properties": {\n        "example_string_property": YOUR_EXAMPLE_STRING,\n        "example_integer_property": YOUR_EXAMPLE_INTEGER\n    },\n    "recipient": {\n        "external_user_id": TARGETED_USER_ID_STRING\n    }\n}',
+    },
   }),
   defineOperation({
     id: "campaigns.trigger.send.create",
@@ -733,6 +999,50 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "aef185ae-f591-452a-93a9-61d4bc023b05",
     description: "Use this endpoint to send immediate, ad-hoc messages to designated users via API-triggered delivery.",
+    requestBody: {
+      source: "example",
+      example: {
+        campaign_id: "campaign_identifier",
+        send_id: "send_identifier",
+        trigger_properties: "",
+        broadcast: false,
+        audience: {
+          AND: [
+            { custom_attribute: { custom_attribute_name: "eye_color", comparison: "equals", value: "blue" } },
+            {
+              custom_attribute: {
+                custom_attribute_name: "favorite_foods",
+                comparison: "includes_value",
+                value: "pizza",
+              },
+            },
+            {
+              OR: [
+                {
+                  custom_attribute: {
+                    custom_attribute_name: "last_purchase_time",
+                    comparison: "less_than_x_days_ago",
+                    value: 2,
+                  },
+                },
+                { push_subscription_status: { comparison: "is", value: "opted_in" } },
+              ],
+            },
+            { email_subscription_status: { comparison: "is_not", value: "subscribed" } },
+            { last_used_app: { comparison: "after", value: "2019-07-22T13:17:55+0000" } },
+          ],
+        },
+        recipients: [
+          {
+            user_alias: { alias_name: "example_name", alias_label: "example_label" },
+            external_user_id: "external_user_identifier",
+            trigger_properties: "",
+            send_to_existing_only: true,
+            attributes: { first_name: "Alex" },
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "canvas.trigger.send.create",
@@ -742,6 +1052,50 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "c9a8a5fe-a101-4755-99f2-73aa8fc146fe",
     description: "Use this endpoint to send Canvas messages via API-triggered delivery.",
+    requestBody: {
+      source: "example",
+      example: {
+        canvas_id: "canvas_identifier",
+        canvas_entry_properties: { product_name: "shoes", product_price: 79.99 },
+        broadcast: false,
+        audience: {
+          AND: [
+            { custom_attribute: { custom_attribute_name: "eye_color", comparison: "equals", value: "blue" } },
+            {
+              custom_attribute: {
+                custom_attribute_name: "favorite_foods",
+                comparison: "includes_value",
+                value: "pizza",
+              },
+            },
+            {
+              OR: [
+                {
+                  custom_attribute: {
+                    custom_attribute_name: "last_purchase_time",
+                    comparison: "less_than_x_days_ago",
+                    value: 2,
+                  },
+                },
+                { push_subscription_status: { comparison: "is", value: "opted_in" } },
+              ],
+            },
+            { email_subscription_status: { comparison: "is_not", value: "subscribed" } },
+            { last_used_app: { comparison: "after", value: "2019-07-22T13:17:55+0000" } },
+          ],
+        },
+        recipients: [
+          {
+            user_alias: { alias_name: "example_name", alias_label: "example_label" },
+            external_user_id: "user_identifier",
+            trigger_properties: "",
+            canvas_entry_properties: "",
+            send_to_existing_only: true,
+            attributes: { first_name: "Alex" },
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "preference-center.v1.by-id.url.by-id.get",
@@ -783,6 +1137,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "e15d7065-2cbc-4eb3-ae16-32efe43357a6",
     description:
       "Use this endpoint to create a preference center to allow users to manage their notification preferences for your email campaigns.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "name": "string",\n  "preference_center_title": "string",\n  "preference_center_page_html": "string",\n  "confirmation_page_html": "string",\n  "state": (optional) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "options": {\n    "meta-viewport-content": "string", (optional) Only the `content` value of the meta tag\n  }\n}',
+    },
   }),
   defineOperation({
     id: "preference-center.v1.by-id.replace",
@@ -793,6 +1151,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "bf1b43db-3f1b-461f-ad9a-2fbe35b804d7",
     pathParameters: ["PreferenceCenterExternalID"],
     description: "Use this endpoint to update a preference center.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "name": "preference_center_name",\n  "preference_center_title": "string",\n  "preference_center_page_html": "string",\n  "confirmation_page_html": "string",\n  "options": {\n    "meta-viewport-content": "string", (optional) Only the `content` value of the meta tag\n  }\n}',
+    },
   }),
   defineOperation({
     id: "scim.v2.users.by-id.delete",
@@ -836,6 +1198,25 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "768a3c9d-ce1d-44fc-a0e4-d556b09f7aa3",
     description:
       "Use this endpoint to create a new dashboard user account by specifying email, given and family names, permissions (for setting permissions at the company, app group, and team level).",
+    requestBody: {
+      source: "example",
+      example: {
+        schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        userName: "user@test.com",
+        name: { givenName: "Test", familyName: "User" },
+        department: "finance",
+        permissions: {
+          companyPermissions: ["manage_company_settings"],
+          appGroup: [
+            {
+              appGroupName: "Test App Group",
+              appGroupPermissions: ["basic_access", "send_campaigns_canvases"],
+              team: [{ teamName: "Test Team", teamPermissions: ["basic_access", "export_user_data"] }],
+            },
+          ],
+        },
+      },
+    },
   }),
   defineOperation({
     id: "scim.v2.users.by-id.replace",
@@ -847,6 +1228,24 @@ export const generatedOperations: readonly Operation[] = [
     pathParameters: ["id"],
     description:
       "Use this endpoint to update an existing dashboard user account by specifying the resource id returned by the SCIM code POST /code method.",
+    requestBody: {
+      source: "example",
+      example: {
+        schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        name: { givenName: "Test", familyName: "User" },
+        department: "finance",
+        permissions: {
+          companyPermissions: ["manage_company_settings"],
+          appGroup: [
+            {
+              appGroupName: "Test App Group",
+              appGroupPermissions: ["basic_access", "send_campaigns_canvases"],
+              team: [{ teamName: "Test Team", teamPermissions: ["admin"] }],
+            },
+          ],
+        },
+      },
+    },
   }),
   defineOperation({
     id: "sms.invalid-phone-numbers.get",
@@ -874,6 +1273,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "76495aac-8c2d-4e1a-8cac-12e3856ab1d3",
     description: "Use this endpoint to remove “invalid” phone numbers from Braze’s invalid list.",
+    requestBody: { source: "annotated", text: '{\n  "phone_numbers": (required, array of string in e.164 format)\n}' },
   }),
   defineOperation({
     id: "subscription.status.get.get",
@@ -912,6 +1312,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "b1b9a0e0-6329-4df2-a465-53347f410662",
     description: "Use this endpoint to batch update the subscription state of up to 50 users on the Braze dashboard.",
+    requestBody: {
+      source: "annotated",
+      text: '"subscription_groups":[\n    {\n      "subscription_group_id": (required, string),\n      "subscription_state": (required, string)\n      "external_ids": (required*, array of strings),\n      "emails": (required*, array of strings),\n      "phones": (required*, array of strings in E.164 format),\n    }\n  ]',
+    },
   }),
   defineOperation({
     id: "subscription.status.set.create",
@@ -921,6 +1325,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "8895e87e-6324-47a3-a833-adf29a258bb9",
     description: "Use this endpoint to batch update the subscription state of up to 50 users on the Braze dashboard.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n   "subscription_group_id": (required, string) the id of your subscription group,\n   "subscription_state": (required, string) available values are "unsubscribed" (not in subscription group) or "subscribed" (in subscription group),\n   "external_id": (required*, array of strings) the external ID of the user or users, may include up to 50 IDs,\n   "email": (required*, array of strings) the email address of the user (must include at least one email and at most 50 emails),\n   // Email subscription group - one of external_id or email is required\n   // Note that sending an email address that is linked to multiple profiles will update all relevant profiles\n }',
+    },
   }),
   defineOperation({
     id: "content-blocks.list.get",
@@ -955,6 +1363,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "f1cefa8b-7a28-4e64-b579-198a4610d0a5",
     description: "Use this endpoint to create a Content Block .",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "name": (required, string) Must be less than 100 characters,\n  "description": (optional, string) The description of the Content Block. Must be less than 250 character,\n  "content": (required, string) HTML or text content within Content Block,\n  "state": (optional, string) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "tags": (optional, array of strings) Tags must already exist\n}',
+    },
   }),
   defineOperation({
     id: "content-blocks.update.create",
@@ -964,6 +1376,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "4782239a-cb60-4217-9de0-51411434d57d",
     description: "Use this endpoint to update a Content Block .",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "content_block_id" : (required, string) Content Block\'s API identifier.\n  "name": (optional, string) Must be less than 100 characters,\n  "description": (optional, string) The description of the Content Block. Must be less than 250 character,\n  "content": (optional, string) HTML or text content within Content Block,\n  "state": (optional, string) Choose `active` or `draft`. Defaults to `active` if not specified,\n  "tags": (optional, array of strings) Tags must already exist\n}',
+    },
   }),
   defineOperation({
     id: "templates.email.list.get",
@@ -1007,6 +1423,10 @@ export const generatedOperations: readonly Operation[] = [
       { name: "should_inline_css" },
     ],
     description: "Use this endpoint to create email templates on the Braze dashboard.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n   "template_name": (required, string) The name of your email template,\n   "subject": (required, string) The email template subject line,\n   "body": (required, string) The email template body that may include HTML,\n   "plaintext_body": (optional, string) A plaintext version of the email template body,\n   "preheader": (optional, string) The email preheader used to generate previews in some clients,\n   "tags": (optional, Array of Strings) Tags must already exist,\n   "should_inline_css": (optional, Boolean) If `true`, the `inline_css` feature is used on this template.\n }',
+    },
   }),
   defineOperation({
     id: "templates.email.update.create",
@@ -1026,6 +1446,10 @@ export const generatedOperations: readonly Operation[] = [
       { name: "should_inline_css" },
     ],
     description: "Use this endpoint to update email templates on the Braze dashboard.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "email_template_id": (required, string) Your email template\'s API Identifier,\n  "template_name": (optional, string) The name of your email template,\n  "subject": (optional, string) The email template subject line,\n  "body": (optional, string) The email template body that may include HTML,\n  "plaintext_body": (optional, string) A plaintext version of the email template body,\n  "preheader": (optional, string) The email preheader used to generate previews in some clients,\n  "tags": (optional, array of Strings) Tags must already exist,\n  "should_inline_css": (optional, Boolean) If `true`, the `inline_css` feature will be applied to the template.\n}',
+    },
   }),
   defineOperation({
     id: "users.external-ids.rename.create",
@@ -1035,6 +1459,12 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "17682d2b-1546-4a3c-9703-aa5a12861d7c",
     description: "Use this endpoint to rename your users’ external IDs.",
+    requestBody: {
+      source: "example",
+      example: {
+        external_id_renames: [{ current_external_id: "existing_external_id", new_external_id: "new_external_id" }],
+      },
+    },
   }),
   defineOperation({
     id: "users.external-ids.remove.create",
@@ -1044,6 +1474,10 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "e16b5340-5f44-42b6-9033-2398faf8908e",
     description: "Use this endpoint to remove your users' old deprecated external IDs.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "external_ids" :[\n    "existing_deprecated_external_id_string",\n    ...\n  ]\n}',
+    },
   }),
   defineOperation({
     id: "users.alias.new.create",
@@ -1054,6 +1488,14 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "5cf18e64-fd02-452f-8c90-9a0f7c4d0487",
     description:
       "Use this endpoint to add new user aliases for existing identified users, or to create new unidentified users.",
+    requestBody: {
+      source: "example",
+      example: {
+        user_aliases: [
+          { external_id: "external_identifier", alias_name: "example_name", alias_label: "example_label" },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "users.alias.update.create",
@@ -1063,6 +1505,18 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "a084b843-b3cd-43f0-bfb1-ef7bada839c5",
     description: "Use this endpoint to update existing user aliases.",
+    requestBody: {
+      source: "example",
+      example: {
+        alias_updates: [
+          {
+            alias_label: "example_alias_label",
+            old_alias_name: "example_old_alias_name",
+            new_alias_name: "example_new_alias_name",
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "users.identify.create",
@@ -1073,6 +1527,10 @@ export const generatedOperations: readonly Operation[] = [
     sourceId: "5f74e0f7-0620-4c7b-b0a2-f5f38fdbff58",
     description:
       "Use this endpoint to identify an unidentified (alias-only or email-only) user using the provided external ID.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "aliases_to_identify": [\n    {\n      "external_id": "external_identifier",\n      "user_alias": {\n        "alias_name" : "example_alias",\n        "alias_label" : "example_label"\n        }\n    }\n  ],\n  "email_addresses": [\n    {\n      "external_id": "external_identifier",\n      "email": "john.smith@example.com"\n      "prioritization": ["unidentified", "most_recently_updated"]\n    }\n  ],\n  "merge_behavior": "merge"\n}',
+    },
   }),
   defineOperation({
     id: "users.track.create",
@@ -1082,6 +1540,56 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "4cf57ea9-9b37-4e99-a02e-4373c9a4ee59",
     description: "Use this endpoint to record custom events, purchases, and update user profile attributes.",
+    requestBody: {
+      source: "example",
+      example: {
+        attributes: [
+          {
+            email: "test@braze.com",
+            string_attribute: "fruit",
+            boolean_attribute_1: true,
+            integer_attribute: 25,
+            array_attribute: ["banana", "apple"],
+          },
+        ],
+        events: [
+          {
+            email: "test@braze.com",
+            app_id: "your_app_identifier",
+            name: "rented_movie",
+            time: "2022-12-06T19:20:45+01:00",
+            properties: {
+              release: { studio: "FilmStudio", year: "2022" },
+              cast: [{ name: "Actor1" }, { name: "Actor2" }],
+            },
+          },
+          {
+            user_alias: { alias_name: "device123", alias_label: "my_device_identifier" },
+            app_id: "your_app_identifier",
+            name: "rented_movie",
+            time: "2013-07-16T19:20:50+01:00",
+          },
+        ],
+        purchases: [
+          {
+            email: "test@braze.com",
+            app_id: "your_app_identifier",
+            product_id: "product_name",
+            currency: "USD",
+            price: 12.12,
+            quantity: 6,
+            time: "2017-05-12T18:47:12Z",
+            properties: {
+              color: "red",
+              monogram: "ABC",
+              checkout_duration: 180,
+              size: "Large",
+              brand: "Backpack Locker",
+            },
+          },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "users.delete.create",
@@ -1091,6 +1599,17 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "22e91d00-d178-4b4f-a3df-0073ecfcc992",
     description: "Use this endpoint to delete any user profile by specifying a known user identifier.",
+    requestBody: {
+      source: "example",
+      example: {
+        external_ids: ["external_identifier1", "external_identifier2"],
+        braze_ids: ["braze_identifier1", "braze_identifier2"],
+        user_aliases: [
+          { alias_name: "user_alias1", alias_label: "alias_label1" },
+          { alias_name: "user_alias2", alias_label: "alias_label2" },
+        ],
+      },
+    },
   }),
   defineOperation({
     id: "users.merge.create",
@@ -1100,5 +1619,9 @@ export const generatedOperations: readonly Operation[] = [
     access: "write",
     sourceId: "d262b86d-cf84-46e2-b9d0-f882bb7078de",
     description: "Use this endpoint to merge one user into another user.",
+    requestBody: {
+      source: "annotated",
+      text: '{\n  "merge_updates": [\n    {\n      "identifier_to_merge": {\n        "external_id": "old-user1"\n      },\n      "identifier_to_keep": {\n        "external_id": "current-user1"\n      }\n    },\n    {\n      "identifier_to_merge": {\n        "email": "user1@braze.com",\n        "prioritization": ["unidentified", "most_recently_updated"]\n      },\n      "identifier_to_keep":  {\n        "email": "user2@braze.com",\n        "prioritization": ["identified", "most_recently_updated"]\n      }\n    },\n    {\n      "identifier_to_merge": {\n        "user_alias": {\n          "alias_name": "old-user2@example.com",\n          "alias_label": "email"\n        }\n      },\n      "identifier_to_keep": {\n        "user_alias": {\n          "alias_name": "current-user2@example.com",\n          "alias_label": "email"\n        }\n      }\n    }\n  ]\n}\'',
+    },
   }),
 ]

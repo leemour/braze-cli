@@ -16,6 +16,7 @@ export {
   type OperationDefinition,
   type PaginationStyle,
   type QueryParameter,
+  type RequestBodyDoc,
   type RetryPolicy,
   rawOperation,
 } from "./operation.js"

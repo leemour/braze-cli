@@ -5,6 +5,7 @@ is ever removed from this file.
 
 | Number | Task | Closed | Commit |
 |---|---|---|---|
+| `CAT-7` | `braze schema <operation>` — the contract of one operation, addressable by command words or by id, needing no profile. The generator now extracts request bodies (32 real examples, 14 annotated prose, `FIND-17`), and `commands --json` carries `operationId` on every generated leaf so the id is reachable at all | 2026-09-14 | see `git log -- packages/cli/src/commands/schema.ts` |
 | `CAT-13` | Help text that informs: `packages/core/src/operations/parameters.ts`, 43 descriptions keyed by parameter name, covering all 134 slots in the catalog so no flag reads `query parameter` (`UX-5`). A gate fails the build on an undescribed parameter. The `BUG-6` half landed with `CAT-9` | 2026-09-14 | see `git log -- packages/core/src/operations/parameters.ts` |
 | `CAT-9` | Contract tests over every generated operation — 95 parameterised cases plus six shared properties, 329 tests total. Found `UX-6` (five SCIM commands needed a capital letter, and the wrong spelling printed help instead of erroring) and `BUG-6` (Braze describes the catalog PATCH with the DELETE's sentence) | 2026-09-14 | see `git log -- packages/core/src/operations/catalog.test.ts` |
 | `CLI-14` | `braze runs list/show/path`, needing no profile and no key — the point is to read what happened when the configuration is what went wrong | 2026-09-13 | see `git log -- packages/cli/src/commands/runs.ts` |

@@ -112,6 +112,32 @@ function describe(item, folders) {
     path,
     description: firstSentence(item.request.description ?? item.description),
     queryParameters: queryOf(url, raw),
+    requestBody: bodyOf(item.request.body),
+  }
+}
+
+/**
+ * What the collection says the request body looks like, and how much that is worth.
+ *
+ * Two flavours, and the flavour travels with the data because they are not interchangeable:
+ * 32 of the 48 documented bodies are real JSON that can be sent as-is, and the other 16 are
+ * Braze writing documentation into the value position — `"name": (required, string) Must be less
+ * than 100 characters,` — which is prose, not a payload (FIND-17).
+ *
+ * No parser is attempted for the prose. Its regular-looking shape covers only 55 of the 145
+ * quoted-key lines, and a parser that handles a third of its input and silently mishandles the
+ * rest is how BUG-4 happened. The text goes through verbatim, labelled, for a person to read.
+ *
+ * Neither flavour is a schema and neither validates anything — CORE-10 owns that.
+ */
+function bodyOf(body) {
+  const raw = body?.mode === "raw" ? (body.raw ?? "").trim() : ""
+  if (!raw) return undefined
+
+  try {
+    return { source: "example", example: JSON.parse(raw) }
+  } catch {
+    return { source: "annotated", text: raw }
   }
 }
 
@@ -424,6 +450,7 @@ function renderOperation(operation) {
   if (operation.pathParameters.length > 0) fields.push(`pathParameters: ${list(operation.pathParameters)}`)
   if (operation.queryParameters.length > 0) fields.push(`queryParameters: ${queryList(operation.queryParameters)}`)
   if (operation.description) fields.push(`description: ${JSON.stringify(operation.description)}`)
+  if (operation.requestBody) fields.push(`requestBody: ${JSON.stringify(operation.requestBody)}`)
 
   return `  defineOperation({\n${fields.map((field) => `    ${field},`).join("\n")}\n  })`
 }

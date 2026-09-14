@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` ✅ `CAT-7` `CAT-11`
+### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` ✅ `CAT-7` ✅ `CAT-11`
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -232,7 +232,25 @@ Properties, each over all 95:
 Properties 10 and 11 are checked in the generator already; the test exists so that weakening the
 generator is visible rather than merely regrettable.
 
-#### `CAT-7` — `braze schema`, the contract of one operation
+#### `CAT-7` — `braze schema`, the contract of one operation — ✅ done 2026-09-14
+
+**Landed.** 346 tests, up from 335. Both addressing forms resolve, `commands --json` carries
+`operationId` on all 95 generated leaves and on none of the handwritten ones, and the generator
+now extracts request bodies: **32 `example`, 14 `annotated`** (48 raw bodies less the two that
+belong to duplicate requests `FIND-15` merges away).
+
+Two corrections to what this section predicted:
+
+- **The near-miss suggestion needed rewriting before it was useful.** The first attempt matched on
+  a squashed string and therefore missed `campaign list` → `campaigns list` — the single likeliest
+  typo, and the one Braze's own brief makes. It now scores per word with prefix matching in either
+  direction, and the right answer comes first for `campaign list`, `user track` and `canvas`.
+- **The size estimate was low.** This section predicted ~17.9 KB of added data; the real cost is
+  **24.5 KB** — core bundles 65 714 → 90 200 bytes — because the emitted TypeScript repeats keys
+  and escapes strings that the raw measurement did not. Still far inside a Worker's budget, and
+  `portability:core` and `smoke:bun` both pass, but the number in the plan was wrong.
+
+The original plan for it:
 
 **How an operation is named.** `braze schema <words...>`, variadic, accepting **either** form:
 

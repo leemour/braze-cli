@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` `CAT-7` `CAT-11` `CAT-13`
+### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` `CAT-13` `CAT-7` `CAT-11`
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -161,10 +161,12 @@ generator regressed; `braze schema campaigns list` prints what an agent needs to
 saying where each part came from; and `braze <paged command> --paginate` walks pages under a
 bound it cannot exceed.
 
-#### The order, and why it is not the backlog's
+#### The order — ruled by the owner 2026-09-14
 
-**`CAT-9` first, then `CAT-7`, then `CAT-11`.** `BACKLOG.md` says "then `CAT-7`", so this is a
-deliberate reversal, not a slip:
+**`CAT-9` → `CAT-13` → `CAT-7` → `CAT-11`.** Both departures from the backlog's row order were put
+to the owner and confirmed: `NEED-27` (contract tests before `braze schema`, against the backlog's
+"then `CAT-7`") and `NEED-26` (help text jumps ahead of pagination, because it is what the owner
+noticed and it is small). Both are rulings in [`../DECISIONS.md`](../DECISIONS.md). The reasoning:
 
 - `CAT-9` is an extension of an already-green file
   (`packages/core/src/operations/catalog.test.ts:1`, 9 tests today) and needs no new production
@@ -172,8 +174,11 @@ deliberate reversal, not a slip:
 - `CAT-7` *exposes* the very fields `CAT-9` pins. Publishing `pathParameters` through
   `braze schema` before anything asserts it matches the placeholders in `path` is the wrong way
   round — the test is what makes the published contract true.
-- `CAT-11` needs `FIND-19` fixed first (three paged endpoints are not classified as paged), and
-  that fix is easiest to verify once `CAT-9` has a gate for it.
+- `CAT-13` is 43 lines of glossary and fixes the thing the owner actually looked at. It sits
+  second because `CAT-9`'s gate for undescribed parameters is what keeps it fixed.
+- `CAT-11` goes last for two reasons: it needs `FIND-19` fixed (three paged endpoints are not
+  classified as paged), and it is blocked on response shapes nobody has measured (`FIND-20`) —
+  six live GETs against the sandbox, which no other item needs.
 
 #### `CAT-9` — a contract test over every operation, not a chosen few
 

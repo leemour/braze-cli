@@ -322,6 +322,27 @@ subscription state» — все три настоящие записи. Слов
 разрешилась на втором уровне и до «list» не дошла. Это то, что §10 требований и предлагает
 править оверрайдом по одному.
 
+**TASK-18 · Шаг 5 фазы 2 (CAT-9, CAT-7, CAT-11) — план написан, ждёт ревью**
+Принял тред по хендоффу `docs/plans/2026-09-14-phase-2-handoff.md`. Холодный старт сошёлся:
+дерево чистое на `25bf4aa`, 228 тестов зелёные, `catalog:check` — «up to date, 95 operations,
+9 overridden».
+
+**Новый файл плана не заводил.** Работу уже держит `docs/plans/2026-09-13-phase-2-catalog.md`
+(§2, шаги 5 и 6), а второй файл на ту же работу — ровно то, что запрещает §7 `HANDOFF.md`.
+План шага 5 дописан туда же, в §2.
+
+Что сделано в этом заходе:
+- §2 шаг 5 расписан целиком: порядок, решения, тест-план, открытые вопросы.
+- Шапка плана поправлена: стояло «`CAT-1` и `CAT-2` сделаны, дальше `CAT-3`», при том что
+  тела шагов 3 и 4 в том же файле уже помечены ✅.
+- Порядок внутри шага развёрнут: `CAT-9` перед `CAT-7`, вопреки строчке «then `CAT-7`» в
+  бэклоге. Причина записана в плане, не молча.
+- Три находки: `FIND-17` (откуда берутся тела запросов), `FIND-18` (`CAT-10` означает две
+  разные задачи), `FIND-19` (три страничных эндпоинта не помечены страничными).
+- `FIND-18` исправлен по месту в трёх документах, с пометкой «поправка».
+
+Кода не написано ни строки — план ждёт ревью владельца, как требует `CLAUDE.md`.
+
 ## 2. Вопросы Славы
 
 **ASK-1 · «<его вопрос дословно>»**
@@ -578,6 +599,89 @@ endpoint must not demand the key again», — а вот эндпоинт так�
 
 Не делал: нашёл в момент написания хендоффа, правка в точке входа заслуживает отдельного
 теста и своего PR, а не довеска к сдаче.
+
+**FIND-17 · Braze's example bodies are prose in JSON clothing — 32 of 48 are real JSON, 16 are annotated text**
+Measured against the committed snapshot (`spec/braze.postman.json`), not inferred:
+
+- 99 requests, **48 carry a non-empty raw body** — 43 POST, 4 PUT, 1 PATCH. No GET or DELETE
+  has one, so a body is a write-side fact only.
+- **32 of the 48 parse as strict JSON**, and **none of those 32 contains a `{{…}}` Postman
+  placeholder**. They are real, usable example payloads. Compact, all 32 together are 9 652
+  bytes — the cost of embedding them in `generated.ts` (1 104 lines today).
+- **The other 16 are not JSON at all.** Braze writes documentation into the value position:
+  `"name": (required, string) Must be less than 100 characters,` and
+  `"state": (optional) Choose \`active\` or \`draft\`,` plus `//` comments.
+- **A tolerant parser for that dialect would be a BUG-4 repeat.** The regular shape
+  `"key": (required|optional[, type]) description` matches only **55 of the 145** quoted-key
+  lines in those 16 bodies — 38%. The rest are nested objects and plain `"string"` values. A
+  parser that handles 38% and silently mishandles the remainder is exactly the failure §3 of
+  the phase plan names.
+
+**What this settles.** The handoff's §6 recommendation — "the body schema lives next to the
+override, because Postman does not give it" — rests on a premise that is false for two thirds
+of the cases. Postman *does* give 32 of them. So: derive `bodyExample` for the 32, carry the
+16 as opaque text labelled with where it came from, and leave handwritten schemas to `CORE-10`
+where the validation-level decision already lives.
+
+**FIND-18 · CAT-10 names two different tasks; the Valibot reading is the wrong one and has spread to three documents**
+`CAT-10` is cited with two incompatible meanings, which means one of them is quietly
+unowned work.
+
+Settled with `git log -S`, not by reading a second document:
+
+- The scaffold commit `c322326` created **both** rows, distinctly:
+  `CAT-10` = "Smoke tests generated from the collection's own examples" (P3), and
+  `CORE-10` = "Valibot validation with the three levels" (P2).
+- The `CAT-4` commit `e7b3a5a` then wrote "Valibot schemas and PII fields still to come with
+  `CAT-10`" into `BACKLOG.md:112`. That is the error — it meant `CORE-10`.
+- It spread from there: `docs/plans/2026-09-13-phase-2-catalog.md:143` ("Valibot schemas and
+  validation levels (`CORE-10`, `CAT-10`)") and
+  `docs/plans/2026-09-14-phase-2-handoff.md:49` ("`CAT-10` / `CORE-10` схемы Valibot").
+
+**Cost if left.** Someone closes `CORE-10`, sees `CAT-10` also described as Valibot, marks it
+done too — and the smoke tests generated from the collection's own examples leave the backlog
+without ever having been built.
+
+Corrected in place in all three documents, marked as corrections.
+
+**Smaller, same class:** `CORE-10` stands as two separate rows in `BACKLOG.md` — line 87 under
+"Core — the portable client" and line 101 under "Left over from Phase 1". The second carries
+the fuller text. Two rows is two answers to "is it done".
+
+**FIND-19 · Three paged endpoints are not classified as paged, and no gate notices**
+Six operations in the catalog carry a `page` query parameter. **Only three declare
+`pagination: "page"`** — the three that happen to have a handwritten override.
+
+Verified by running the built catalog (`packages/core/dist/index.js`), not read off a document:
+
+| operation | `page` parameter | `pagination` declared |
+|---|---|---|
+| `campaigns.list.get` | yes | `page` |
+| `canvas.list.get` | yes | `page` |
+| `segments.list.get` | yes | `page` |
+| `events.list.get` | yes | **none** |
+| `feed.list.get` | yes | **none** |
+| `purchases.product-list.get` | yes | **none** |
+
+The three without it are `/events/list`, `/feed/list` and `/purchases/product_list` — Braze's
+own example URLs for them are `?page=3`, `?page=1` and `?page=1`.
+
+**What it costs today.** `paginationNote` in `packages/cli/src/execute.ts:96` returns early
+unless `pagination === "page"`, so those three print no "you are on page N of at most M"
+line — the exact ambiguity that note exists to remove. A caller cannot tell a full page from
+the last one.
+
+**What it will cost at `CAT-11`.** `--paginate` keys off the same field, so it would silently
+do nothing on three of the six paged endpoints. Silently, because nothing checks this: the
+`catalog:check` gate covers unclassified **access** (`CAT-5`), and has no equivalent for
+pagination.
+
+**Inferred, not verified:** that all three are paged the same 0-or-1-indexed way as the other
+three, and that their page size is also 100. Braze's example URLs show `page=` but the page
+size is prose in their docs, which is why the existing three needed an override at all. Do not
+copy `pageSize: 100` across without checking each.
+
+The fix is two lines of work and one gate, and it belongs with `CAT-11`.
 
 ## 4. Вопросы к Славе
 

@@ -72,12 +72,20 @@ contract-tested, every flag described, `braze schema` answering for one, `--pagi
 HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests. It found `BUG-8`,
 a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
 
-**What is left is `CAT-10` at P3**, which blocks nothing. The next substantial thread is
-**Phase 3, the bulk pipeline** — and `BULK-3` should read `batchTotal`, not `batch`.
+**The open thread is Phase 3, the bulk pipeline.** Its plan is written and waiting on the owner:
+[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — six steps,
+starting at `CLI-13`. Two decisions are blocked on the owner (`NEED-30`, `NEED-31`) and one
+measurement is blocked on nothing (`RISK-3`: how Braze attributes an error inside a 2xx).
+
+`CAT-10` at P3 blocks nothing.
 
 ## Blocked on the owner
 
-**Nothing.** `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
+**Two, both in the Phase 3 plan.** `NEED-30` — is bulk a `--records` flag on the existing command
+or a separate `braze bulk` verb? `NEED-31` — what goes in `records.csv` when a record carries no
+identifier at all? Neither blocks Step 1.
+
+Previously: `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
 [`docs/DECISIONS.md`](docs/DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;
 the packages are `brazecli` and `brazecli-core`, published no earlier than v1; run artifacts never
 expire on a timer.

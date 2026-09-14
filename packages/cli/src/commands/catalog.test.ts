@@ -20,7 +20,12 @@ const braze = (argv: string[], mock: ReturnType<typeof mockBraze>, readOnly = fa
   saveConfig(configDir, config)
 
   return run(argv, {
-    env: { BRAZE_CONFIG_DIR: configDir, BRAZE_RUNS_DIR: runsDir, BRAZE_API_KEY: "test-key" },
+    env: {
+      BRAZE_CONFIG_DIR: configDir,
+      BRAZE_RUNS_DIR: runsDir,
+      BRAZE_API_KEY: "test-key",
+      BRAZE_PROFILE: "production",
+    },
     keyring: memoryKeyring(),
     streams,
     isTty: false,
@@ -94,6 +99,35 @@ describe("commands generated from the catalog", () => {
 
     expect(code).toBe(0)
     expect(mock.requests).toHaveLength(1)
+  })
+})
+
+describe("paging", () => {
+  // Braze returns a page with no total and no "next" marker, so a full page and the last page
+  // look identical. Only the catalog's page size tells them apart.
+  it("says a full page is probably not the whole list", async () => {
+    const mock = mockBraze(brazeResponses.ok({ campaigns: Array.from({ length: 100 }, (_, i) => ({ id: `c${i}` })) }))
+
+    await braze(["campaigns", "list", "--json"], mock)
+
+    expect(streams.stderr.join("\n")).toContain("a full page")
+    expect(streams.stderr.join("\n")).toContain("--page 1")
+  })
+
+  it("says so when the page is short", async () => {
+    const mock = mockBraze(brazeResponses.ok({ campaigns: [{ id: "c1" }] }))
+
+    await braze(["campaigns", "list", "--json"], mock)
+
+    expect(streams.stderr.join("\n")).toContain("last page")
+  })
+
+  it("stays quiet for an operation that is not paged", async () => {
+    const mock = mockBraze(brazeResponses.ok({ catalogs: [] }))
+
+    await braze(["catalogs", "get", "--json"], mock)
+
+    expect(streams.stderr.join("\n")).not.toContain("page")
   })
 })
 

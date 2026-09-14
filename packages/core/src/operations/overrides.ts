@@ -11,6 +11,7 @@ export interface OperationOverride {
   retryPolicy?: RetryPolicy
   permission?: string
   pagination?: PaginationStyle
+  pageSize?: number
   batch?: Readonly<Record<string, number>>
   description?: string
   documentationUrl?: string
@@ -66,16 +67,21 @@ export const overrides: Readonly<Record<string, OperationOverride>> = {
   },
   "campaigns.list.get": {
     pagination: "page",
+    pageSize: 100,
     permission: "campaigns.list",
-    reason: "Paged by a 0-indexed `page` parameter, which the collection shows but does not label as pagination.",
+    reason:
+      "Paged by a 0-indexed `page` parameter, which the collection shows but does not label as " +
+      "pagination. Braze's own description says the rows come in groups of 100.",
   },
   "canvas.list.get": {
     pagination: "page",
+    pageSize: 100,
     permission: "canvas.list",
     reason: "Paged like campaigns.list.",
   },
   "segments.list.get": {
     pagination: "page",
+    pageSize: 100,
     permission: "segments.list",
     reason: "Paged like campaigns.list.",
   },

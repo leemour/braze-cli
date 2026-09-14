@@ -81,6 +81,10 @@ export const runOperation = async (
     const result = await client.execute(operation, { pathParams: request.pathParams, query, body })
 
     renderer.result(result.data ?? null)
+
+    const page = paginationNote(operation, query, result.data)
+    if (page) renderer.note(page)
+
     renderer.success(`${operation.method} ${path} · ${result.status} · ${Math.round(result.totalDurationMs)} ms`)
     await run.finish("success", { httpRequests: result.attempts, httpRetries: result.attempts - 1 })
   } catch (error) {
@@ -90,6 +94,34 @@ export const runOperation = async (
     await run.finish(code === "cancelled" ? "cancelled" : "failed", { errorCode: code })
     throw error
   }
+}
+
+/**
+ * Braze returns a page with no total and no "next" marker, so a full page and the last page look
+ * identical — 100 rows could be all of them or the first of nine. The catalog knows the page size,
+ * which is the only thing that tells them apart.
+ */
+const paginationNote = (operation: Operation, query: Record<string, string>, data: unknown): string | undefined => {
+  if (operation.pagination !== "page" || operation.pageSize === undefined) return undefined
+
+  const rows = countRows(data)
+  if (rows === undefined) return undefined
+
+  const page = Number.parseInt(query.page ?? "0", 10)
+  const shown = Number.isNaN(page) ? 0 : page
+  const where = `page ${shown} · ${rows} of at most ${operation.pageSize}`
+
+  return rows < operation.pageSize
+    ? `${where} · last page`
+    : `${where} · a full page, so there is probably more — try --page ${shown + 1}`
+}
+
+const countRows = (data: unknown): number | undefined => {
+  if (Array.isArray(data)) return data.length
+  if (typeof data !== "object" || data === null) return undefined
+
+  const list = Object.values(data).find((value) => Array.isArray(value))
+  return Array.isArray(list) ? list.length : undefined
 }
 
 /** Shared by `--query` on `braze api` and on every generated command. */

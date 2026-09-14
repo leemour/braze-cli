@@ -1,10 +1,18 @@
-import { BrazeError } from "brazecli-core"
+import { BrazeError, catalog } from "brazecli-core"
 import { Command } from "commander"
 import { Credentials } from "../auth/credentials.js"
 import type { KeyringStore } from "../auth/keyring.js"
 import { loadConfig, saveConfig } from "../config/file.js"
 import { resolvePaths } from "../config/paths.js"
 import { processStreams, type Streams } from "../output/stream.js"
+import { verifyCommand } from "./verify.js"
+
+/**
+ * Top-level command names a profile may not take. Not derived from the program at runtime: that
+ * would need the built tree here and make a circular import of it, and this list is short and
+ * changes with the handwritten commands, not with the catalog.
+ */
+const RESERVED = ["profile", "api", "runs", "commands", "help", ...new Set(catalog.map((o) => o.command[0]))]
 
 export interface ProfileContext {
   env?: NodeJS.ProcessEnv
@@ -37,12 +45,23 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
   command
     .command("add")
     .argument("<name>", "profile name, such as production or staging")
-    .requiredOption("--endpoint <url>", "Braze REST endpoint, e.g. https://rest.fra-01.braze.eu")
-    .option("--default", "make this the profile used when none is given")
+    .option("--endpoint <url>", "Braze REST endpoint, e.g. https://rest.fra-01.braze.eu")
     .option("--read-only", "refuse every write for this profile, whatever flags a command carries")
+    .option("--no-read-only", "allow writes again; they still need --confirm")
     .description("add or update a profile and store its API key")
-    .action(async (name: string, flags: { endpoint: string; default?: boolean; readOnly?: boolean }) => {
+    .action(async (name: string, flags: { endpoint?: string; readOnly?: boolean }) => {
       const { paths, config, streams, credentials, env } = context(options)
+      const existingProfile = config.profiles[name]
+
+      // `braze <profile> <command>` reads the first word as a profile when one is configured with
+      // that name. A profile called `users` would make `braze users track` ambiguous, so the
+      // collision is refused here — at the only moment it can still be avoided.
+      if (RESERVED.includes(name)) {
+        throw new BrazeError(
+          "validation_error",
+          `"${name}" is also a command, so \`braze ${name} …\` would be ambiguous — pick another name`,
+        )
+      }
 
       // Never a command line argument: it would land in shell history, in `ps`, and in CI logs.
       const given = env.BRAZE_API_KEY?.trim() || (await askForKey(name, options))
@@ -58,8 +77,21 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
         )
       }
 
-      config.profiles[name] = { restEndpoint: flags.endpoint, readOnly: flags.readOnly === true }
-      if (flags.default || config.defaultProfile === undefined) config.defaultProfile = name
+      // Updating one field must not mean retyping the others. The key was already protected this
+      // way; the endpoint was not, and got retyped wrong — `rest.fra-01.braze.com` does not exist,
+      // so every command failed until it was noticed (BUG-5, UX-3).
+      const restEndpoint = flags.endpoint ?? existingProfile?.restEndpoint
+      if (restEndpoint === undefined) {
+        throw new BrazeError("validation_error", `new profile "${name}" needs --endpoint`)
+      }
+
+      // Three states, not two. With both --read-only and --no-read-only declared and neither
+      // given, Commander leaves this `undefined` — which is what distinguishes "leave it alone"
+      // from "set it false". Without that third state, `profile add production --endpoint …` to
+      // correct a URL would quietly unlock writes.
+      const readOnly = flags.readOnly ?? existingProfile?.readOnly ?? false
+
+      config.profiles[name] = { restEndpoint, readOnly }
       saveConfig(paths.config, config)
 
       const storedIn = given ? credentials.write(name, given) : (existing?.source ?? "file")
@@ -71,12 +103,15 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
       streams.data(
         JSON.stringify({
           profile: name,
-          restEndpoint: flags.endpoint,
+          restEndpoint,
+          readOnly,
           keyStoredIn: storedIn,
           keyChanged: Boolean(given),
         }),
       )
     })
+
+  command.addCommand(verifyCommand(options))
 
   command
     .command("list")
@@ -90,7 +125,6 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
         name,
         restEndpoint: profile.restEndpoint,
         readOnly: profile.readOnly === true,
-        isDefault: config.defaultProfile === name,
         apiKey: credentials.read(name) ? { present: true, source: credentials.read(name)?.source } : { present: false },
       }))
 

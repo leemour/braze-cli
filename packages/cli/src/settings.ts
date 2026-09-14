@@ -1,8 +1,10 @@
+import { join } from "node:path"
 import { BrazeError } from "brazecli-core"
 import { type CredentialSource, Credentials } from "./auth/credentials.js"
 import type { KeyringStore } from "./auth/keyring.js"
 import { type Config, loadConfig, type OutputFormat } from "./config/file.js"
 import { type Paths, resolvePaths } from "./config/paths.js"
+import { firstProfileHint } from "./documentation.js"
 
 export interface GlobalFlags {
   profile?: string
@@ -22,6 +24,8 @@ export interface Settings {
   profileName: string
   restEndpoint: string
   readOnly: boolean
+  /** The ceiling `braze profile verify` checks the workspace's size against, when one is recorded. */
+  expectMaxMonthlyActives: number | undefined
   apiKey: string
   apiKeySource: CredentialSource
   outputFormat: OutputFormat
@@ -49,11 +53,18 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
   const config = loadConfig(paths.config)
   if (flags.runsDir) paths.runs = flags.runsDir
 
-  const profileName = flags.profile ?? env.BRAZE_PROFILE ?? config.defaultProfile
+  // No default, deliberately. A default is selected by OMISSION, and the thing most easily
+  // omitted should not be the workspace with a million people in it. `BRAZE_PROFILE` gives the
+  // same brevity for a whole shell session without making silence mean production.
+  const profileName = flags.profile ?? env.BRAZE_PROFILE
   if (!profileName) {
+    const names = Object.keys(config.profiles)
     throw new BrazeError(
       "configuration_error",
-      "no profile selected and no default configured — run `braze profile add <name>`",
+      names.length === 0
+        ? firstProfileHint(join(paths.config, "config.json"))
+        : `no profile given. Name one first — \`braze ${names[0]} <command>\` — or set BRAZE_PROFILE ` +
+            `for the session. Configured: ${names.join(", ")}. There is no default on purpose.`,
     )
   }
 
@@ -64,7 +75,9 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
       "configuration_error",
       profile
         ? `profile "${profileName}" has no REST endpoint`
-        : `no profile named "${profileName}" — run \`braze profile list\` to see what exists`,
+        : `no profile named "${profileName}" — run \`braze profile list\` to see what exists, ` +
+            `or \`braze profile add ${profileName} --endpoint <url>\`. Profiles live in ` +
+            `${join(paths.config, "config.json")}`,
     )
   }
 
@@ -90,6 +103,7 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
     profileName,
     restEndpoint,
     readOnly: profile?.readOnly === true,
+    expectMaxMonthlyActives: profile?.expectMaxMonthlyActives,
     apiKey: stored.apiKey,
     apiKeySource: stored.source,
     outputFormat: resolveOutputFormat(flags, env, config, options.isTty ?? process.stdout.isTTY === true),

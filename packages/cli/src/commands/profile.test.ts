@@ -2,6 +2,7 @@ import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
+import { keyringService } from "../auth/credentials.js"
 import { memoryKeyring } from "../auth/keyring.js"
 import { captureStreams } from "../output/stream.js"
 import { run } from "../program.js"
@@ -26,12 +27,53 @@ describe("braze profile", () => {
     })
 
     expect(code).toBe(0)
-    expect(keyring.entries.get("brazecli:production")).toBe("prod-key")
+    expect(keyring.entries.get(`${keyringService(configDir, { BRAZE_CONFIG_DIR: configDir })}:production`)).toBe(
+      "prod-key",
+    )
     expect(JSON.parse(streams.stdout.join("\n"))).toEqual({
       profile: "production",
       restEndpoint: "https://rest.fra-01.braze.eu",
+      readOnly: false,
       keyStoredIn: "keyring",
       keyChanged: true,
+    })
+  })
+
+  // BUG-5 and UX-3. Updating one field used to mean re-supplying every field, and the endpoint
+  // got retyped as `rest.fra-01.braze.com` — a host that does not exist, so nothing worked at
+  // all until someone noticed.
+  describe("updating one field of an existing profile", () => {
+    const add = (args: string[]) => braze(["profile", "add", "production", ...args], { BRAZE_API_KEY: "prod-key" })
+    const written = () => JSON.parse(streams.stdout.join("\n").trim().split("\n").at(-1) as string)
+
+    beforeEach(async () => {
+      await add(["--endpoint", "https://rest.fra-01.braze.eu", "--read-only"])
+      streams.stdout.length = 0
+    })
+
+    it("turns writes back on without being told the endpoint again", async () => {
+      expect(await add(["--no-read-only"])).toBe(0)
+      expect(written()).toMatchObject({ restEndpoint: "https://rest.fra-01.braze.eu", readOnly: false })
+    })
+
+    it("turns them off again", async () => {
+      await add(["--no-read-only"])
+      streams.stdout.length = 0
+
+      expect(await add(["--read-only"])).toBe(0)
+      expect(written()).toMatchObject({ readOnly: true })
+    })
+
+    it("does NOT silently unlock writes when only the endpoint is corrected", async () => {
+      expect(await add(["--endpoint", "https://rest.fra-02.braze.eu"])).toBe(0)
+      expect(written()).toMatchObject({ restEndpoint: "https://rest.fra-02.braze.eu", readOnly: true })
+    })
+
+    it("still demands an endpoint for a profile that does not exist yet", async () => {
+      const code = await braze(["profile", "add", "brand-new"], { BRAZE_API_KEY: "k" })
+
+      expect(code).toBe(2)
+      expect(streams.stderr.join("\n")).toMatch(/needs --endpoint/)
     })
   })
 
@@ -43,13 +85,22 @@ describe("braze profile", () => {
     expect(readFileSync(join(configDir, "config.json"), "utf8")).not.toContain("prod-key")
   })
 
-  it("makes the first profile the default", async () => {
+  // NEED-25: no profile is ever the default, so nothing is reached by omission.
+  it("makes no profile the default, whichever was created first", async () => {
     await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"], {
       BRAZE_API_KEY: "k",
     })
-    await braze(["profile", "add", "staging", "--endpoint", "https://rest.iad-03.braze.com"], { BRAZE_API_KEY: "k2" })
 
-    expect(JSON.parse(readFileSync(join(configDir, "config.json"), "utf8")).defaultProfile).toBe("production")
+    expect(JSON.parse(readFileSync(join(configDir, "config.json"), "utf8")).defaultProfile).toBeUndefined()
+  })
+
+  it("refuses a profile named after a command, which `braze <profile> …` would make ambiguous", async () => {
+    const code = await braze(["profile", "add", "users", "--endpoint", "https://rest.fra-01.braze.eu"], {
+      BRAZE_API_KEY: "k",
+    })
+
+    expect(code).toBe(2)
+    expect(streams.stderr.join("\n")).toMatch(/would be ambiguous/)
   })
 
   it("lists profiles without ever printing a key, masked or otherwise", async () => {
@@ -67,7 +118,6 @@ describe("braze profile", () => {
     expect(output).not.toContain("secret")
     expect(JSON.parse(output).profiles[0]).toMatchObject({
       name: "production",
-      isDefault: true,
       apiKey: { present: true, source: "keyring" },
     })
   })
@@ -79,7 +129,7 @@ describe("braze profile", () => {
     const code = await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"])
 
     expect(code).toBe(0)
-    expect(keyring.entries.get("brazecli:production")).toBe("k")
+    expect(keyring.entries.get(`${keyringService(configDir, { BRAZE_CONFIG_DIR: configDir })}:production`)).toBe("k")
     expect(JSON.parse(streams.stdout.join("\n"))).toMatchObject({
       restEndpoint: "https://rest.fra-01.braze.eu",
       keyChanged: false,

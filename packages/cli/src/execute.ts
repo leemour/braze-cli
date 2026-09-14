@@ -3,6 +3,7 @@ import { assertWriteAllowed } from "./guards.js"
 import { createRenderer, type Renderer } from "./output/renderer.js"
 import { processStreams, type Streams } from "./output/stream.js"
 import { startRun } from "./runs/run.js"
+import { trackRun } from "./runs/signals.js"
 import { type GlobalFlags, type ResolveOptions, resolveSettings, type Settings } from "./settings.js"
 import { VERSION } from "./version.js"
 
@@ -54,6 +55,9 @@ export const runOperation = async (
     logLevel: context.env?.BRAZE_LOG ?? process.env.BRAZE_LOG,
   })
 
+  // From here until `finish`, a signal finalizes this run instead of killing the process mid-write.
+  const untrack = trackRun(run)
+
   try {
     if (settings.dryRun) {
       const plan = {
@@ -92,7 +96,11 @@ export const runOperation = async (
       return
     }
 
-    const result = await client.execute(operation, { pathParams: request.pathParams, query, body })
+    const result = await client.execute(
+      operation,
+      { pathParams: request.pathParams, query, body },
+      { signal: run.signal },
+    )
 
     renderer.result(result.data ?? null)
 
@@ -105,8 +113,22 @@ export const runOperation = async (
     // Every path finalizes. A directory with events.jsonl and no run.json is a special case
     // `runs list` would have to carry forever.
     const code = error instanceof BrazeError ? error.code : undefined
-    await run.finish(code === "cancelled" ? "cancelled" : "failed", { errorCode: code })
-    throw error
+
+    // An aborted run was cancelled, whatever error surfaced first. Deciding this from the signal
+    // rather than from the error code avoids a race: the signal handler and this catch both call
+    // `finish`, and whichever wins would otherwise decide the status — a Ctrl+C would be recorded
+    // as `failed` with whatever the dying connection happened to report.
+    //
+    // **`outcome_unknown` survives.** A write that may already have reached Braze is not made safe
+    // by the fact that we stopped waiting (rule 4), and that is the one thing a re-run must know.
+    const cancelled = run.signal.aborted && code !== "outcome_unknown"
+
+    await run.finish(cancelled ? "cancelled" : "failed", { errorCode: cancelled ? "cancelled" : code })
+    throw cancelled && code !== "cancelled"
+      ? new BrazeError("cancelled", "cancelled — the run was interrupted", { operation: operation.id })
+      : error
+  } finally {
+    untrack()
   }
 }
 

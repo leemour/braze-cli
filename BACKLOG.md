@@ -81,10 +81,7 @@ attributes an error inside a 2xx; Step 4 settles it against the sandbox).
 
 ## Blocked on the owner
 
-**One.** `NEED-32` — what exit code does a bulk run give when some records failed but the run
-completed? It is in §7.1 of the Phase 3 plan and blocks nothing before Step 6.
-
-`NEED-30` and `NEED-31` were answered on 2026-09-15 and are rulings in
+**Nothing.** `NEED-30`, `NEED-31` and `NEED-32` were all answered on 2026-09-15 and are rulings in
 [`docs/DECISIONS.md`](docs/DECISIONS.md): bulk is a `--records` flag on the existing command, not a
 second command tree; and every record carries an identifier of ours, with required fields checked
 before the request rather than after Braze refuses it.

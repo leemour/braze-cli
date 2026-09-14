@@ -276,3 +276,20 @@ Two rulings, not one:
 
 The practical effect is that a bulk run can be wrong about a record only in ways Braze itself
 introduces. Everything we can know before sending, we check before sending.
+
+**NEED-32 · What exit code does a bulk run give when it completes with some records failed?**
+**Zero, whenever the run completed (option A).** «A». A run that sent 750 000 records and had 612
+refused by Braze did exactly what it was asked; the failure is in the data, not in the command.
+
+**The summary on stdout is what a script branches on**, not the exit code. An agent deciding what
+to re-send needs the number — 612 of 750 000, and which ones — and it already has to read
+`records.csv` to act. An exit code cannot carry that and pretending it can invites a script that
+retries the whole file.
+
+A non-zero code on any failed record was rejected because it makes **one bad row in a
+two-million-row file indistinguishable from a wrong API key**, which is the distinction exit codes
+exist to make. The existing mapping still applies to everything that genuinely raises: a bad
+credential, an unreadable input, a refused profile, a validation error that stopped the run before
+it started.
+
+Cheap to revisit — one line, and no data format depends on it.

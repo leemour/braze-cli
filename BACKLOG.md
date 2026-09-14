@@ -117,7 +117,7 @@ Everything needed for one hand-written command to reach Braze safely. Plan:
 | `CAT-7` | ◐ `braze commands --json` done 2026-09-14, ahead of the catalog: it walks the live Commander tree, so catalog commands join it automatically. `braze schema <operation>` still needs the catalog | P1 |
 | `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-9` | Contract tests over **every** generated operation: unique id, valid method and path, unique command, known access, resolvable path variables, constructible request | P1 |
-| `CAT-10` | Smoke tests generated from the collection's own examples — broad coverage, not a substitute for hand-written tests on important endpoints | P3 |
+| `CAT-10` | 🚩 Smoke tests generated from the collection's own examples — **the collection carries 0 response examples across all 99 requests (`FIND-20`), so this cannot be built as written.** The 48 request-body examples (`FIND-17`) would support "the request builds" tests, which is a different task. Needs rewording or closing | P3 |
 | `CAT-11` | Pagination: `none`/`page`/`offset`/`cursor` metadata plus `--paginate`, `--max-pages`, `--max-items`, always bounded | P2 |
 | `CAT-13` | Help text that informs: one glossary of the 43 distinct query-parameter names covering all 134 slots, so no flag reads `query parameter` (`UX-5`); plus the override for Braze's own wrong description on `catalogs items update-many` (`BUG-6`) | P2 |
 

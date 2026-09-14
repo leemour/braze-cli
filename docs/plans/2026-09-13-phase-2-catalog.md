@@ -330,13 +330,19 @@ and every catalog command still go through exactly one place.
 *The merge is over the one array-valued key.* Braze answers `{"campaigns":[…],"message":"success"}`,
 not a bare array, so "accumulate" needs a rule:
 
-- Find the single array-valued key — the same logic `countRows` already uses at
+- An operation may name its rows with an optional **`itemsKey`**. Where it does not, fall back to
+  "the single array-valued key" — the logic `countRows` already uses at
   `packages/cli/src/execute.ts:118`. Concatenate that key across pages; keep the **last** page's
   other keys. A bare array response concatenates directly.
-- **More than one array-valued key: refuse, naming them.** No operation in the collection does
-  this today, and guessing which one is "the rows" is how a walk silently returns a third of the
-  data. This is `buildQuery`'s house style for repeated parameters, applied to the same class of
-  problem.
+- **More than one array-valued key and no `itemsKey`: refuse, naming them.** Guessing which one is
+  "the rows" is how a walk silently returns a third of the data. This is `buildQuery`'s house style
+  for repeated parameters, applied to the same class of problem.
+- ⚠ **The response shapes are not known, and the snapshot cannot tell us** (`FIND-20`). The
+  collection carries **zero response examples — 0 of 99 requests.** One shape is verified, from
+  Phase 1's live runs: `/campaigns/list` answers `{"campaigns":[…],"message":"success"}`. The
+  other five paged endpoints are **unverified**, which is why `itemsKey` exists rather than a
+  heuristic trusted on its own. Settling them is six GET requests against the sandbox, and it
+  should happen before `--paginate` is written, not after.
 - **The page count goes to stderr as a note, never into the payload.** stdout stays byte-identical
   in shape to what Braze returned, which is rule 3 and what `paginationNote` already does. No
   `_pages` key injected into someone else's response.

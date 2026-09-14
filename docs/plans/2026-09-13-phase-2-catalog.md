@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` ✅ `CAT-7` ✅ `CAT-11`
+### Step 5 — commands from the catalog — ✅ **done 2026-09-14** (`CAT-6` `CAT-9` `CAT-13` `CAT-7` `CAT-11`)
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -336,7 +336,37 @@ because it does not match an example. That is the mistake §3 exists to prevent.
 Cost to the portability gate: ~17.9 KB of data added to `generated.ts` (1 104 lines today), no
 new import. `pnpm portability:core` and `pnpm smoke:bun` are run as part of the step, not after it.
 
-#### `CAT-11` — pagination that terminates
+#### `CAT-11` — pagination that terminates — ✅ done 2026-09-14
+
+**Landed.** 355 tests. `--paginate`, `--max-pages`, `--max-items`; the loop lives inside
+`runOperation` so a walk is one run; the merged pages leave as one JSON value in Braze's own shape
+with the page count on stderr.
+
+**`FIND-19` is closed, and Braze's documentation contradicted the obvious assumption.** The three
+unclassified endpoints are now overrides, and copying `pageSize: 100` across would have been wrong
+on all three:
+
+| operation | page size |
+|---|---|
+| `events.list.get` | **250**, not 100 |
+| `purchases.product-list.get` | **not documented** — so none is recorded |
+| `feed.list.get` | **not documented** — so none is recorded |
+
+An operation with no documented size carries none, and the page note degrades to a row count
+without the "so there is probably more" claim it cannot support. Inventing 100 would make the CLI
+announce "last page" at a boundary it does not know.
+
+**Two deviations from what this section specified:**
+
+- **The gate is a test, not `catalog:check`.** The generator reads `overrides.ts` as text and
+  cannot see what an override *declares*, only which ids exist. The test has the real merged
+  catalog. Both run in CI, so the guarantee is identical.
+- **`itemsKey` is specified above and was not built.** The single-array-key rule covers every paged
+  endpoint Braze documents — confirmed from their docs for `segments`, `events` and `products` —
+  and a response with two lists refuses by name rather than guessing. Adding a field nothing sets
+  would be speculative; the refusal is what makes it safe to omit.
+
+The original plan for it:
 
 **First, `FIND-19`: three paged endpoints are not classified as paged.** Six operations carry a
 `page` query parameter; only the three with a handwritten override declare `pagination: "page"`.

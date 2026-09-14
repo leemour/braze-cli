@@ -164,3 +164,36 @@ closed `FIND-13` was run before this was asked, on `POST /users/export/ids` with
 absent identifier: it returned 201 and `{"users":[],"invalid_user_ids":["nope"]}`, and wrote
 nothing. That is the last one that happens without a question.
 
+**NEED-25 · How is a profile chosen — a default, a sticky `profile use`, or named every time?**
+**Named every time, and there is no default.** «ok let's allow env var along with braze
+production ... using no profile for braze profile or similar is ok, no default profile».
+
+```sh
+braze staging campaigns list          # the profile is the first word
+BRAZE_PROFILE=staging braze …         # or once for a shell session
+braze --profile staging …             # the flag still works
+```
+
+Omitting it is an error that lists the profiles that exist. `braze profile`, `braze runs` and
+`braze commands` need none, because they do not talk to Braze.
+
+**A sticky `profile use` was rejected**, not merely skipped: it is `kubectl config use-context`,
+where a command that reads perfectly is aimed by invisible state set at some earlier time,
+possibly in another terminal. A default has the same flaw in weaker form — it is selected by
+*omission*, and the easiest thing to omit must not be the workspace with 1.3 million people in it.
+
+A profile may not be named after a top-level command; `profile add` refuses, because
+`braze users track` would otherwise be ambiguous between a profile named `users` and the users
+command.
+
+**NEED-24 · How does a profile prove it points at the workspace you think?**
+**By size, checked with `braze profile verify`.** Braze publishes no workspace identifier — no
+`/me`, nothing in any response naming the workspace a key belongs to — so it cannot be checked
+directly. Activity separates them cleanly where volume does not: the sandbox held just as many
+user *profiles* as production but ran 502 monthly actives against 1,307,224.
+
+`--expect-max` records a ceiling on the profile, and only when the live workspace already agrees
+with it; a contradicted ceiling is never written, because that would stamp "this is the small one"
+onto the large one. An exact fingerprint over campaign or segment ids was rejected: it breaks the
+first time anyone adds one, and a check that cries wolf is a check people learn to skip.
+

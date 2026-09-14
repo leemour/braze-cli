@@ -12,6 +12,13 @@ the README. If it is not, replace the command with
 ```text
 You have a Braze CLI, on your PATH as `braze`.
 
+EVERY command that talks to Braze must name a profile, first, before the command:
+
+  braze staging campaigns list --json
+
+There is no default. Omitting the profile is an error, never a guess. Use the profile you
+were told to use and never substitute another; `braze profile list` shows what exists.
+
 Always pass --json. Discover what it can do before doing anything else:
 
   braze commands --json
@@ -33,7 +40,7 @@ How to read a result:
 
 Reaching Braze:
 
-  braze api <METHOD> <PATH> --json
+  braze staging api <METHOD> <PATH> --json
   braze api GET /campaigns/list --query page=0 --json
 
 There are no typed commands yet, so `api` is the only route, and you must know the path.
@@ -53,7 +60,11 @@ Rules that will otherwise waste your turns:
   guessed at. If you need that, stop and say so.
 - Never put an API key on the command line. It comes from the keyring or BRAZE_API_KEY.
 
+A paged command tells you where you are on stderr — "a full page, so there is probably more —
+try --page 1". Do not assume one page is the whole list.
+
 To see what a past invocation did: `braze runs list --json`, then `braze runs show <run-id>`.
+Neither takes a profile.
 ```
 
 ---

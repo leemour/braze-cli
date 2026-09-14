@@ -19,3 +19,4 @@ task at hand.
 | branch `feat/cat-5-coverage-gate` (local and on origin) | Merged into `main` by rebase in PR #5 on 2026-09-14 | 2026-09-14 |
 | branch `feat/cat-6-generated-commands` (local and on origin) | Merged into `main` by rebase in PR #6 on 2026-09-14 | 2026-09-14 |
 | branch `fix/profile-update-one-field` (local and on origin) | Merged into `main` by rebase in PR #7 on 2026-09-14 | 2026-09-14 |
+| `docs/plans/2026-09-13-phase-2-catalog-handoff.md` | The handoff that opened Phase 2. Superseded by `2026-09-14-phase-2-handoff.md`; its `CAT-1` context is now in the plan and in `DECISIONS.md` | 2026-09-14 |

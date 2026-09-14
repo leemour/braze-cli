@@ -61,10 +61,10 @@ current phase: [`docs/plans/`](docs/plans/).
 > is a read Braze implements as a POST — correct behaviour today, and the first concrete case for
 > `CAT-4`).
 
-**Open thread:** Phase 2, the generated catalog —
-[`docs/plans/2026-09-13-phase-2-catalog.md`](docs/plans/2026-09-13-phase-2-catalog.md). `CAT-1` is
-answered (`NEED-13`): the collection downloads anonymously from Braze's Postman documenter, 99
-requests, every one with a distinct Postman id. **Start at `CAT-2`**, the committed snapshot.
+**Open thread:** Phase 2, the generated catalog. `CAT-1`…`CAT-6` are done — the collection is
+committed, 95 operations are generated from it, and every one is registered as a command.
+**Start with [`docs/plans/2026-09-14-phase-2-handoff.md`](docs/plans/2026-09-14-phase-2-handoff.md)**,
+then `CAT-7`.
 
 ## Blocked on the owner
 

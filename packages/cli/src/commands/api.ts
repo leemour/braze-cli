@@ -1,4 +1,4 @@
-import { BrazeClient, BrazeError, type HttpMethod, rawOperation } from "brazecli-core"
+import { BrazeClient, BrazeError, findByRequest, type HttpMethod, rawOperation } from "brazecli-core"
 import { Command } from "commander"
 import { DOCUMENTATION } from "../documentation.js"
 import { assertWriteAllowed } from "../guards.js"
@@ -47,7 +47,10 @@ export const apiCommand = (context: ApiContext = {}): Command =>
 
         const settings = resolveSettings(globals, { ...context, warn: context.warn ?? streams.diagnostic })
         const renderer = createRenderer({ format: settings.outputFormat, color: settings.color, streams })
-        const operation = rawOperation(method, path)
+        // The catalog first, exactly as the note below intends: a Braze read implemented as a POST
+        // is corrected by its catalog entry (FIND-13), not by guessing here. `rawOperation` remains
+        // the escape hatch for every path the catalog does not carry.
+        const operation = findByRequest(method, path) ?? rawOperation(method, path)
         const body = flags.input === undefined ? undefined : readInput(flags.input)
 
         // §14: the method decides. A Braze read that happens to be a POST is corrected by a typed

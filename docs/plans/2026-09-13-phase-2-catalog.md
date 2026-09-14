@@ -103,16 +103,31 @@ aborts the generator with both paths printed.
 `/users/export/ids` is still generated as a write, because access comes from the HTTP method here
 (`FIND-13`). A test pins that, so `CAT-4` flipping it will be visible rather than silent.
 
-### Step 4 — overrides and coverage `CAT-4` `CAT-5` `CORE-10`
-Handwritten corrections merged over the generated catalog. The first three, already known:
+### Step 4 — overrides `CAT-4` ✅, coverage `CAT-5` `CORE-10` still open
+Overrides done 2026-09-14 in `packages/core/src/operations/overrides.ts`, merged in
+`operations/index.ts`. Seven corrections, each carrying a `reason`.
 
-- **`/users/export/ids` is `access: "read"`** despite being a POST (`FIND-13`). This is the case
-  that motivated overrides existing.
-- Repeated query parameters: decide per operation whether Braze wants them repeated or joined.
-  `buildQuery` refuses arrays today and names `CAT-3` in the message.
-- Batch limits for `/users/track` — 75 per field, which Phase 3 needs.
+- **Keyed by `Operation.id`, not by path** as §10 sketches — a path is not unique (`/catalogs`
+  has both a GET and a POST), so a path-keyed override would hit both.
+- **An override may not change `id`, `method` or `path`.** Those identify the operation being
+  corrected; one that could move them would quietly become an override of something else.
+- **Three validations, each tested:** an override matching no operation aborts (that is how a
+  renamed endpoint is caught rather than silently losing its safety classification); a write with
+  `retryPolicy: "read-safe"` is rejected, which is the check `operation.ts` asks for by name; and
+  `retryPolicy` is re-derived when a correction flips `access` without naming one.
 
-`catalog:check` then fails CI when an operation vanishes or arrives unclassified.
+**`FIND-13` is closed.** `braze api` now consults the catalog before falling back to
+`rawOperation`, which is what `api.ts`'s own note meant by "corrected by a typed catalog
+operation, never by guessing here". Verified live against the read-only production profile:
+`POST /users/export/ids` returns 201, while `POST /users/track` and `DELETE /catalogs/...` are
+still refused with `permission_error`. `rawOperation` itself is untouched.
+
+Repeated query parameters turned out to need **no** override: no request in the collection
+documents a repeated key, so there is nothing to decide per operation yet and `buildQuery` keeps
+refusing rather than guessing.
+
+Still open: the coverage report and `catalog:check` as a CI gate (`CAT-5`), and Valibot schemas
+(`CORE-10`, `CAT-10`).
 
 ### Step 5 — commands from the catalog `CAT-6` `CAT-7` `CAT-9` `CAT-11`
 Register Commander commands in a loop, not by hand. `braze commands --json` and

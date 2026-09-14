@@ -141,6 +141,13 @@ export const generatedOperations: readonly Operation[] = [
     path: "/email/hard_bounces",
     access: "read",
     sourceId: "7c2ef84f-ddf5-451a-a72c-beeabc06ad9d",
+    queryParameters: [
+      { name: "start_date", example: "2019-01-01" },
+      { name: "end_date", example: "2019-02-01" },
+      { name: "limit", example: "100" },
+      { name: "offset", example: "1" },
+      { name: "email", example: "example@braze.com" },
+    ],
     description:
       "Use this endpoint to pull a list of email addresses that have “hard bounced” your email messages within a certain time frame.",
   }),
@@ -151,6 +158,14 @@ export const generatedOperations: readonly Operation[] = [
     path: "/email/unsubscribes",
     access: "read",
     sourceId: "d2966b81-188a-407b-ba7e-e6c252c44b4a",
+    queryParameters: [
+      { name: "start_date", example: "2020-01-01" },
+      { name: "end_date", example: "2020-02-01" },
+      { name: "limit", example: "1" },
+      { name: "offset", example: "1" },
+      { name: "sort_direction", example: "desc" },
+      { name: "email", example: "example@braze.com" },
+    ],
     description:
       "Use this endpoint to return emails that have unsubscribed during the time period from start_date to end_date .",
   }),
@@ -208,6 +223,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/campaigns/data_series",
     access: "read",
     sourceId: "c07b5ebd-0246-471e-b154-416d63ae28a1",
+    queryParameters: [
+      { name: "campaign_id" },
+      { name: "length", example: "7" },
+      { name: "ending_at", example: "2020-06-28T23:59:59-5:00" },
+    ],
     description: "Use this endpoint to retrieve a daily series of various stats for a campaign over time.",
   }),
   defineOperation({
@@ -217,6 +237,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/campaigns/details",
     access: "read",
     sourceId: "aad2a811-7237-43b1-9d64-32042eabecd9",
+    queryParameters: [{ name: "campaign_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a specified campaign, which can be identified by the campaign_id .",
   }),
@@ -227,6 +248,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/campaigns/list",
     access: "read",
     sourceId: "f3b0b3ef-04fb-4a31-8570-e6ad88dacb18",
+    queryParameters: [
+      { name: "page", example: "0" },
+      { name: "include_archived", example: "false" },
+      { name: "sort_direction", example: "desc" },
+      { name: "last_edit.time[gt]", example: "2020-06-28T23:59:59-5:00" },
+    ],
     description:
       "Use this endpoint to export a list of campaigns, each of which will include its name, campaign API identifier, whether it is an API campaign, and tags associated with the campaign.",
   }),
@@ -237,6 +264,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/sends/data_series",
     access: "read",
     sourceId: "76f822a8-a13b-4bfb-b20e-72b5013dfe86",
+    queryParameters: [
+      { name: "campaign_id" },
+      { name: "send_id" },
+      { name: "length", example: "30" },
+      { name: "ending_at", example: "2014-12-10T23:59:59-05:00" },
+    ],
     description:
       "Use this endpoint to retrieve a daily series of various stats for a tracked send_id for API campaigns.",
   }),
@@ -247,6 +280,15 @@ export const generatedOperations: readonly Operation[] = [
     path: "/canvas/data_series",
     access: "read",
     sourceId: "0fd61e93-7edf-4d87-a8dc-052420aefb73",
+    queryParameters: [
+      { name: "canvas_id" },
+      { name: "ending_at", example: "2018-05-30T23:59:59-5:00" },
+      { name: "starting_at", example: "2018-05-28T23:59:59-5:00" },
+      { name: "length", example: "10" },
+      { name: "include_variant_breakdown", example: "true" },
+      { name: "include_step_breakdown", example: "true" },
+      { name: "include_deleted_step_data", example: "true" },
+    ],
     description: "Use this endpoint to export time series data for a Canvas.",
   }),
   defineOperation({
@@ -256,6 +298,15 @@ export const generatedOperations: readonly Operation[] = [
     path: "/canvas/data_summary",
     access: "read",
     sourceId: "1eb1b760-6b00-4c03-bcfb-12646f2ba6da",
+    queryParameters: [
+      { name: "canvas_id" },
+      { name: "ending_at", example: "2018-05-30T23:59:59-5:00" },
+      { name: "starting_at", example: "2018-05-28T23:59:59-5:00" },
+      { name: "length", example: "5" },
+      { name: "include_variant_breakdown", example: "true" },
+      { name: "include_step_breakdown", example: "true" },
+      { name: "include_deleted_step_data", example: "true" },
+    ],
     description:
       "Use this endpoint to export rollups of time series data for a Canvas, providing a concise summary of a Canvas’ results.",
   }),
@@ -266,6 +317,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/canvas/details",
     access: "read",
     sourceId: "5188873c-13a3-4aaf-a54b-9fa1daeac5f8",
+    queryParameters: [{ name: "canvas_id" }],
     description:
       "Use this endpoint to export metadata about a Canvas, such as the name, time created, current status, and more.",
   }),
@@ -276,6 +328,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/canvas/list",
     access: "read",
     sourceId: "e6c150d7-fceb-4b10-91e2-a9ca4d5806d1",
+    queryParameters: [
+      { name: "page", example: "1" },
+      { name: "include_archived", example: "false" },
+      { name: "sort_direction", example: "desc" },
+      { name: "last_edit.time[gt]", example: "2020-06-28T23:59:59-5:00" },
+    ],
     description:
       "Use this endpoint to export a list of Canvases, including the name, Canvas API identifier and associated tags.",
   }),
@@ -286,6 +344,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/events/list",
     access: "read",
     sourceId: "93ecd8a5-305d-4b72-ae33-2d74983255c1",
+    queryParameters: [{ name: "page", example: "3" }],
     description: "Use this endpoint to export a list of custom events that have been recorded for your app.",
   }),
   defineOperation({
@@ -295,6 +354,14 @@ export const generatedOperations: readonly Operation[] = [
     path: "/events/data_series",
     access: "read",
     sourceId: "0bd1ab63-d1a5-4301-8d17-246cf24a178c",
+    queryParameters: [
+      { name: "event", example: "event_name" },
+      { name: "length", example: "24" },
+      { name: "unit", example: "hour" },
+      { name: "ending_at", example: "2014-12-10T23:59:59-05:00" },
+      { name: "app_id" },
+      { name: "segment_id" },
+    ],
     description:
       "Use this endpoint to retrieve a series of the number of occurrences of a custom event in your app over a designated time period.",
   }),
@@ -305,6 +372,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/kpi/new_users/data_series",
     access: "read",
     sourceId: "07756c39-cfa0-40a0-8101-03f8791cec01",
+    queryParameters: [
+      { name: "length", example: "14" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "app_id" },
+    ],
     description: "Use this endpoint to retrieve a daily series of the total number of new users on each date.",
   }),
   defineOperation({
@@ -314,6 +386,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/kpi/dau/data_series",
     access: "read",
     sourceId: "90a64560-65aa-4f71-a8ef-1edf49321986",
+    queryParameters: [
+      { name: "length", example: "10" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "app_id" },
+    ],
     description:
       "Use this endpoint to retrieve a daily series of the total number of unique active users on each date.",
   }),
@@ -324,6 +401,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/kpi/mau/data_series",
     access: "read",
     sourceId: "68f45461-3bf1-425c-b918-f0bbf3f87149",
+    queryParameters: [
+      { name: "length", example: "7" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-05:00" },
+      { name: "app_id" },
+    ],
     description:
       "Use this endpoint to retrieve a daily series of the total number of unique active users over a 30-day rolling window.",
   }),
@@ -334,6 +416,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/kpi/uninstalls/data_series",
     access: "read",
     sourceId: "59c4d592-3e77-42f8-8ff1-d5d250acbeae",
+    queryParameters: [
+      { name: "length", example: "14" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "app_id" },
+    ],
     description: "Use this endpoint to retrieve a daily series of the total number of uninstalls on each date.",
   }),
   defineOperation({
@@ -343,6 +430,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/feed/data_series",
     access: "read",
     sourceId: "9cdc3b1e-641e-4d62-b9e8-42d04ee9d4d8",
+    queryParameters: [
+      { name: "card_id" },
+      { name: "length", example: "14" },
+      { name: "unit", example: "day" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+    ],
     description: "Use this endpoint to retrieve a daily series of engagement stats for a card over time.",
   }),
   defineOperation({
@@ -352,6 +445,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/feed/details",
     access: "read",
     sourceId: "5b1401a6-f12c-4827-82c9-8dc604f1671e",
+    queryParameters: [{ name: "card_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a card, which can be identified by the card_id .",
   }),
@@ -362,6 +456,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/feed/list",
     access: "read",
     sourceId: "9fa7a3bc-4a02-4de2-bc4c-8f111750665e",
+    queryParameters: [
+      { name: "page", example: "1" },
+      { name: "include_archived", example: "true" },
+      { name: "sort_direction", example: "desc" },
+    ],
     description:
       "Use this endpoint to export a list of News Feed cards, each of which will include its name and card API identifier.",
   }),
@@ -372,6 +471,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/purchases/product_list",
     access: "read",
     sourceId: "dff4ed40-81f5-451d-9d44-accc0e932285",
+    queryParameters: [{ name: "page", example: "1" }],
     description: "Use this endpoint to return a paginated lists of product IDs.",
   }),
   defineOperation({
@@ -381,6 +481,13 @@ export const generatedOperations: readonly Operation[] = [
     path: "/purchases/quantity_series",
     access: "read",
     sourceId: "6ac59282-d231-4317-88df-f7f12169b94e",
+    queryParameters: [
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "length", example: "100" },
+      { name: "unit", example: "14" },
+      { name: "app_id" },
+      { name: "product", example: "name" },
+    ],
     description: "Use this endpoint to return the total number of purchases in your app over a time range.",
   }),
   defineOperation({
@@ -390,6 +497,13 @@ export const generatedOperations: readonly Operation[] = [
     path: "/purchases/revenue_series",
     access: "read",
     sourceId: "f6e05f9a-13c0-4d66-8caa-4a376d25749f",
+    queryParameters: [
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "length", example: "100" },
+      { name: "unit", example: "14" },
+      { name: "app_id" },
+      { name: "product", example: "name" },
+    ],
     description: "Use this endpoint to return the total money spent in your app over a time range.",
   }),
   defineOperation({
@@ -399,6 +513,10 @@ export const generatedOperations: readonly Operation[] = [
     path: "/segments/list",
     access: "read",
     sourceId: "1349e6f4-3ce7-4e60-b3e9-951c99c0993f",
+    queryParameters: [
+      { name: "page", example: "1" },
+      { name: "sort_direction", example: "desc" },
+    ],
     description:
       "Use this endpoint to export a list of segments, each of which will include its name, Segment API identifier, and whether it has analytics tracking enabled.",
   }),
@@ -409,6 +527,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/segments/data_series",
     access: "read",
     sourceId: "62d9d142-cdec-4aea-a287-c13efea7415e",
+    queryParameters: [
+      { name: "segment_id" },
+      { name: "length", example: "14" },
+      { name: "ending_at", example: "2018-06-27T23:59:59-5:00" },
+    ],
     description: "Use this endpoint to retrieve a daily series of the estimated size of a segment over time.",
   }),
   defineOperation({
@@ -418,6 +541,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/segments/details",
     access: "read",
     sourceId: "aab56ed9-0a28-476a-8b57-b79786dbb9c1",
+    queryParameters: [{ name: "segment_id" }],
     description:
       "Use this endpoint to retrieve relevant information on a segment, which can be identified by the segment_id .",
   }),
@@ -428,6 +552,13 @@ export const generatedOperations: readonly Operation[] = [
     path: "/sessions/data_series",
     access: "read",
     sourceId: "79efb6a9-62ec-4b8a-bf4a-e96313aa4be1",
+    queryParameters: [
+      { name: "length", example: "14" },
+      { name: "unit", example: "day" },
+      { name: "ending_at", example: "2018-06-28T23:59:59-5:00" },
+      { name: "app_id" },
+      { name: "segment_id" },
+    ],
     description:
       "Use this endpoint to retrieve a series of the number of sessions for your app over a designated time period.",
   }),
@@ -474,6 +605,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/messages/scheduled_broadcasts",
     access: "read",
     sourceId: "6f623cc3-383b-4bf7-b14d-7c56fc5562f5",
+    queryParameters: [{ name: "end_time", example: "2018-09-01T00:00:00-04:00" }],
     description:
       "Use this endpoint to return a JSON list of information about scheduled campaigns and entry Canvases between now and a designated end_time specified in the request.",
   }),
@@ -619,6 +751,7 @@ export const generatedOperations: readonly Operation[] = [
     access: "read",
     sourceId: "0bc750ff-068e-4391-897e-6eddca2561cd",
     pathParameters: ["PreferenceCenterExternalID", "UserID"],
+    queryParameters: [{ name: "preference_center_api_id" }, { name: "external_id" }],
     description: "Use this endpoint to generate a URL for a preference center.",
   }),
   defineOperation({
@@ -679,6 +812,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/scim/v2/Users",
     access: "read",
     sourceId: "5037d810-b822-4c54-bb51-f30470a42a95",
+    queryParameters: [{ name: "filter", example: "{userName@example.com}" }],
     description:
       "Use this endpoint to look up an existing dashboard user account by specifying their email in the filter query parameter.",
   }),
@@ -721,6 +855,14 @@ export const generatedOperations: readonly Operation[] = [
     path: "/sms/invalid_phone_numbers",
     access: "read",
     sourceId: "81ceae19-15d1-4ac1-ad22-a6b86a92456d",
+    queryParameters: [
+      { name: "start_date", example: "2018-09-01" },
+      { name: "end_date", example: "2018-09-01" },
+      { name: "limit", example: "100" },
+      { name: "offset", example: "1" },
+      { name: "phone_numbers", example: "12345678901" },
+      { name: "reason", example: "provider_error" },
+    ],
     description:
       "Use this endpoint to pull a list of phone numbers that have been deemed “invalid” within a certain time frame.",
   }),
@@ -740,6 +882,11 @@ export const generatedOperations: readonly Operation[] = [
     path: "/subscription/status/get",
     access: "read",
     sourceId: "488c8923-fa44-4124-9245-036d13c615f2",
+    queryParameters: [
+      { name: "subscription_group_id" },
+      { name: "external_id" },
+      { name: "email", example: "example@braze.com" },
+    ],
     description: "Use this endpoint to get the subscription state of a user in a subscription group.",
   }),
   defineOperation({
@@ -749,6 +896,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/subscription/user/status",
     access: "read",
     sourceId: "d1c3b617-22f1-47bf-9ee8-499526824470",
+    queryParameters: [
+      { name: "external_id" },
+      { name: "email", example: "example@braze.com" },
+      { name: "limit", example: "100" },
+      { name: "offset", example: "0" },
+    ],
     description: "Use this endpoint to list and get the subscription groups of a certain user.",
   }),
   defineOperation({
@@ -776,6 +929,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/content_blocks/list",
     access: "read",
     sourceId: "6d87048f-68fd-46c9-aa15-3a970e99540e",
+    queryParameters: [
+      { name: "modified_after", example: "2020-01-01T01:01:01.000000" },
+      { name: "modified_before", example: "2020-02-01T01:01:01.000000" },
+      { name: "limit", example: "100" },
+      { name: "offset", example: "1" },
+    ],
     description: "Use this endpoint to list your existing Content Blocks information.",
   }),
   defineOperation({
@@ -785,6 +944,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/content_blocks/info",
     access: "read",
     sourceId: "589adda3-0def-4369-9ddc-eae71923c0ee",
+    queryParameters: [{ name: "content_block_id" }, { name: "include_inclusion_data", example: "false" }],
     description: "Use this endpoint to call information for your existing Content Blocks .",
   }),
   defineOperation({
@@ -812,6 +972,12 @@ export const generatedOperations: readonly Operation[] = [
     path: "/templates/email/list",
     access: "read",
     sourceId: "eec24bf4-a3f4-47cb-b4d8-bb8f03964cca",
+    queryParameters: [
+      { name: "modified_after", example: "2020-01-01T01:01:01.000000" },
+      { name: "modified_before", example: "2020-02-01T01:01:01.000000" },
+      { name: "limit", example: "1" },
+      { name: "offset", example: "0" },
+    ],
     description: "Use this endpoint to get a list of available templates in your Braze account.",
   }),
   defineOperation({
@@ -821,6 +987,7 @@ export const generatedOperations: readonly Operation[] = [
     path: "/templates/email/info",
     access: "read",
     sourceId: "e98d2d5b-62fe-4358-b391-9fe9e460d0ac",
+    queryParameters: [{ name: "email_template_id" }],
     description: "Use this endpoint to get information on your email templates.",
   }),
   defineOperation({
@@ -830,6 +997,15 @@ export const generatedOperations: readonly Operation[] = [
     path: "/templates/email/create",
     access: "write",
     sourceId: "5eb1fe0d-2795-474d-aaf2-c4e2977dc94b",
+    queryParameters: [
+      { name: "template_name" },
+      { name: "subject" },
+      { name: "body" },
+      { name: "plaintext_body" },
+      { name: "preheader" },
+      { name: "tags" },
+      { name: "should_inline_css" },
+    ],
     description: "Use this endpoint to create email templates on the Braze dashboard.",
   }),
   defineOperation({
@@ -839,6 +1015,16 @@ export const generatedOperations: readonly Operation[] = [
     path: "/templates/email/update",
     access: "write",
     sourceId: "afb25494-3350-458d-932d-5bf4220049fa",
+    queryParameters: [
+      { name: "email_template_id" },
+      { name: "template_name" },
+      { name: "subject" },
+      { name: "body" },
+      { name: "plaintext_body" },
+      { name: "preheader" },
+      { name: "tags" },
+      { name: "should_inline_css" },
+    ],
     description: "Use this endpoint to update email templates on the Braze dashboard.",
   }),
   defineOperation({

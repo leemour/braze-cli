@@ -8,15 +8,11 @@ Covers file deletions, dropped databases, Docker volumes and containers, stale b
 worktrees, generated artifacts and temp directories — anything whose removal is not itself the
 task at hand.
 
+**Done 2026-09-14**, after the owner confirmed: seven merged branches removed local and on
+origin (`feat/cat-1`…`feat/cat-6`, `fix/profile-update-one-field` — every patch verified already
+in `main` with `git cherry`, since they were merged by rebase and their hashes therefore do not
+appear in history), plus the two superseded plans. The run artifacts below were deliberately kept.
+
 | What | Why | Recorded |
 |---|---|---|
-| `docs/plans/2026-09-13-phase-1-foundation.md` | Phase 1 landed and was verified live; a plan is deleted when its work does. Its decisions are in `DECISIONS.md`, its durable truths in `ARCHITECTURE.md`, its leftovers numbered in `BACKLOG.md`. Keep until the next agent has read the Phase 2 handoff, which refers to it for context | 2026-09-13 |
 | `~/.local/share/brazecli/runs/2026-09-13/**` | Run artifacts from this session's live checks against production Braze. They carry no key, but they name real campaign counts and a profile. Owner's data, owner's call | 2026-09-13 |
-| branch `feat/cat-1-collection-source` (local and on origin) | Merged into `main` by rebase in PR #1 on 2026-09-14; its eleven commits are in `main`'s history, so the branch carries nothing the default branch does not | 2026-09-14 |
-| branch `feat/cat-2-spec-snapshot` (local and on origin) | Merged into `main` by rebase in PR #2 on 2026-09-14; its commits are in `main`'s history | 2026-09-14 |
-| branch `feat/cat-3-normalizer` (local and on origin) | Merged into `main` by rebase in PR #3 on 2026-09-14; its commits are in `main`'s history | 2026-09-14 |
-| branch `feat/cat-4-overrides` (local and on origin) | Merged into `main` by rebase in PR #4 on 2026-09-14; its commits are in `main`'s history | 2026-09-14 |
-| branch `feat/cat-5-coverage-gate` (local and on origin) | Merged into `main` by rebase in PR #5 on 2026-09-14 | 2026-09-14 |
-| branch `feat/cat-6-generated-commands` (local and on origin) | Merged into `main` by rebase in PR #6 on 2026-09-14 | 2026-09-14 |
-| branch `fix/profile-update-one-field` (local and on origin) | Merged into `main` by rebase in PR #7 on 2026-09-14 | 2026-09-14 |
-| `docs/plans/2026-09-13-phase-2-catalog-handoff.md` | The handoff that opened Phase 2. Superseded by `2026-09-14-phase-2-handoff.md`; its `CAT-1` context is now in the plan and in `DECISIONS.md` | 2026-09-14 |

@@ -6,12 +6,11 @@
   after `CAT-6`, when the catalog began registering commands. Its §0 prints the state.
 - [`2026-09-13-phase-2-catalog.md`](2026-09-13-phase-2-catalog.md) — the plan, with each step's
   decisions recorded in it as it was built.
-- [`2026-09-13-phase-2-catalog-handoff.md`](2026-09-13-phase-2-catalog-handoff.md) — the handoff
-  that opened the phase. Superseded by the one above; listed for removal.
 
-Closed, kept only until the next agent has read it:
-[`2026-09-13-phase-1-foundation.md`](2026-09-13-phase-1-foundation.md) — Phase 1, done and
-verified against live Braze. Listed for removal in [`../../CLEANUP.md`](../../CLEANUP.md).
+The handoff that opened Phase 2 and the Phase 1 plan were both removed on 2026-09-14, once the
+owner confirmed: their decisions are in [`../DECISIONS.md`](../DECISIONS.md), their durable truths
+in [`../ARCHITECTURE.md`](../ARCHITECTURE.md), their leftovers numbered in
+[`../../BACKLOG.md`](../../BACKLOG.md), and the files themselves in git history.
 
 `YYYY-MM-DD-<topic>.md` is a plan; `YYYY-MM-DD-<topic>-handoff.md` is the handoff for the same
 thread, written by `/handoff` from the session that ran it. Both are **deleted when the work

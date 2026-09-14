@@ -14,13 +14,16 @@ stdout, a closed list of error codes).
 The Braze client underneath is a separate package that **must run unchanged in a Cloudflare
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
-**Status 2026-09-13: Phase 1 done and verified against live Braze.** `braze profile`, `braze api`
-and `braze runs` work; `braze api GET /campaigns/list --json` returns real data. 152 tests.
+**Status 2026-09-14: Phase 1 closed and verified against live Braze; Phase 2's catalog is built.**
+`braze profile`, `braze api` and `braze runs` work, and **95 operations are generated from Braze's
+own collection and registered as typed commands** — `braze staging campaigns list --json` returns
+what the raw call does, without anyone having written a `campaigns` command. Each one is contract
+tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
+`--paginate` walks pages under a ceiling it cannot exceed. 355 tests.
 
-**Not built:** the generated operation catalog. Until it exists there are no typed commands —
-everything goes through `braze api`. That is Phase 2, and it is the open thread. Its one open
-question is answered as of 2026-09-14: the collection downloads anonymously from Braze's own
-Postman documenter (`NEED-13`), so Phase 2 starts at `CAT-2` and not at a probe.
+**Not built:** `CAT-8` — the generated `docs/commands.md` and its `docs:check` gate — which is
+what is left of Phase 2 and the open thread. Valibot validation (`CORE-10`) and the bulk pipeline
+(Phase 3) come after.
 
 ## 2. Layout
 
@@ -121,8 +124,13 @@ The live list is [`../BACKLOG.md`](../BACKLOG.md); the rules for taking a number
 the fold.
 
 **The open thread is Phase 2, the generated catalog.** Start with the handoff —
-[`plans/2026-09-13-phase-2-catalog-handoff.md`](plans/2026-09-13-phase-2-catalog-handoff.md) —
-and its §0, which prints the state in one command.
+[`plans/2026-09-14-phase-2-handoff.md`](plans/2026-09-14-phase-2-handoff.md) — and its §0, which
+prints the state in one command.
+
+**Updated 2026-09-14: Step 5 is done.** `CAT-6`, `CAT-9`, `CAT-13`, `CAT-7` and `CAT-11` are all
+closed — 95 operations registered as commands, contract-tested, every flag described, `braze
+schema` answering for one operation, and `--paginate` bounded. 355 tests. What is left of the
+phase is `CAT-8`, Step 6 of [the plan](plans/2026-09-13-phase-2-catalog.md).
 
 Nothing is waiting on the owner.
 

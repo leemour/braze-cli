@@ -241,3 +241,38 @@ operation with a documented body can be turned into a request that builds.
 Taking the shapes from live Braze instead was rejected: 95 live requests to capture fixtures that
 go stale the first time Braze changes a response is a maintenance cost with no matching benefit.
 The 🚩 is cleared.
+
+## 2026-09-15
+
+**NEED-30 · Is bulk a `--records` flag on the existing command, or a separate `braze bulk` verb?**
+**A flag on the existing command (option A).** «1 А». `braze production users track --records
+users.jsonl`. `--input` keeps its meaning — one file, one body — and passing both is an error.
+
+A second command tree was rejected because it would put every one of the 95 generated operations
+into the surface twice: in `braze commands --json`, in `docs/commands.md`, and in the tree an agent
+walks to find out what exists. The operation is the same one either way; only how many records go
+into it differs.
+
+**NEED-31 · What does `records.csv` hold when a record carries no identifier?**
+**The question was too narrow. Every record must carry an identifier, and it must be ours.**
+«надо сделать поле id обязательным, и продумывать, чтобы была валидация данных и проверка
+обязательных полей перед запросом, просто что попало не шлем. если это создание нового, все равно
+должен быть у нас какой-то id, да хоть sequential row number как минимум, а в идеале что-то наше».
+
+Two rulings, not one:
+
+1. **`recordId` is mandatory on every record**, not optional and never blank. Where the input
+   supplies one it is used; where it does not — a create, for instance — **the pipeline generates
+   one** rather than leaving the audit row unactionable. A bare row number is the floor, not the
+   goal: it is ambiguous the moment there is a second run or a second file, so the generated form
+   is `<runId>-<row>`, unique across every run this tool has ever made and traceable to both the
+   run and the input line. The audit records whether the id came from the input or from us, so a
+   generated one is never mistaken for the customer's own key.
+
+2. **Required fields are checked per record, before the request is built.** "We do not send
+   whatever turns up." This goes further than `CORE-10`, which validates an assembled body: in a
+   bulk run one malformed record among 75 would fail the whole batch, so each record is checked on
+   its own and a bad one is `invalid` — named in the audit, never sent, and the other 74 still go.
+
+The practical effect is that a bulk run can be wrong about a record only in ways Braze itself
+introduces. Everything we can know before sending, we check before sending.

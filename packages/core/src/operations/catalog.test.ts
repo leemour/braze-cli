@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { defineOperation, mayRetry } from "../operation.js"
 import { buildUrl } from "../request.js"
-import { applyOverrides, catalog, findByCommand, findOperation } from "./index.js"
+import { applyOverrides, catalog, describeParameters, findByCommand, findOperation } from "./index.js"
+import { parameterDescriptions } from "./parameters.js"
 
 describe("the generated catalog", () => {
   it("covers the whole snapshot, with nothing dropped in silence", () => {
@@ -206,5 +207,85 @@ describe("the contract every generated operation keeps", () => {
 
     const shared = [...byDescription].filter(([, methods]) => methods.size > 1)
     expect(shared.map(([description]) => description)).toEqual([])
+  })
+})
+
+/**
+ * CAT-13. `braze campaigns list --help` used to print `--page <value>  query parameter (e.g. 0)`
+ * for all 134 parameter slots in the catalog — a line shaped like documentation that carries
+ * nothing (`UX-5`). The collection cannot help: it holds no structured query entries at all.
+ */
+describe("what each query parameter means", () => {
+  it("leaves no flag in the whole catalog undescribed", () => {
+    const undescribed = catalog.flatMap((operation) =>
+      (operation.queryParameters ?? [])
+        .filter((parameter) => !parameter.description)
+        .map((parameter) => `${operation.id} --${parameter.name}`),
+    )
+
+    // The gate, not the report: a parameter Braze adds later arrives here with no description,
+    // and this fails naming it rather than letting it ship as "query parameter".
+    expect(undescribed).toEqual([])
+  })
+
+  it("says something different for each flag, rather than one placeholder repeated", () => {
+    const descriptions = catalog.flatMap((operation) =>
+      (operation.queryParameters ?? []).map((parameter) => parameter.description),
+    )
+
+    expect(descriptions).not.toContain("query parameter")
+    expect(new Set(descriptions).size).toBeGreaterThan(40)
+  })
+
+  it("describes `page` identically wherever it appears, which is why this is keyed by name", () => {
+    const pages = catalog
+      .flatMap((operation) => operation.queryParameters ?? [])
+      .filter((parameter) => parameter.name === "page")
+
+    expect(pages.length).toBe(6)
+    expect(new Set(pages.map((parameter) => parameter.description)).size).toBe(1)
+  })
+
+  /**
+   * The cap on `length` is 100 on campaign analytics and 14 on Canvas; `limit` is capped at 500
+   * for email lists and 1000 for Content Blocks. One glossary line cannot name either as *the*
+   * limit without being wrong on the other endpoint, so it names neither.
+   */
+  it("states no single cap for a parameter whose cap differs per endpoint", () => {
+    expect(parameterDescriptions.length).toContain("differs by endpoint")
+    expect(parameterDescriptions.limit).toContain("differs by endpoint")
+  })
+
+  it("lets a per-operation description win, since it is the more specific of the two", () => {
+    const operations = [
+      defineOperation({
+        id: "a.get",
+        command: ["a"],
+        method: "GET",
+        path: "/a",
+        access: "read",
+        queryParameters: [{ name: "page", description: "pages of something unusual" }, { name: "limit" }],
+      }),
+    ]
+
+    const [described] = describeParameters(operations, { page: "generic", limit: "generic" })
+
+    expect(described?.queryParameters?.[0]?.description).toBe("pages of something unusual")
+    expect(described?.queryParameters?.[1]?.description).toBe("generic")
+  })
+
+  it("leaves a parameter nobody has described alone rather than inventing text", () => {
+    const operations = [
+      defineOperation({
+        id: "a.get",
+        command: ["a"],
+        method: "GET",
+        path: "/a",
+        access: "read",
+        queryParameters: [{ name: "mystery" }],
+      }),
+    ]
+
+    expect(describeParameters(operations, {})[0]?.queryParameters?.[0]?.description).toBeUndefined()
   })
 })

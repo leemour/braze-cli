@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { defineOperation, mayRetry } from "../operation.js"
+import { buildUrl } from "../request.js"
 import { applyOverrides, catalog, findByCommand, findOperation } from "./index.js"
 
 describe("the generated catalog", () => {
@@ -123,5 +124,87 @@ describe("applying overrides", () => {
 
   it("refuses an override that empties the command", () => {
     expect(() => applyOverrides(generated, { "b.get": { command: [], reason: "wrong" } })).toThrow(/no command/)
+  })
+})
+
+/**
+ * CAT-9. Every property here holds for all 95 operations or for none — a sample would pass while
+ * the generator quietly mangled the one endpoint nobody thought to name. Each assertion carries
+ * the operation id, so a failure says which one.
+ */
+describe("the contract every generated operation keeps", () => {
+  const ID = /^[a-z0-9][a-z0-9.-]*$/
+  const WORD = /^[a-z0-9][a-z0-9-]*$/
+  const METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"])
+  const PLACEHOLDER = /\{([A-Za-z_][A-Za-z0-9_]*)\}/g
+
+  it.each(catalog.map((operation) => [operation.id, operation] as const))(
+    "%s is callable, addressable and safe to classify",
+    (id, operation) => {
+      expect(ID.test(id), `id ${id}`).toBe(true)
+      expect(METHODS.has(operation.method), `${id} method ${operation.method}`).toBe(true)
+
+      expect(operation.path.startsWith("/"), `${id} path`).toBe(true)
+      expect(operation.path, `${id} path`).not.toMatch(/\{\{|\s/)
+
+      expect(["read", "write"], `${id} access`).toContain(operation.access)
+      if (operation.access === "write") expect(operation.retryPolicy, `${id} retry`).not.toBe("read-safe")
+
+      expect(operation.command.length, `${id} command`).toBeGreaterThan(0)
+      for (const word of operation.command) expect(WORD.test(word), `${id} word "${word}"`).toBe(true)
+    },
+  )
+
+  // The only thing an agent is told in order to call the operation at all. Matching the path is
+  // not enough — the order has to match too, since that is what `braze commands --json` prints.
+  it("names every path placeholder, in the order the path uses them", () => {
+    for (const operation of catalog) {
+      const placeholders = [...operation.path.matchAll(PLACEHOLDER)].map(([, name]) => name)
+      expect(operation.pathParameters ?? [], operation.id).toEqual(placeholders)
+    }
+  })
+
+  it("builds a real request for every operation, with no placeholder left behind", () => {
+    const endpoint = new URL("https://rest.iad-01.braze.com")
+
+    for (const operation of catalog) {
+      const pathParams = Object.fromEntries((operation.pathParameters ?? []).map((name) => [name, "x"]))
+      const url = buildUrl(endpoint, { method: operation.method, path: operation.path, pathParams })
+
+      expect(url.pathname, operation.id).not.toContain("{")
+      expect(url.protocol, operation.id).toBe("https:")
+    }
+  })
+
+  it("gives an operation no two query parameters under one name", () => {
+    for (const operation of catalog) {
+      const names = (operation.queryParameters ?? []).map((parameter) => parameter.name)
+      expect(new Set(names).size, operation.id).toBe(names.length)
+    }
+  })
+
+  /**
+   * BUG-6: Braze describes `PATCH /catalogs/{catalog_name}/items` — editing items — with the
+   * sentence it uses for deleting them. The description reaches `--help`, `braze commands --json`
+   * and the generated docs, so an agent choosing a command by description reads "delete" for the
+   * edit endpoint. A wrong description is worse than a missing one.
+   *
+   * Two operations sharing a description under DIFFERENT methods is the signature of that
+   * copy-paste. The two legitimate cases share a method — `/email/blocklist` with its
+   * `blacklist` spelling, and the v1/v2 subscription pair — so this catches Braze's mistake
+   * without catching Braze's aliases.
+   */
+  it("lets no two operations with different methods share a description", () => {
+    const byDescription = new Map<string, Set<string>>()
+
+    for (const operation of catalog) {
+      if (!operation.description) continue
+      const methods = byDescription.get(operation.description) ?? new Set()
+      methods.add(operation.method)
+      byDescription.set(operation.description, methods)
+    }
+
+    const shared = [...byDescription].filter(([, methods]) => methods.size > 1)
+    expect(shared.map(([description]) => description)).toEqual([])
   })
 })

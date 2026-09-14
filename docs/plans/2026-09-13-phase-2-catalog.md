@@ -148,7 +148,7 @@ Still open: Valibot schemas and validation levels — `CORE-10`. **Correction, 2
 line also named `CAT-10`, which is a different task (smoke tests generated from the collection's
 own examples). `FIND-18` traces where the confusion came from.
 
-### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` `CAT-13` `CAT-7` `CAT-11`
+### Step 5 — commands from the catalog `CAT-6` ✅ `CAT-9` ✅ `CAT-13` `CAT-7` `CAT-11`
 
 `CAT-6` landed 2026-09-14: 95 operations registered in a loop by
 `packages/cli/src/commands/catalog.ts:12`, and `braze staging campaigns list --json` returns the
@@ -180,7 +180,27 @@ noticed and it is small). Both are rulings in [`../DECISIONS.md`](../DECISIONS.m
   classified as paged), and it is blocked on response shapes nobody has measured (`FIND-20`) —
   six live GETs against the sandbox, which no other item needs.
 
-#### `CAT-9` — a contract test over every operation, not a chosen few
+#### `CAT-9` — a contract test over every operation, not a chosen few — ✅ done 2026-09-14
+
+**Landed.** 329 tests, up from 228 — the 95 parameterised cases plus six shared properties. It
+found two real defects before it was finished, which is the argument for covering all 95 rather
+than a sample:
+
+- **`UX-6`** — five SCIM commands needed a capital letter. Braze's path is `/scim/v2/Users` (the
+  SCIM spec requires the capital) and the generator passed the casing into the command name, so
+  `braze scim v2 users list` printed the **group's help** instead of running. Commander matches
+  case-sensitively and answers a near miss with help rather than an error, so the obvious spelling
+  failed silently. `slug()` in `scripts/generate-catalog.mjs:335` now lower-cases; **the path keeps
+  Braze's exact spelling**, only the name does not. Verified in the built CLI.
+- **`BUG-6`** — fixed here rather than waiting for `CAT-13`, because the gate that catches it is
+  this item's and a gate cannot land red. Override on `catalogs.by-id.items.update` with the
+  reason; `braze catalogs items --help` now says *edit* for the endpoint that edits.
+
+Two properties from the table below were already covered and were left where they were: the
+group/leaf prefix collision and the `by-id` marker, both in
+`packages/cli/src/commands/catalog.test.ts`.
+
+The original plan for it:
 
 **What a "contract test" means here**, since the handoff left it open: a table-driven test in
 **core**, over all 95 catalog entries, asserting properties directly against

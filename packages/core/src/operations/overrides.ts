@@ -1,0 +1,72 @@
+import type { Access, PaginationStyle, RetryPolicy } from "../operation.js"
+
+/**
+ * What a handwritten correction may change. Not `id`, `method` or `path`: those identify the
+ * operation being corrected, and an override that could move them would silently become an
+ * override of something else the next time Braze reorganises the collection.
+ */
+export interface OperationOverride {
+  command?: readonly string[]
+  access?: Access
+  retryPolicy?: RetryPolicy
+  permission?: string
+  pagination?: PaginationStyle
+  batch?: Readonly<Record<string, number>>
+  description?: string
+  documentationUrl?: string
+  /** Why the correction exists. Read by whoever wonders whether it is still needed. */
+  reason: string
+}
+
+/**
+ * Corrections to the generated catalog, keyed by `Operation.id`.
+ *
+ * Keyed by id rather than by path as §10 sketches, because a path is not unique — `/catalogs`
+ * carries both a GET and a POST — so a path-keyed override would silently hit both.
+ *
+ * Everything here is a fact about Braze that the Postman collection does not carry. If something
+ * can be derived from the collection, derive it in the generator instead: an override is a line
+ * someone has to re-check every time Braze changes.
+ */
+export const overrides: Readonly<Record<string, OperationOverride>> = {
+  "users.export.ids.create": {
+    access: "read",
+    retryPolicy: "read-safe",
+    permission: "users.export.ids",
+    reason:
+      "Braze implements this read as a POST, so classifying by HTTP method calls it a write and a " +
+      "read-only profile refuses it. Exporting profiles changes nothing and may be repeated safely.",
+  },
+  "users.export.segment.create": {
+    access: "read",
+    retryPolicy: "read-safe",
+    permission: "users.export.segment",
+    reason: "A POST-shaped read, same as users.export.ids.",
+  },
+  "users.export.global-control-group.create": {
+    access: "read",
+    retryPolicy: "read-safe",
+    permission: "users.export.global_control_group",
+    reason: "A POST-shaped read, same as users.export.ids.",
+  },
+  "users.track.create": {
+    permission: "users.track",
+    batch: { attributes: 75, events: 75, purchases: 75 },
+    reason: "Braze caps each array in the body at 75 per request (§10). The bulk pipeline needs it in Phase 3.",
+  },
+  "campaigns.list.get": {
+    pagination: "page",
+    permission: "campaigns.list",
+    reason: "Paged by a 0-indexed `page` parameter, which the collection shows but does not label as pagination.",
+  },
+  "canvas.list.get": {
+    pagination: "page",
+    permission: "canvas.list",
+    reason: "Paged like campaigns.list.",
+  },
+  "segments.list.get": {
+    pagination: "page",
+    permission: "segments.list",
+    reason: "Paged like campaigns.list.",
+  },
+}

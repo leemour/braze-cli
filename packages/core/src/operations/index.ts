@@ -1,14 +1,74 @@
-import type { Operation } from "../operation.js"
+import { defineOperation, type Operation } from "../operation.js"
 import { generatedOperations } from "./generated.js"
+import { type OperationOverride, overrides } from "./overrides.js"
 
 /**
- * Every operation the CLI knows, ready to be turned into commands. Generated from the committed
- * snapshot today; `CAT-4` merges handwritten overrides on top of it here, which is why callers
- * should read this and never `generatedOperations` directly.
+ * Applies the handwritten corrections to the generated catalog.
+ *
+ * Exported so a test can drive it with its own inputs — the failure modes here are the expensive
+ * kind, and they are much easier to prove on three operations than on ninety-five.
  */
-export const catalog: readonly Operation[] = generatedOperations
+export const applyOverrides = (
+  generated: readonly Operation[],
+  corrections: Readonly<Record<string, OperationOverride>>,
+): readonly Operation[] => {
+  const known = new Set(generated.map((operation) => operation.id))
+
+  for (const id of Object.keys(corrections)) {
+    if (!known.has(id)) {
+      // The endpoint was renamed or withdrawn and the correction now describes nothing. Silently
+      // ignoring it is how a safety classification like FIND-13's quietly stops being applied.
+      throw new Error(`override "${id}" matches no operation — it is stale, or the id changed`)
+    }
+  }
+
+  return generated.map((operation) => {
+    const correction = corrections[operation.id]
+    if (!correction) return operation
+
+    const { reason: _reason, ...fields } = correction
+
+    // Re-derived when the correction flips access without stating a policy: a POST-shaped read
+    // left at `never` would keep the wrong answer to "may this be repeated".
+    const retryPolicy =
+      fields.retryPolicy ?? (fields.access && fields.access !== operation.access ? undefined : operation.retryPolicy)
+
+    const merged = defineOperation({ ...operation, ...fields, retryPolicy })
+    assertCoherent(merged)
+    return merged
+  })
+}
+
+/**
+ * The check `operation.ts` asks for by name: a write that claims to be repeatable is a catalog
+ * bug, and it has to be rejected here rather than handled at the point of retrying, because two
+ * sources of truth for "may this be repeated" is how one of them ends up wrong.
+ */
+const assertCoherent = (operation: Operation): void => {
+  if (operation.access === "write" && operation.retryPolicy === "read-safe") {
+    throw new Error(`override "${operation.id}" makes a write read-safe — a repeat could duplicate the effect`)
+  }
+  if (operation.command.length === 0) {
+    throw new Error(`override "${operation.id}" leaves the operation with no command`)
+  }
+}
+
+/**
+ * Every operation the CLI knows: generated from the committed snapshot, with the handwritten
+ * corrections merged on top. Read this, never `generatedOperations`.
+ */
+export const catalog: readonly Operation[] = applyOverrides(generatedOperations, overrides)
 
 export const findOperation = (id: string): Operation | undefined => catalog.find((operation) => operation.id === id)
+
+/**
+ * The catalog entry for a literal request, if there is one. Exact paths only: a request against
+ * `/catalogs/my-catalog` is not matched to `/catalogs/{catalog_name}`, and falls back to judging
+ * by method — which for a templated path is right anyway, since none of Braze's POST-shaped reads
+ * take a path parameter.
+ */
+export const findByRequest = (method: string, path: string): Operation | undefined =>
+  catalog.find((operation) => operation.method === method && operation.path === path)
 
 /** Commands are matched as whole words, so `["campaigns", "list"]` never matches `campaigns`. */
 export const findByCommand = (command: readonly string[]): Operation | undefined =>

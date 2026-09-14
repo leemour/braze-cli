@@ -77,20 +77,49 @@ function describe(item, folders) {
     method: (item.request.method ?? "GET").toUpperCase(),
     path,
     description: firstSentence(item.request.description ?? item.description),
-    queryParameters: queryOf(url),
+    queryParameters: queryOf(url, raw),
   }
 }
 
-function queryOf(url) {
-  if (typeof url !== "object" || url === null || !Array.isArray(url.query)) return []
+/**
+ * Both shapes, because this collection only uses one of them and it is not the documented one:
+ * all 99 URLs are plain strings with the query inline, and reading only Postman's structured
+ * `url.query` array yielded zero parameters for all 40 requests that have them (BUG-4).
+ */
+function queryOf(url, raw) {
+  const structured =
+    typeof url === "object" && url !== null && Array.isArray(url.query)
+      ? url.query
+          .filter((parameter) => parameter?.key && parameter.disabled !== true)
+          .map((parameter) => ({ name: parameter.key, description: parameter.description, example: parameter.value }))
+      : []
 
-  return url.query
-    .filter((parameter) => parameter?.key && parameter.disabled !== true)
-    .map((parameter) => ({
-      name: parameter.key,
-      ...(firstSentence(parameter.description) ? { description: firstSentence(parameter.description) } : {}),
-      ...(parameter.value ? { example: String(parameter.value) } : {}),
-    }))
+  const inline = (raw.split("?")[1] ?? "")
+    .split("&")
+    .filter(Boolean)
+    .map((pair) => {
+      const separator = pair.indexOf("=")
+      const name = separator === -1 ? pair : pair.slice(0, separator)
+      const example = separator === -1 ? undefined : pair.slice(separator + 1)
+      return { name: decodeURIComponent(name), example }
+    })
+    .filter((parameter) => parameter.name)
+
+  const seen = new Set()
+  const merged = []
+
+  for (const parameter of [...structured, ...inline]) {
+    if (seen.has(parameter.name)) continue
+    seen.add(parameter.name)
+
+    const description = firstSentence(parameter.description)
+    // A Postman variable is that collection's own placeholder, not a value anyone can send.
+    const example =
+      parameter.example && !String(parameter.example).includes("{{") ? String(parameter.example) : undefined
+
+    merged.push({ name: parameter.name, ...(description ? { description } : {}), ...(example ? { example } : {}) })
+  }
+  return merged
 }
 
 function normalize(requests) {

@@ -94,6 +94,24 @@ describe("braze api", () => {
       expect(mock.requests).toHaveLength(0)
     })
 
+    // FIND-13. Before the catalog carried this endpoint, `braze api` judged by HTTP method, so a
+    // read Braze implements as a POST was refused here and there was no way to run it at all.
+    it("allows a read that Braze implements as a POST, because the catalog says it is a read", async () => {
+      const mock = mockBraze(brazeResponses.created())
+
+      const code = await braze(["api", "POST", "/users/export/ids", "--input", '{"external_ids":[]}'], mock)
+
+      expect(code).toBe(0)
+      expect(mock.requests).toHaveLength(1)
+    })
+
+    it("still refuses a POST the catalog agrees is a write", async () => {
+      const mock = mockBraze(brazeResponses.created())
+
+      expect(await braze(["api", "POST", "/users/track", "--input", "{}", "--confirm"], mock)).toBe(5)
+      expect(mock.requests).toHaveLength(0)
+    })
+
     it("still allows reads", async () => {
       const mock = mockBraze(brazeResponses.ok({ campaigns: [] }))
 

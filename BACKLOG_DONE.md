@@ -5,6 +5,7 @@ is ever removed from this file.
 
 | Number | Task | Closed | Commit |
 |---|---|---|---|
+| `CAT-9` | Contract tests over every generated operation — 95 parameterised cases plus six shared properties, 329 tests total. Found `UX-6` (five SCIM commands needed a capital letter, and the wrong spelling printed help instead of erroring) and `BUG-6` (Braze describes the catalog PATCH with the DELETE's sentence) | 2026-09-14 | see `git log -- packages/core/src/operations/catalog.test.ts` |
 | `CLI-14` | `braze runs list/show/path`, needing no profile and no key — the point is to read what happened when the configuration is what went wrong | 2026-09-13 | see `git log -- packages/cli/src/commands/runs.ts` |
 | `CLI-10` | `--dry-run`: resolve, validate, construct, count, send nothing. Allowed even on a read-only profile | 2026-09-13 | see `git log -- packages/cli/src/commands/api.ts` |
 | `CLI-9` | `braze api <METHOD> <path>` — relative Braze paths only, writes gated, repeated `--query` refused with a message naming `CAT-3` | 2026-09-13 | see `git log -- packages/cli/src/commands/api.ts` |

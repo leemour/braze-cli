@@ -13,10 +13,19 @@ import { dirname } from "node:path"
 
 const DEFAULT_SPEC = "spec/braze.postman.json"
 const DEFAULT_OUT = "packages/core/src/operations/generated.ts"
+const OVERRIDES = "packages/core/src/operations/overrides.ts"
+const COVERAGE = "docs/catalog-coverage.md"
 
 // Braze's own paths carry the action, so `/campaigns/list` needs no verb from us. Only the
 // REST-shaped resources (catalogs, scim, preference_center) do, and there the method is the verb.
 const VERBS = { GET: "get", POST: "create", PUT: "replace", PATCH: "update", DELETE: "delete", HEAD: "head" }
+
+// Words Braze puts in the path of an endpoint that only reads. A POST carrying one of these and
+// no override is the FIND-13 shape: a read the CLI refuses on a read-only profile because it
+// judged by method. §12 calls that an unclassified endpoint and wants CI to fail on it.
+// "status" is deliberately absent: Braze writes through `/subscription/status/set` and
+// `/email/status`, so it flagged three genuine writes and would have trained anyone to ignore this.
+const READING_WORDS = ["export", "list", "details", "data_series", "data_summary", "info"]
 
 const flags = parseFlags(process.argv.slice(2))
 const collection = JSON.parse(readFileSync(flags.spec, "utf8"))
@@ -25,27 +34,52 @@ const requests = collect(collection)
 if (requests.length === 0) fail(`${flags.spec} contains no requests`)
 
 const { operations, merged, report } = normalize(requests)
+
+// By text, not by import: this file is plain JS and overrides.ts is TypeScript. Reading the keys
+// is enough — whether each override is VALID is checked where it is applied, with a real type.
+const corrected = overrideIds()
+const unclassified = ambiguous(operations, corrected)
+
 const rendered = format(render(operations, report), flags.out)
+const coverage = renderCoverage(operations, merged, report, corrected, unclassified)
+
+if (unclassified.length > 0) {
+  // §12: CI fails on an endpoint nobody has classified, rather than shipping a read that the
+  // CLI will refuse. Fix it with an override, or add it to the list of known writes.
+  console.error("these look like reads Braze implemented as writes, and no override says either way:")
+  for (const operation of unclassified) console.error(`  ${operation.id} — ${operation.method} ${operation.path}`)
+  console.error(`\nGive each one an entry in ${OVERRIDES}, with a reason.`)
+  process.exit(1)
+}
 
 if (flags.check) {
-  const current = readOutput(flags.out)
-  if (current === rendered) {
-    console.log(`up to date — ${operations.length} operations`)
+  const stale = [
+    readOutput(flags.out) === rendered ? undefined : flags.out,
+    readOutput(flags.coverage) === coverage ? undefined : flags.coverage,
+  ].filter(Boolean)
+
+  if (stale.length === 0) {
+    console.log(`up to date — ${operations.length} operations, ${corrected.size} overridden`)
     process.exit(0)
   }
-  console.error(`${flags.out} is out of date — run \`pnpm catalog:generate\``)
+  console.error(`out of date, run \`pnpm catalog:generate\`: ${stale.join(", ")}`)
   process.exit(1)
 }
 
 mkdirSync(dirname(flags.out), { recursive: true })
 writeFileSync(flags.out, rendered)
+mkdirSync(dirname(flags.coverage), { recursive: true })
+writeFileSync(flags.coverage, coverage)
 
 console.log(`wrote ${flags.out}`)
 console.log(`  Braze requests:      ${report.requests}`)
 console.log(`  operations:          ${operations.length}`)
 console.log(`  reads / writes:      ${report.reads} / ${report.writes}`)
 console.log(`  duplicate requests:  ${merged.length}${merged.length > 0 ? " (same method and path, merged)" : ""}`)
+console.log(`  overridden by hand:  ${corrected.size}`)
+console.log(`  unclassified:        0`)
 console.log(`  commands needing a method to stay unique: ${report.disambiguated}`)
+console.log(`wrote ${flags.coverage}`)
 for (const duplicate of merged) console.log(`    merged: ${duplicate.method} ${duplicate.path} — ${duplicate.name}`)
 
 /** Depth-first, in collection order, so every id and every merge is deterministic. */
@@ -266,6 +300,19 @@ function isRead(method) {
   return method === "GET" || method === "HEAD"
 }
 
+function looksLikeARead(operation) {
+  return operation.path
+    .split("/")
+    .filter(Boolean)
+    .some((segment) => READING_WORDS.includes(segment))
+}
+
+function ambiguous(operations, corrected) {
+  return operations.filter(
+    (operation) => !isRead(operation.method) && looksLikeARead(operation) && !corrected.has(operation.id),
+  )
+}
+
 /** Postman descriptions are HTML. One plain sentence is worth more than a paragraph of markup. */
 function firstSentence(text) {
   if (typeof text !== "string") return undefined
@@ -348,6 +395,70 @@ function format(source, outputPath) {
   }
 }
 
+function overrideIds() {
+  const source = readOutput(OVERRIDES)
+  if (source === undefined) return new Set()
+
+  // Only the keys of the exported record: `"users.track.create": {`.
+  return new Set([...source.matchAll(/^\s{2}"([^"]+)":\s*\{/gm)].map((match) => match[1]))
+}
+
+function renderCoverage(operations, merged, report, corrected, unclassified) {
+  const rows = [
+    ["Braze requests", report.requests],
+    ["duplicate requests merged", merged.length],
+    ["operations generated", operations.length],
+    ["reads", report.reads],
+    ["writes", report.writes],
+    ["corrected by an override", corrected.size],
+    ["unclassified or ambiguous", unclassified.length],
+  ]
+
+  const byResource = new Map()
+  for (const operation of operations) {
+    const resource = operation.command[0]
+    byResource.set(resource, (byResource.get(resource) ?? 0) + 1)
+  }
+
+  return `# Catalog coverage
+
+GENERATED by \`pnpm catalog:generate\`. Do not edit by hand.
+
+Source: [\`${DEFAULT_SPEC}\`](../${DEFAULT_SPEC}), whose provenance is in
+[\`spec/provenance.json\`](../spec/provenance.json).
+
+| | |
+|---|---:|
+${rows.map(([label, value]) => `| ${label} | ${value} |`).join("\n")}
+
+**\`unclassified or ambiguous\` must stay at zero** — \`pnpm catalog:check\` fails CI otherwise. It
+counts operations Braze implements as a write whose path reads like a query (\`export\`, \`list\`,
+\`details\`, …) and which no override has ruled on either way. That is the shape of \`FIND-13\`, where
+a read implemented as a POST was refused on a read-only profile.
+
+A number nobody blocks on is a number nobody reads, which is why this is a gate and not a report.
+
+## Operations by resource
+
+| Resource | Operations |
+|---|---:|
+${[...byResource.entries()]
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  .map(([resource, count]) => `| \`${resource}\` | ${count} |`)
+  .join("\n")}
+
+## Corrected by hand
+
+These carry a fact the Postman collection does not. Each one's reason is in
+[\`${OVERRIDES}\`](../${OVERRIDES}).
+
+${[...corrected]
+  .sort()
+  .map((id) => `- \`${id}\``)
+  .join("\n")}
+`
+}
+
 function readOutput(path) {
   try {
     return readFileSync(path, "utf8")
@@ -357,7 +468,7 @@ function readOutput(path) {
 }
 
 function parseFlags(argv) {
-  const flags = { check: false, spec: DEFAULT_SPEC, out: DEFAULT_OUT }
+  const flags = { check: false, spec: DEFAULT_SPEC, out: DEFAULT_OUT, coverage: COVERAGE }
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]
@@ -366,12 +477,13 @@ function parseFlags(argv) {
       flags.check = true
       continue
     }
-    if (arg !== "--spec" && arg !== "--out") fail(`unknown argument: ${arg}`)
+    if (arg !== "--spec" && arg !== "--out" && arg !== "--coverage") fail(`unknown argument: ${arg}`)
 
     const value = argv[index + 1]
     if (value === undefined || value.startsWith("--")) fail(`${arg} needs a path`)
 
     if (arg === "--spec") flags.spec = value
+    else if (arg === "--coverage") flags.coverage = value
     else flags.out = value
     index += 1
   }

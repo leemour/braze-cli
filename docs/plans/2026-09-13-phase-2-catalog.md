@@ -126,8 +126,21 @@ Repeated query parameters turned out to need **no** override: no request in the 
 documents a repeated key, so there is nothing to decide per operation yet and `buildQuery` keeps
 refusing rather than guessing.
 
-Still open: the coverage report and `catalog:check` as a CI gate (`CAT-5`), and Valibot schemas
-(`CORE-10`, `CAT-10`).
+**Coverage done 2026-09-14 (`CAT-5`).** `docs/catalog-coverage.md` is generated alongside the
+catalog, and `pnpm catalog:check` verifies both files and now runs in CI. It reads the committed
+snapshot and never the network, which is why it can gate every pull request while `spec:check`
+deliberately does not.
+
+The line that matters is **`unclassified or ambiguous`, which must stay zero**: operations Braze
+implements as a write whose path reads like a query and that no override has ruled on. Proved to
+be a real gate — removing the `users.export.ids` override makes the generator fail and name that
+endpoint, so `FIND-13` would have been caught automatically.
+
+`status` was dropped from the list of query-ish words after it produced three false positives in
+a row (`/email/status` and both `/subscription/status/set` forms are genuine writes, per Braze's
+own descriptions). A gate that cries wolf is a gate people learn to ignore.
+
+Still open: Valibot schemas and validation levels (`CORE-10`, `CAT-10`).
 
 ### Step 5 — commands from the catalog `CAT-6` `CAT-7` `CAT-9` `CAT-11`
 Register Commander commands in a loop, not by hand. `braze commands --json` and

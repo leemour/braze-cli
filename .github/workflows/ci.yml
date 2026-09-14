@@ -40,6 +40,11 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+      # Reads the committed snapshot, never the network, so it gates every PR without making CI
+      # depend on Postman's uptime. Fails when the catalog no longer matches the spec it claims
+      # to come from, or when an endpoint arrives that nobody has classified (§12).
+      - run: pnpm catalog:check
+
   portability:
     name: Core runs outside Node
     runs-on: ubuntu-latest

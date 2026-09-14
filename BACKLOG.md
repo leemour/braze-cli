@@ -72,18 +72,19 @@ contract-tested, every flag described, `braze schema` answering for one, `--pagi
 HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests. It found `BUG-8`,
 a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
 
-**The open thread is Phase 3, the bulk pipeline.** Its plan is written and waiting on the owner:
-[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — six steps,
-starting at `CLI-13`. Two decisions are blocked on the owner (`NEED-30`, `NEED-31`) and one
-measurement is blocked on nothing (`RISK-3`: how Braze attributes an error inside a 2xx).
+**The open thread is Phase 3, the bulk pipeline.** Its plan is written and approved:
+[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — **seven steps,
+starting at `CLI-13`.** One measurement is outstanding and blocks nobody (`RISK-3`: how Braze
+attributes an error inside a 2xx; Step 4 settles it against the sandbox).
 
 `CAT-10` at P3 blocks nothing.
 
 ## Blocked on the owner
 
-**Two, both in the Phase 3 plan.** `NEED-30` — is bulk a `--records` flag on the existing command
-or a separate `braze bulk` verb? `NEED-31` — what goes in `records.csv` when a record carries no
-identifier at all? Neither blocks Step 1.
+**Nothing.** `NEED-30` and `NEED-31` were answered on 2026-09-15 and are rulings in
+[`docs/DECISIONS.md`](docs/DECISIONS.md): bulk is a `--records` flag on the existing command, not a
+second command tree; and every record carries an identifier of ours, with required fields checked
+before the request rather than after Braze refuses it.
 
 Previously: `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
 [`docs/DECISIONS.md`](docs/DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;

@@ -3,7 +3,7 @@
 **One thread is open:** Phase 3, the bulk pipeline.
 
 - [`2026-09-14-phase-3-bulk.md`](2026-09-14-phase-3-bulk.md) — **start here.** The plan, written
-  2026-09-14 and waiting on the owner for `NEED-30` and `NEED-31`. Six steps, starting at `CLI-13`.
+  2026-09-14 and approved 2026-09-15 (`NEED-30`, `NEED-31`). Seven steps, starting at `CLI-13`.
 
 Phase 2 is complete and its documents are spent, kept only until whoever opens Phase 3 has read
 why the catalog is shaped as it is — both are recorded in [`../../CLEANUP.md`](../../CLEANUP.md):

@@ -63,10 +63,13 @@ current phase: [`docs/plans/`](docs/plans/).
 
 **Open thread:** Phase 2, the generated catalog. `CAT-1`…`CAT-6` are done — the collection is
 committed, 95 operations are generated from it, and every one is registered as a command.
-**Step 5 is done** (2026-09-14): `CAT-6`, `CAT-9`, `CAT-13`, `CAT-7` and `CAT-11` all closed, 355
-tests. What remains of the phase is **`CAT-8`** — generated `docs/commands.md` with a `docs:check`
-gate — and `CAT-10`, `CORE-10` at P3. See Step 6 of
-[the phase plan](docs/plans/2026-09-13-phase-2-catalog.md).
+**Phase 2 is functionally complete** (2026-09-14). `CAT-1`…`CAT-9`, `CAT-11` and `CAT-13` are all
+closed: 95 operations generated from Braze's own collection and registered as typed commands,
+contract-tested, every flag described, `braze schema` answering for one, `--paginate` bounded, and
+[`docs/commands.md`](docs/commands.md) generated from the CLI with a CI gate. 362 tests.
+
+**What is left is `CORE-10`** — Valibot validation and the three levels — plus `CAT-10` at P3.
+Neither blocks anything. The next substantial thread is **Phase 3, the bulk pipeline**.
 
 ## Blocked on the owner
 
@@ -115,7 +118,6 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 | `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CORE-10` — corrected 2026-09-14, this said `CAT-10`, which is the smoke tests two rows down (`FIND-18`) | P1 |
 | `CAT-5` | ✅ Done 2026-09-14. `docs/catalog-coverage.md` is generated with the catalog; `pnpm catalog:check` runs in CI and fails on a stale catalog or an unclassified endpoint | P1 |
 | `CAT-6` | ✅ Done 2026-09-14. 95 operations registered in a loop; `braze campaigns list --json` returns the same bytes as the raw call | P1 |
-| `CAT-8` | `docs:generate` and `docs:check` producing `docs/commands.md` and `docs/catalog-coverage.md` from the same catalog | P2 |
 | `CAT-10` | Every operation with a documented request body builds a request from it — driven by the collection's 48 body examples, 32 of them real JSON (`FIND-17`). Reworded 2026-09-14 per `NEED-28`: it said "smoke tests generated from the collection's own examples", and the collection has 0 response examples across all 99 requests (`FIND-20`) | P3 |
 
 ## Phase 3 — bulk and audit

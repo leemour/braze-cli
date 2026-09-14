@@ -19,6 +19,8 @@
     "spec:check": "node scripts/sync-spec.mjs --check",
     "catalog:generate": "node scripts/generate-catalog.mjs",
     "catalog:check": "node scripts/generate-catalog.mjs --check",
+    "docs:generate": "node scripts/generate-commands-doc.mjs",
+    "docs:check": "node scripts/generate-commands-doc.mjs --check",
     "smoke:bun": "bun run scripts/smoke-core.ts",
     "prepare": "lefthook install || true"
   },

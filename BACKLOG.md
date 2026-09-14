@@ -135,10 +135,7 @@ Expected to ship with the first practically useful release, not after it.
 
 | Number | Task | P |
 |---|---|---|
-| `BULK-1` | Bulk executor built on `AsyncIterable<Record>`, so the source can be a file, a database or another program without touching the pipeline | P1 |
 | `BULK-2` | Streaming parsers for JSONL, CSV and JSON, none of which may materialize the whole input | P1 |
-| `BULK-3` | Batch to Braze's per-endpoint limits **before** concurrency — 750 000 users → 75 per request → 10 000 batches → 4 in flight | P1 |
-| `BULK-4` | `p-queue` with bounded depth and real backpressure; the parser must never enqueue two million promises | P1 |
 | `BULK-5` | `records.csv` streamed as work completes, one row per logical record even when 75 shared one HTTP request | P1 |
 | `BULK-6` | Truthful per-record status: `planned`/`submitted`/`failed`/`unknown`/`invalid`/`skipped` — never `success` without a per-record acknowledgement from Braze | P1 |
 | `BULK-7` | Progress UI: records/sec, batches/sec, elapsed, rough ETA — pretty mode only, never in a log or on stdout in JSON mode | P2 |

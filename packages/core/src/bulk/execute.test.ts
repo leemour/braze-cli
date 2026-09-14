@@ -173,6 +173,10 @@ describe("what an outcome says happened", () => {
     expect(outcomes).toHaveLength(3)
     expect(outcomes.every((outcome) => outcome.status === "failed")).toBe(true)
     expect(outcomes[0]?.errorCode).toBeTruthy()
+    // The refused batch is the row where naming the users matters most — re-sending 75 records
+    // starts from knowing which 75 they were.
+    expect(outcomes[0]?.identity).toEqual({ external_id: "u1" })
+    expect(outcomes[0]?.recordId).toBe(`${RUN}-1`)
   })
 
   /**

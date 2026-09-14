@@ -1,3 +1,4 @@
+import { join } from "node:path"
 import { BrazeError } from "brazecli-core"
 import { Command, Option } from "commander"
 import type { KeyringStore } from "./auth/keyring.js"
@@ -8,7 +9,7 @@ import { profileCommand } from "./commands/profile.js"
 import { runsCommand } from "./commands/runs.js"
 import { emptyConfig, loadConfig, OUTPUT_FORMATS } from "./config/file.js"
 import { resolvePaths } from "./config/paths.js"
-import { DOCUMENTATION } from "./documentation.js"
+import { DOCUMENTATION, firstProfileHint } from "./documentation.js"
 import { exitCodeFor, GENERIC_FAILURE } from "./exit-codes.js"
 import { processStreams, type Streams } from "./output/stream.js"
 import { type GlobalFlags, resolveOutputFormat } from "./settings.js"
@@ -36,20 +37,7 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
     .option("--timeout <ms>", "per-attempt timeout in milliseconds", Number)
     .option("--retries <n>", "attempts after the first", Number)
     .showHelpAfterError()
-    .addHelpText(
-      "after",
-      [
-        "",
-        "There are no typed commands yet, so every Braze call goes through `braze api`, and you",
-        "have to know the path. Braze lists them all here:",
-        `  endpoints      ${DOCUMENTATION.endpoints}`,
-        `  auth & limits  ${DOCUMENTATION.basics}`,
-        "",
-        "Writing an agent? `braze commands --json` returns this whole surface, plus the exit code",
-        "for every kind of failure, as JSON.",
-        "",
-      ].join("\n"),
-    )
+    .addHelpText("after", () => helpFooter(options))
 
   program.addCommand(profileCommand(options))
   program.addCommand(apiCommand(options))
@@ -70,9 +58,10 @@ export const buildProgram = (options: ProgramOptions = {}): Command => {
 export const run = async (argv: string[], options: ProgramOptions = {}): Promise<number> => {
   const streams = options.streams ?? processStreams
   const program = buildProgram(options)
+  const { profile, rest } = takeProfile(argv, options)
 
   try {
-    await program.parseAsync(argv, { from: "user" })
+    await program.parseAsync(profile ? ["--profile", profile, ...rest] : rest, { from: "user" })
     return 0
   } catch (error) {
     if (error instanceof BrazeError) {
@@ -112,6 +101,71 @@ const report = (program: Command, options: ProgramOptions, streams: Streams, err
   const format = resolveOutputFormat(program.opts<GlobalFlags>(), env, config, isTty)
 
   streams.diagnostic(format === "pretty" ? `${error.code}: ${error.message}` : JSON.stringify({ error }))
+}
+
+/**
+ * Built per invocation, not once: the paths come from the environment, and a first-time user
+ * reading this has a different question from someone with three profiles configured.
+ */
+const helpFooter = (options: ProgramOptions): string => {
+  const env = options.env ?? process.env
+  const paths = resolvePaths(env)
+
+  let profiles: string[] = []
+  try {
+    profiles = Object.keys(loadConfig(paths.config).profiles)
+  } catch {
+    // An unreadable config is exactly when someone reaches for --help.
+  }
+
+  const lines =
+    profiles.length === 0
+      ? ["", firstProfileHint(join(paths.config, "config.json")), ""]
+      : [
+          "",
+          `Profiles: ${profiles.join(", ")} — pick one with \`--profile <name>\` or BRAZE_PROFILE.`,
+          "",
+          "On this machine:",
+          `  config  ${join(paths.config, "config.json")}`,
+          `  runs    ${paths.runs}`,
+          "",
+        ]
+
+  return [
+    ...lines,
+    "Braze's own documentation:",
+    `  endpoints      ${DOCUMENTATION.endpoints}`,
+    `  auth & limits  ${DOCUMENTATION.basics}`,
+    "",
+    "Writing an agent? `braze commands --json` returns this whole surface, plus the exit code",
+    "for every kind of failure, as JSON.",
+    "",
+  ].join("\n")
+}
+
+/**
+ * `braze production campaigns list` — the profile is the first word, and it is rewritten into
+ * `--profile` before Commander sees it.
+ *
+ * Done here rather than by registering the command tree once per profile: that would multiply
+ * `braze commands --json` by the number of profiles and make the surface an agent reads depend on
+ * local configuration.
+ *
+ * Only a name that is actually configured is taken, so `braze campaigns list` still reaches the
+ * campaigns command. `profile add` refuses a name that collides with a command, which is what
+ * keeps that unambiguous rather than merely unlikely.
+ */
+const takeProfile = (argv: string[], options: ProgramOptions): { profile?: string; rest: string[] } => {
+  const first = argv[0]
+  if (first === undefined || first.startsWith("-")) return { rest: argv }
+
+  try {
+    const config = loadConfig(resolvePaths(options.env ?? process.env).config)
+    if (config.profiles[first]) return { profile: first, rest: argv.slice(1) }
+  } catch {
+    // An unreadable config cannot make a word a profile name.
+  }
+  return { rest: argv }
 }
 
 interface CommanderExit {

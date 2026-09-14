@@ -17,6 +17,16 @@ const ProfileSchema = v.object({
    * carries it. Meant for a production profile during development.
    */
   readOnly: v.optional(v.boolean(), false),
+  /**
+   * A ceiling on how large this workspace is expected to be, in monthly active users.
+   *
+   * Braze exposes no workspace identifier — nothing in the API says which workspace a key belongs
+   * to — so a profile cannot prove it is pointed at the sandbox. Size is the next best thing and
+   * in practice separates them cleanly: the sandbox ran 502 monthly actives against production's
+   * 1.3 million, even though both held millions of *profiles*. `braze profile verify` records and
+   * checks this.
+   */
+  expectMaxMonthlyActives: v.optional(v.pipe(v.number(), v.minValue(1))),
 })
 
 export const ConfigSchema = v.object({

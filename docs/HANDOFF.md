@@ -14,18 +14,21 @@ stdout, a closed list of error codes).
 The Braze client underneath is a separate package that **must run unchanged in a Cloudflare
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
-**Status 2026-09-14: Phase 1 closed and verified against live Braze; Phase 2's catalog is built.**
+**Status 2026-09-15: Phase 1 closed and verified against live Braze, Phase 2's catalog is built, and
+Phase 3's bulk pipeline is three steps in.**
 `braze profile`, `braze api` and `braze runs` work, and **95 operations are generated from Braze's
 own collection and registered as typed commands** — `braze staging campaigns list --json` returns
 what the raw call does, without anyone having written a `campaigns` command. Each one is contract
 tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
-`--paginate` walks pages under a ceiling it cannot exceed. 355 tests.
+`--paginate` walks pages under a ceiling it cannot exceed. 423 tests.
 
 Every command is documented in [`commands.md`](commands.md), generated from the CLI itself and
 gated in CI, so it cannot describe a version of the program that no longer exists.
 
-**Not built:** Valibot validation and its three levels (`CORE-10`), and the bulk pipeline —
-Phase 3, which is the next substantial thread.
+**Not built:** the rest of Phase 3 — the streaming parsers, `records.csv`, the progress UI and the
+end-of-run summary. What exists is the executor underneath them:
+[`packages/core/src/bulk/`](../packages/core/src/bulk/) turns an async iterable of records into
+Braze requests and truthful per-record outcomes, in bounded memory.
 
 ## 2. Layout
 
@@ -127,17 +130,15 @@ Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
 The live list is [`../BACKLOG.md`](../BACKLOG.md); the rules for taking a number are in it, under
 the fold.
 
-**The open thread is Phase 2, the generated catalog.** Start with the handoff —
-[`plans/2026-09-14-phase-2-handoff.md`](plans/2026-09-14-phase-2-handoff.md) — and its §0, which
-prints the state in one command.
+**The open thread is Phase 3, the bulk pipeline.** Its plan is written, approved and being built
+against: [`plans/2026-09-14-phase-3-bulk.md`](plans/2026-09-14-phase-3-bulk.md), seven steps, each
+marked done in place as it lands. **Steps 1–3 are done** (the signal handler, the executor, and
+per-record identity and validation); **step 4 is next, and it opens with a sandbox measurement** —
+how Braze attributes an error inside a 2xx (`RISK-3`), which the honest-status design rests on.
 
-**Updated 2026-09-14: Phase 2 is functionally complete.** All six steps of
-[the plan](plans/2026-09-13-phase-2-catalog.md) are closed. 362 tests. What remains is `CORE-10`
-(Valibot validation) and `CAT-10` at P3, neither of which blocks anything.
-
-**The next substantial thread is Phase 3, the bulk pipeline** — `BULK-1`…`BULK-10` in
-[`../BACKLOG.md`](../BACKLOG.md). It has no plan yet; write one before building, per
-[`../CLAUDE.md`](../CLAUDE.md).
+Phase 2 is functionally complete — all six steps of
+[its plan](plans/2026-09-13-phase-2-catalog.md) are closed. `CORE-10` closed on 2026-09-14. What is
+left outside Phase 3 is `CAT-10` at P3, which blocks nothing.
 
 Nothing is waiting on the owner.
 

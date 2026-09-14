@@ -1,7 +1,7 @@
 import * as v from "valibot"
 import { BrazeError } from "./errors.js"
 import type { Operation } from "./operation.js"
-import { schemas } from "./operations/schemas.js"
+import { recordSchemas, schemas } from "./operations/schemas.js"
 import { buildQuery, type QueryValue, resolvePath } from "./request.js"
 
 export interface ValidatableInput {
@@ -53,6 +53,30 @@ export const validateRequest = (operation: Operation, input: ValidatableInput = 
 }
 
 /**
+ * What is wrong with a single record of a batch, or `undefined` when nothing is.
+ *
+ * **It returns a reason instead of throwing.** A record that cannot be sent is an outcome, not an
+ * error: it gets an audit row saying `invalid` and why, the run carries on, and the other 74
+ * records of its batch still go (`NEED-31`, §34). One bad line in two million ending the run is the
+ * thing this shape exists to prevent.
+ *
+ * That is also where it goes beyond `validateRequest`, which checks an assembled body. By then the
+ * malformed record has already taken 74 innocent ones with it.
+ */
+export const checkRecord = (operation: Operation, field: string, value: unknown): string | undefined => {
+  const fields = operation.batch
+  if (fields && !(field in fields)) {
+    return `${operation.id} has no batch field "${field}" — it takes ${Object.keys(fields).join(", ")}`
+  }
+
+  const schema = recordSchemas[operation.id]?.[field]
+  if (!schema) return undefined
+
+  const result = v.safeParse(schema, value)
+  return result.success ? undefined : issueText(result.issues)
+}
+
+/**
  * What `generated` is allowed to say about a body, and no more.
  *
  * **Nothing about which keys are allowed.** One example is not a schema: `/users/track`'s example
@@ -101,15 +125,12 @@ const kindOf = (value: unknown): string => {
 }
 
 /** Names the field, because "invalid request" costs the reader a round trip to find out which. */
-const refusal = (operation: Operation, issues: readonly v.BaseIssue<unknown>[]): BrazeError => {
+const refusal = (operation: Operation, issues: readonly v.BaseIssue<unknown>[]): BrazeError =>
+  new BrazeError("validation_error", `${operation.id}: ${issueText(issues)}`, { operation: operation.id })
+
+const issueText = (issues: readonly v.BaseIssue<unknown>[]): string => {
   const first = issues[0] as v.BaseIssue<unknown>
   const path = first.path?.map((segment) => String((segment as { key?: unknown }).key ?? "")).join(".")
 
-  return new BrazeError(
-    "validation_error",
-    path ? `${operation.id}: ${path} — ${first.message}` : `${operation.id}: ${first.message}`,
-    {
-      operation: operation.id,
-    },
-  )
+  return path ? `${path} — ${first.message}` : first.message
 }

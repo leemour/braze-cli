@@ -79,8 +79,9 @@ expire on a timer.
 
 ## Phase 1 — foundation
 
-Everything needed for one hand-written command to reach Braze safely. Plan:
-[`docs/plans/2026-09-13-phase-1-foundation.md`](docs/plans/2026-09-13-phase-1-foundation.md).
+Everything needed for one hand-written command to reach Braze safely. Closed and verified live on
+2026-09-13; its plan was removed on 2026-09-14 once the owner confirmed, so the rulings are in
+[`docs/DECISIONS.md`](docs/DECISIONS.md) and the leftovers are the rows below.
 
 ### Core — the portable client
 

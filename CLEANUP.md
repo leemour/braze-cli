@@ -15,4 +15,5 @@ appear in history), plus the two superseded plans. The run artifacts below were 
 
 | What | Why | Recorded |
 |---|---|---|
+| `docs/plans/2026-09-13-phase-2-catalog.md` and `2026-09-14-phase-2-handoff.md` | Phase 2 landed on 2026-09-14 — all six steps closed, 362 tests. A plan and its handoff are deleted when their work does. Keep until whoever opens Phase 3 has read them, since they carry the reasoning behind the catalog's shape; the rulings are already in `DECISIONS.md` and the leftovers numbered in `BACKLOG.md` | 2026-09-14 |
 | `~/.local/share/brazecli/runs/2026-09-13/**` | Run artifacts from this session's live checks against production Braze. They carry no key, but they name real campaign counts and a profile. Owner's data, owner's call | 2026-09-13 |

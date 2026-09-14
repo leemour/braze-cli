@@ -21,9 +21,11 @@ what the raw call does, without anyone having written a `campaigns` command. Eac
 tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
 `--paginate` walks pages under a ceiling it cannot exceed. 355 tests.
 
-**Not built:** `CAT-8` — the generated `docs/commands.md` and its `docs:check` gate — which is
-what is left of Phase 2 and the open thread. Valibot validation (`CORE-10`) and the bulk pipeline
-(Phase 3) come after.
+Every command is documented in [`commands.md`](commands.md), generated from the CLI itself and
+gated in CI, so it cannot describe a version of the program that no longer exists.
+
+**Not built:** Valibot validation and its three levels (`CORE-10`), and the bulk pipeline —
+Phase 3, which is the next substantial thread.
 
 ## 2. Layout
 
@@ -129,10 +131,13 @@ the fold.
 [`plans/2026-09-14-phase-2-handoff.md`](plans/2026-09-14-phase-2-handoff.md) — and its §0, which
 prints the state in one command.
 
-**Updated 2026-09-14: Step 5 is done.** `CAT-6`, `CAT-9`, `CAT-13`, `CAT-7` and `CAT-11` are all
-closed — 95 operations registered as commands, contract-tested, every flag described, `braze
-schema` answering for one operation, and `--paginate` bounded. 355 tests. What is left of the
-phase is `CAT-8`, Step 6 of [the plan](plans/2026-09-13-phase-2-catalog.md).
+**Updated 2026-09-14: Phase 2 is functionally complete.** All six steps of
+[the plan](plans/2026-09-13-phase-2-catalog.md) are closed. 362 tests. What remains is `CORE-10`
+(Valibot validation) and `CAT-10` at P3, neither of which blocks anything.
+
+**The next substantial thread is Phase 3, the bulk pipeline** — `BULK-1`…`BULK-10` in
+[`../BACKLOG.md`](../BACKLOG.md). It has no plan yet; write one before building, per
+[`../CLAUDE.md`](../CLAUDE.md).
 
 Nothing is waiting on the owner.
 

@@ -57,7 +57,7 @@ place — and moving or deleting the checkout breaks it.
 Working today:
 
 ```sh
-braze profile add production --endpoint https://rest.fra-01.braze.eu --read-only
+braze profile add production --endpoint <your Braze REST endpoint> --read-only
 braze profile list                       # names, endpoints, whether a key exists — never the key
 
 braze api GET /campaigns/list --json     # a read
@@ -103,9 +103,60 @@ named options and its documented query keys as optional ones — so an agent nee
 `braze commands --json` to construct a call. `--query key=value` still works on every command,
 because Postman's examples are not a schema and the documented keys are never the whole list.
 
-**A profile can be marked read-only** (`--read-only`), which refuses every write before `--confirm`
-is even considered. `--confirm` guards against a mistyped command; this guards against a correct
-command aimed at the wrong environment. Recommended for anything pointing at production.
+### Profiles
+
+One profile per Braze workspace. **A workspace is chosen by its API key, not by the endpoint** —
+two profiles on the same cluster URL can point at completely different data, so the endpoint alone
+tells you nothing about which one you are talking to.
+
+**The endpoint is your cluster**, and it differs per customer — Braze lists them against dashboard
+URLs in [the API overview](https://www.braze.com/docs/api/basics). European workspaces are on
+`braze.eu`, not `braze.com`; getting that wrong produces a host that does not resolve and every
+command fails at once.
+
+**Every command that talks to Braze names its profile.** The profile comes first:
+
+```sh
+braze staging campaigns list
+braze production campaigns list --json
+
+BRAZE_PROFILE=staging braze campaigns list      # or set it once for a shell session
+braze --profile staging campaigns list          # the flag also works
+```
+
+**There is no default profile, on purpose.** A default is selected by *omission*, and the thing
+most easily omitted should not be the workspace with a million people in it. Leaving the profile
+out is an error that lists the profiles you have.
+
+Commands that do not talk to Braze — `braze profile …`, `braze runs …`, `braze commands` — need no
+profile.
+
+A profile may not be named after a command (`users`, `campaigns`, `api`, …); `profile add` refuses
+it, because `braze users track` could otherwise mean two things.
+
+**A profile can be marked read-only**, which refuses every write before `--confirm` is even
+considered. `--confirm` guards against a mistyped command; this guards against a correct command
+aimed at the wrong environment. Recommended for anything pointing at production.
+
+```sh
+braze profile add production --read-only      # refuse writes
+braze profile add staging --no-read-only      # allow them again
+```
+
+Updating one field leaves the others alone: neither the endpoint nor the key has to be retyped,
+and a flag you do not mention keeps its current value.
+
+### Where things live
+
+| | |
+|---|---|
+| profiles | `~/.config/brazecli/config.json` — override with `BRAZE_CONFIG_DIR` |
+| run artifacts | `~/.local/share/brazecli/runs` — override with `BRAZE_RUNS_DIR` |
+| the API key | your OS keyring, never the config file |
+
+`braze --help` prints the resolved paths for the machine it runs on, and names your profiles.
+Braze's own endpoint index is [here](https://www.braze.com/docs/api/home), and authentication and
+rate limits are [here](https://www.braze.com/docs/api/basics).
 
 **Credentials** come from the OS keyring, with a warned fallback to a permission-restricted file.
 `BRAZE_API_KEY`, `BRAZE_REST_ENDPOINT` and `BRAZE_PROFILE` override it. The API key is never a

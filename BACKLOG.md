@@ -72,11 +72,15 @@ contract-tested, every flag described, `braze schema` answering for one, `--pagi
 HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests. It found `BUG-8`,
 a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
 
-**The open thread is Phase 3, the bulk pipeline.** Its plan is written and approved:
-[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — seven steps,
-**six of them done as of 2026-09-15**, and the pipeline works end to end against the staging
-workspace. What is left is `BULK-9`, the million-record proof. `RISK-3` is closed: Braze does
+**Phase 3 is complete, 2026-09-15.** All seven steps of
+[its plan](docs/plans/2026-09-14-phase-3-bulk.md) are closed: the pipeline sends a file of records
+to Braze in bounded memory — measured at 599 records resident on a million-record run — leaves one
+truthful audit row each, and survives Ctrl+C without truncating the audit or lying about what
+reached Braze. Verified end to end against a staging workspace. `RISK-3` is closed: Braze does
 attribute an error inside a 2xx, by `index` and `input_array`.
+
+**What is left of it:** `BULK-10` (`braze runs cleanup`) and `BULK-13` (JSON-array input), both P3
+and blocking nothing.
 
 `CAT-10` at P3 blocks nothing.
 
@@ -136,7 +140,6 @@ Expected to ship with the first practically useful release, not after it.
 | Number | Task | P |
 |---|---|---|
 | `BULK-13` | Bulk input as one big JSON array. Deferred 2026-09-15 with `BULK-2`: streaming it needs a hand-rolled incremental scanner — depth, strings, escapes — that we would then own, and §37 already tells callers to prefer JSONL at this scale. JSONL and CSV cover every stated use. Worth building only if somebody turns up with an array they cannot convert | P3 |
-| `BULK-9` | A synthetic million-record run proving memory stays bounded, without making a million HTTP calls | P2 |
 | `BULK-10` | `braze runs cleanup` with an explicit retention setting — opt-in, never a default (`NEED-3`) | P3 |
 
 ## Phase 4 — when real usage asks for it

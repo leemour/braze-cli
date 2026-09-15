@@ -6,6 +6,33 @@ import { parse } from "csv-parse"
 
 export type RecordsFormat = "jsonl" | "csv"
 
+/**
+ * Which format a source is in: what `--records-format` says, or what the file extension says.
+ *
+ * **Standard input must be told.** There is nothing to read the format from and sniffing the first
+ * line would guess — a CSV whose header happens to start with `{` is contrived, but a JSONL file
+ * whose first line is blank is not, and a wrong guess sends the whole file into the wrong parser.
+ */
+export const resolveRecordsFormat = (source: string, given: string | undefined): RecordsFormat => {
+  if (given !== undefined) {
+    if (given !== "jsonl" && given !== "csv") {
+      throw new BrazeError("validation_error", `--records-format takes jsonl or csv, not "${given}"`)
+    }
+    return given
+  }
+
+  const path = source.startsWith("@") ? source.slice(1) : source
+  if (path.endsWith(".jsonl") || path.endsWith(".ndjson")) return "jsonl"
+  if (path.endsWith(".csv")) return "csv"
+
+  throw new BrazeError(
+    "validation_error",
+    source === "-"
+      ? "reading records from standard input needs --records-format jsonl or --records-format csv"
+      : `cannot tell what format ${path} is in — name it with --records-format jsonl or --records-format csv`,
+  )
+}
+
 export interface RecordsOptions {
   /**
    * Which of the operation's `batch` fields every record of this source belongs in.

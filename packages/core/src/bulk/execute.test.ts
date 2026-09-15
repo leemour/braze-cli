@@ -402,3 +402,74 @@ describe("a 2xx that refused part of the batch", () => {
     expect(outcomes.every((outcome) => outcome.status === "unknown")).toBe(true)
   })
 })
+
+describe("a dry run", () => {
+  /**
+   * The point of a dry run over two million rows is the arithmetic — how many requests this file
+   * becomes — so it has to go through the same batcher. A separate walk would be a second
+   * implementation of the one thing being checked.
+   */
+  it("plans every record through the real batcher, and sends nothing", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const { records } = counted(150)
+
+    const outcomes = await drain(
+      executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1, dryRun: true }),
+    )
+
+    expect(mock.requests).toHaveLength(0)
+    expect(outcomes).toHaveLength(150)
+    expect(outcomes.every((outcome) => outcome.status === "planned")).toBe(true)
+    // Two batches of 75, the same two the real run would have made.
+    expect(new Set(outcomes.map((outcome) => outcome.batchId))).toEqual(new Set([1, 2]))
+  })
+
+  it("still refuses the records it would have refused, so a dry run is worth running", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const records = (async function* () {
+      yield { row: 1, field: "attributes", value: { external_id: "u1" } }
+      yield { row: 2, field: "attributes", value: { colour: "amber" } }
+    })()
+
+    const outcomes = await drain(
+      executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1, dryRun: true }),
+    )
+
+    expect(outcomes.map((outcome) => outcome.status)).toEqual(["invalid", "planned"])
+    expect(mock.requests).toHaveLength(0)
+  })
+
+  it("timestamps a real send from the attempt, not from the duration", async () => {
+    const mock = mockBraze(() => brazeResponses.created())
+    const { records } = counted(1)
+
+    const [outcome] = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcome?.startedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
+})
+
+describe("a batch that was cancelled before it went", () => {
+  /**
+   * `skipped`, not `failed`. Braze never saw these records, so calling them failed claims a refusal
+   * that never happened — and sends whoever reads the audit looking for a Braze-side problem that
+   * does not exist. §34 has the word for this and it is the one an interrupted run needs.
+   */
+  it("calls records Braze never saw skipped", async () => {
+    const controller = new AbortController()
+    const mock = mockBraze(() => {
+      controller.abort()
+      return brazeResponses.created()
+    })
+    const { records } = counted(300)
+
+    const outcomes = await drain(
+      executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 2, signal: controller.signal }),
+    )
+
+    expect(mock.requests).toHaveLength(1)
+    expect(outcomes.filter((outcome) => outcome.status === "failed")).toHaveLength(0)
+    expect(outcomes.filter((outcome) => outcome.status === "submitted")).toHaveLength(75)
+    expect(outcomes.filter((outcome) => outcome.status === "skipped")).toHaveLength(225)
+  })
+})

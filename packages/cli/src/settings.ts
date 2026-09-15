@@ -19,6 +19,11 @@ export interface GlobalFlags {
   paginate?: boolean
   maxPages?: number
   maxItems?: number
+  records?: string
+  recordsFormat?: string
+  recordsField?: string
+  recordId?: string
+  concurrency?: number
 }
 
 export interface Settings {
@@ -41,6 +46,19 @@ export interface Settings {
   /** Undefined means "the default ceiling", never "unbounded" — `execute.ts` supplies the number. */
   maxPages: number | undefined
   maxItems: number | undefined
+  /**
+   * The source of a bulk run, and the three things that say how to read it. Set means "this file
+   * holds many records; batch them" — a different operation from `--input`, which sends one body
+   * (`NEED-30`).
+   */
+  records: string | undefined
+  recordsFormat: string | undefined
+  recordsField: string | undefined
+  recordId: string | undefined
+  /** §38: four concurrent requests by default, 1–32, settable per run or in the config. */
+  concurrency: number
+  /** Whether stderr is a terminal. Progress needs it; colour is a separate question (`--no-color`). */
+  interactive: boolean
 }
 
 export interface ResolveOptions {
@@ -113,6 +131,12 @@ export const resolveSettings = (flags: GlobalFlags, options: ResolveOptions = {}
     expectMaxMonthlyActives: profile?.expectMaxMonthlyActives,
     apiKey: stored.apiKey,
     apiKeySource: stored.source,
+    records: flags.records,
+    recordsFormat: flags.recordsFormat,
+    recordsField: flags.recordsField,
+    recordId: flags.recordId,
+    concurrency: resolveConcurrency(flags, config),
+    interactive: options.isTty ?? process.stderr.isTTY === true,
     outputFormat: resolveOutputFormat(flags, env, config, options.isTty ?? process.stdout.isTTY === true),
     color: resolveColor(flags, env, config, options.isTty ?? process.stderr.isTTY === true),
     timeoutMs: flags.timeout ?? config.http.timeoutMs,
@@ -146,6 +170,18 @@ export const resolveOutputFormat = (
   if (configured && configured !== "auto") return configured
 
   return isTty ? "pretty" : "json"
+}
+
+/** §38's suggested safe range, and the config field Phase 1 reserved for it. */
+const DEFAULT_CONCURRENCY = 4
+
+const resolveConcurrency = (flags: GlobalFlags, config: Config): number => {
+  const given = flags.concurrency ?? config.bulk?.concurrency ?? DEFAULT_CONCURRENCY
+
+  if (!Number.isInteger(given) || given < 1 || given > 32) {
+    throw new BrazeError("validation_error", `--concurrency takes a whole number from 1 to 32, not ${given}`)
+  }
+  return given
 }
 
 export const resolveColor = (flags: GlobalFlags, env: NodeJS.ProcessEnv, config: Config, isTty: boolean): boolean => {

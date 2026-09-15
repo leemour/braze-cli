@@ -14,9 +14,17 @@ export interface RunMetadata {
   completedAt?: string
   status: RunStatus | "running"
   inputRecords?: number
+  /**
+   * One per §34 status, so the summary on stdout and this file are generated from the same tally
+   * and cannot disagree. Phase 1 reserved four of the six; `planned`, `invalid` and `skipped` are
+   * the ones a bulk run turned out to need.
+   */
+  plannedRecords?: number
   submittedRecords?: number
   failedRecords?: number
   unknownRecords?: number
+  invalidRecords?: number
+  skippedRecords?: number
   httpRequests?: number
   httpRetries?: number
   durationMs?: number
@@ -49,6 +57,12 @@ export interface Run {
   signal: AbortSignal
   /** Stops work in flight. Safe to call more than once. */
   cancel(): void
+  /**
+   * Registers the work a signal must wait for before the run file is written — see `Interruptible`
+   * in `signals.ts`. A command with nothing to wind down never calls it.
+   */
+  onDrain(drain: () => Promise<void>): void
+  drain?: () => Promise<void>
   /**
    * Writes the final `run.json` and closes the log. **Must run on every path** — success, a
    * refusal, a signal. A directory holding `events.jsonl` and no `run.json` is a special case
@@ -85,13 +99,16 @@ export const startRun = (options: StartRunOptions): Run => {
   let finished = false
   const controller = new AbortController()
 
-  return {
+  const run: Run = {
     id,
     dir,
     logger,
     signal: controller.signal,
     cancel: () => {
       if (!controller.signal.aborted) controller.abort()
+    },
+    onDrain: (drain) => {
+      run.drain = drain
     },
     finish: async (status, extra = {}) => {
       if (finished) return
@@ -108,6 +125,8 @@ export const startRun = (options: StartRunOptions): Run => {
       await logger.close()
     },
   }
+
+  return run
 }
 
 /** `20260913T191500Z-users-track-a81f2c` — sortable, and readable without opening it. */

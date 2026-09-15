@@ -43,6 +43,13 @@ export interface BulkOutcome {
   batchId: number
   status: BulkStatus
   identity?: BrazeIdentifiers
+  /**
+   * When the request carrying this record was sent, ISO 8601. Taken from the attempt itself rather
+   * than worked back from the duration: `totalDurationMs` includes the waiting between retries, so
+   * subtracting it would put the start before the request actually left, by as much as the whole
+   * backoff. Absent where no request was made.
+   */
+  startedAt?: string
   httpStatus?: number
   attempts?: number
   durationMs?: number

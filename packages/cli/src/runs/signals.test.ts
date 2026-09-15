@@ -132,3 +132,64 @@ describe("installing the handlers", () => {
     }
   })
 })
+
+describe("a run with work to wind down", () => {
+  /**
+   * `BULK-8`. A bulk run's most important rows are written *after* the signal arrives: the records
+   * that never went still need their `skipped` rows, the audit needs closing and the summary is
+   * what says how far the run got. Finalizing the moment the signal lands truncates the CSV
+   * mid-row and prints nothing.
+   */
+  it("waits for the drain before writing the run file", async () => {
+    const order: string[] = []
+    let release: (() => void) | undefined
+
+    trackRun({
+      cancel: () => order.push("cancel"),
+      drain: () =>
+        new Promise<void>((resolve) => {
+          order.push("drain started")
+          release = () => {
+            order.push("drain finished")
+            resolve()
+          }
+        }),
+      finish: async () => {
+        order.push("finish")
+      },
+    })
+
+    const interrupt = handleInterrupt("SIGINT", options)
+    await Promise.resolve()
+
+    expect(order).toEqual(["cancel", "drain started"])
+    expect(exits).toEqual([])
+
+    release?.()
+    await interrupt
+
+    expect(order).toEqual(["cancel", "drain started", "drain finished", "finish"])
+    expect(exits).toEqual([130])
+  })
+
+  /** A drain that throws must not cost the run its file — that file is the whole point. */
+  it("finalizes anyway when the drain fails", async () => {
+    const run = fakeRun()
+    trackRun({ ...run, drain: () => Promise.reject(new Error("disk full")) })
+
+    await handleInterrupt("SIGINT", options)
+
+    expect(run.calls.finished).toEqual(["cancelled"])
+    expect(exits).toEqual([130])
+  })
+
+  /** A single request has nothing to wind down, and must not wait for a drain nobody registered. */
+  it("does not wait when there is no drain", async () => {
+    const run = fakeRun()
+    trackRun(run)
+
+    await handleInterrupt("SIGINT", options)
+
+    expect(run.calls.finished).toEqual(["cancelled"])
+  })
+})

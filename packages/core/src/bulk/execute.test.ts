@@ -365,3 +365,40 @@ describe("a record refused before it is sent", () => {
     expect(mock.requests).toHaveLength(0)
   })
 })
+
+describe("a 2xx that refused part of the batch", () => {
+  /**
+   * Measured against staging on 2026-09-15: Braze answers 201 `"success"` and names the objects it
+   * refused by `index` inside `input_array`. Reading only the status code would call all 75 of them
+   * submitted and never look.
+   */
+  it("fails only the records Braze named, and submits the rest of the same request", async () => {
+    const mock = mockBraze(() =>
+      brazeResponses.created({
+        message: "success",
+        attributes_processed: 2,
+        errors: [{ index: 1, input_array: "attributes", type: "'email_subscribe' must be 'subscribed'" }],
+      }),
+    )
+    const { records } = counted(3)
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(mock.requests).toHaveLength(1)
+    expect(outcomes.map((outcome) => outcome.status)).toEqual(["submitted", "failed", "submitted"])
+    expect(outcomes[1]?.errorMessage).toContain("email_subscribe")
+    // The request succeeded; one object inside it did not. The closed error-code list is about
+    // requests, so inventing a code here would say something untrue.
+    expect(outcomes[1]?.errorCode).toBeUndefined()
+    expect(outcomes[1]?.recordId).toBe(`${RUN}-2`)
+  })
+
+  it("marks a record unknown when Braze reports an error it does not place", async () => {
+    const mock = mockBraze(() => brazeResponses.created({ message: "success", errors: [{ type: "something" }] }))
+    const { records } = counted(2)
+
+    const outcomes = await drain(executeBulk(client(mock), track as never, records, { runId: RUN, concurrency: 1 }))
+
+    expect(outcomes.every((outcome) => outcome.status === "unknown")).toBe(true)
+  })
+})

@@ -1,9 +1,9 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { BrazeClient, findOperation } from "brazecli-core"
 import { brazeResponses, mockBraze } from "brazecli-core/testing"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runBulk } from "./bulk.js"
 import { createRenderer } from "./output/renderer.js"
 import { captureStreams } from "./output/stream.js"
@@ -56,6 +56,13 @@ beforeEach(() => {
   runsDir = mkdtempSync(join(tmpdir(), "brazecli-bulkruns-"))
   inputDir = mkdtempSync(join(tmpdir(), "brazecli-bulkin-"))
   streams = captureStreams()
+})
+
+// The other test files leave their temp directories behind, and at a few kilobytes each that is
+// fine. This one writes a million-row input and a million-row audit — a quarter of a gigabyte per
+// run — so it puts them back.
+afterEach(() => {
+  for (const dir of [runsDir, inputDir]) rmSync(dir, { recursive: true, force: true })
 })
 
 describe("a run interrupted in the middle", () => {
@@ -160,4 +167,45 @@ describe("the audit is written as work completes", () => {
 
     expect(summary.recordsFile).toBe(join(run.dir, "records.csv"))
   })
+})
+
+describe("the whole pipeline streams, not just each half", () => {
+  /**
+   * The audit is the slow end of the pull chain, and the piece that makes it real is `write`
+   * waiting when the file cannot keep up. A `write` that ignored that would let the stream's own
+   * buffer grow to the size of the run while every other bound still looked satisfied — so this
+   * watches the heap through a run big enough for that to show.
+   */
+  it("keeps the heap bounded while writing a large audit", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.created())
+    const before = process.memoryUsage().heapUsed
+
+    const summary = await bulk(run, users(200_000), mock, 4)
+
+    const grew = (process.memoryUsage().heapUsed - before) / 1024 / 1024
+    expect(summary.records).toBe(200_000)
+    expect(auditRows(run)).toHaveLength(200_000)
+    expect(grew).toBeLessThan(250)
+  }, 180_000)
+})
+
+describe("a million records, watched from the heap", () => {
+  /**
+   * `BULK-9`'s other half. The exact bound — at most `concurrency * 2 * batchSize` records resident,
+   * measured at 599 against a predicted 600 — is asserted in `packages/core/src/bulk/memory.test.ts`,
+   * which cannot look at the heap because core may not touch `process`. This is the same claim from
+   * the outside, and with the audit writer in the chain, which is where an ignored backpressure
+   * signal would actually show.
+   */
+  it("holds a bounded heap while a million records go by", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.created())
+    const before = process.memoryUsage().heapUsed
+
+    const summary = await bulk(run, users(1_000_000), mock, 4)
+
+    expect(summary.records).toBe(1_000_000)
+    expect((process.memoryUsage().heapUsed - before) / 1024 / 1024).toBeLessThan(250)
+  }, 600_000)
 })

@@ -277,6 +277,11 @@ const dispatch = async (
       outcome(record, options.runId, {
         batchId,
         status,
+        // Carried through because it is what says a request was actually made. Every failure the
+        // client raises after sending sets it; the one it raises *before* sending — the signal
+        // arriving while this batch waited in the queue — does not, and that absence is the only
+        // way to tell a batch Braze refused from a batch Braze never saw.
+        ...(failure?.details.attempts === undefined ? {} : { attempts: failure.details.attempts }),
         errorCode: failure?.code,
         errorMessage: failure?.message ?? (error instanceof Error ? error.message : String(error)),
       }),

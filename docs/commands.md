@@ -25,6 +25,11 @@ never reach Braze — `profile`, `runs`, `commands`, `schema` — take none.
 | `--paginate` | no | walk the pages of a paged read and return them as one value |
 | `--max-pages <n>` | no | how many pages --paginate may walk (default 10) |
 | `--max-items <n>` | no | stop --paginate once this many rows have been collected |
+| `--records <source>` | no | a file of many records to batch and send, or - for standard input |
+| `--records-format <format>` | no | how --records is encoded |
+| `--records-field <name>` | no | which batch field the records belong in, e.g. attributes |
+| `--record-id <key>` | no | key of each record holding your own id for it, for the audit |
+| `--concurrency <n>` | no | how many requests a bulk run may have in flight, 1-32 |
 | `--runs-dir <path>` | no | where run artifacts are written |
 | `--timeout <ms>` | no | per-attempt timeout in milliseconds |
 | `--retries <n>` | no | attempts after the first |

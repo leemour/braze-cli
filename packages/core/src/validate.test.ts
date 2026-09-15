@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { BrazeError } from "./errors.js"
 import { defineOperation, rawOperation } from "./operation.js"
 import { catalog, findOperation } from "./operations/index.js"
-import { schemas } from "./operations/schemas.js"
-import { validateRequest } from "./validate.js"
+import { recordSchemas, schemas } from "./operations/schemas.js"
+import { checkRecord, validateRequest } from "./validate.js"
 
 const code = (run: () => void): string | undefined => {
   try {
@@ -156,5 +156,83 @@ describe("the levels across the whole catalog", () => {
     const item = findOperation("catalogs.by-id.items.by-id.get")
 
     expect(item && code(() => validateRequest(item, {}))).toBe("validation_error")
+  })
+})
+
+describe("checking one record of a batch", () => {
+  const track = findOperation("users.track.create") as NonNullable<ReturnType<typeof findOperation>>
+  const refusal = (field: string, value: unknown): string | undefined => checkRecord(track, field, value)
+
+  it("passes a record that names a user", () => {
+    expect(refusal("attributes", { external_id: "u1", colour: "amber" })).toBeUndefined()
+  })
+
+  it("refuses one that names nobody, naming the fields Braze would have accepted", () => {
+    const reason = refusal("attributes", { colour: "amber" })
+
+    expect(reason).toContain("external_id")
+    expect(reason).toContain("user_alias")
+  })
+
+  /**
+   * Braze's own exception: "you can import the legacy tokens for anonymous users without providing
+   * `external_id` by specifying `push_token_import` as `true`". Refusing these would make the CLI
+   * unable to do a documented import at all.
+   */
+  it("allows an anonymous push token import to carry no identifier", () => {
+    expect(
+      refusal("attributes", { push_token_import: true, push_tokens: [{ app_id: "a", token: "t" }] }),
+    ).toBeUndefined()
+  })
+
+  it("refuses two primary identifiers, which Braze rejects inside a 2xx where we cannot see it", () => {
+    expect(refusal("attributes", { external_id: "u1", user_alias: { alias_name: "n", alias_label: "l" } })).toContain(
+      "more than one",
+    )
+  })
+
+  it("requires an event's name and time, which Braze documents as required", () => {
+    expect(refusal("events", { external_id: "u1", name: "rented_movie", time: "2026-09-15T10:00:00Z" })).toBeUndefined()
+    expect(refusal("events", { external_id: "u1", time: "2026-09-15T10:00:00Z" })).toContain("name")
+    expect(refusal("events", { external_id: "u1", name: "rented_movie" })).toContain("time")
+  })
+
+  it("requires a purchase's product_id, currency, price and time", () => {
+    const purchase = { external_id: "u1", product_id: "p", currency: "EUR", price: 9.99, time: "2026-09-15T10:00:00Z" }
+
+    expect(refusal("purchases", purchase)).toBeUndefined()
+    expect(refusal("purchases", { ...purchase, price: "9.99" })).toContain("price")
+    expect(refusal("purchases", { ...purchase, currency: undefined })).toContain("currency")
+  })
+
+  it("refuses a field the operation does not batch, from the catalog alone", () => {
+    expect(refusal("attribute", { external_id: "u1" })).toContain("attributes")
+  })
+
+  /** Nothing is checked that nobody read a Braze page for — the same bar the body schemas hold to. */
+  it("says nothing about an operation with no per-record schema", () => {
+    const list = findOperation("campaigns.list")
+
+    expect(list && checkRecord(list, "anything", { whatever: true })).toBeUndefined()
+  })
+
+  /**
+   * The field check reads the catalog, so it covers the two batching operations that have no
+   * per-record schema of their own — and says nothing about what is inside their records.
+   */
+  it("checks the field against whichever operation is batching", () => {
+    const subscriptions = findOperation("v2.subscription.status.set.create")
+
+    expect(subscriptions && checkRecord(subscriptions, "attributes", {})).toContain("subscription_groups")
+    expect(subscriptions && checkRecord(subscriptions, "subscription_groups", { anything: true })).toBeUndefined()
+  })
+
+  it("keeps a per-record schema only where the operation is strict and batches that field", () => {
+    for (const [id, fields] of Object.entries(recordSchemas)) {
+      const operation = findOperation(id)
+
+      expect(operation?.validation, id).toBe("strict")
+      for (const field of Object.keys(fields)) expect(operation?.batch?.[field], `${id}.${field}`).toBeDefined()
+    }
   })
 })

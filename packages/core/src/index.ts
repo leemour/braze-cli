@@ -1,5 +1,6 @@
 export { type BulkOptions, executeBulk } from "./bulk/execute.js"
 export type { BulkOutcome, BulkProgress, BulkRecord, BulkStatus } from "./bulk/types.js"
+export { type BulkVerdict, type Placement, verdictsFor } from "./bulk/verdict.js"
 export {
   BrazeClient,
   type BrazeClientOptions,
@@ -9,6 +10,15 @@ export {
 } from "./client.js"
 export { BrazeError, type BrazeErrorDetails, type ErrorCode, errorCodes } from "./errors.js"
 export type { FetchLike } from "./fetch.js"
+export {
+  type BrazeIdentifiers,
+  IDENTIFIER_FIELDS,
+  identifiersOf,
+  namesAUser,
+  PRIMARY_IDENTIFIER_FIELDS,
+  primaryIdentifierCount,
+  type UserAlias,
+} from "./identity.js"
 export { type Logger, noopLogger } from "./logger.js"
 export {
   type Access,
@@ -33,7 +43,7 @@ export {
 } from "./operations/index.js"
 export type { OperationOverride } from "./operations/overrides.js"
 export { parameterDescriptions } from "./operations/parameters.js"
-export { schemas } from "./operations/schemas.js"
+export { recordSchemas, schemas } from "./operations/schemas.js"
 export {
   buildQuery,
   buildUrl,
@@ -63,4 +73,4 @@ export {
   type WallClock,
   wallClock,
 } from "./time.js"
-export { type ValidatableInput, validateRequest } from "./validate.js"
+export { checkRecord, type ValidatableInput, validateRequest } from "./validate.js"

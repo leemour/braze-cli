@@ -1,19 +1,41 @@
 import PQueue from "p-queue"
 import type { BrazeClient } from "../client.js"
 import { BrazeError } from "../errors.js"
+import { identifiersOf } from "../identity.js"
 import type { Operation } from "../operation.js"
+import { checkRecord } from "../validate.js"
 import type { BulkOutcome, BulkRecord } from "./types.js"
+import { type Placement, verdictsFor } from "./verdict.js"
 
 export interface BulkOptions {
+  /**
+   * What a generated `recordId` is scoped to (`NEED-31`). Core does not know what a run is — this
+   * is an opaque prefix, and it is required because a default would quietly make the generated ids
+   * of two runs collide, which is the ambiguity the ruling rejected a bare row number for.
+   */
+  runId: string
   /** §38 of the brief. Four concurrent requests, not four threads. */
   concurrency?: number
   /** Stops pulling and scheduling. Work already in flight is allowed to finish. */
   signal?: AbortSignal
   /** Overrides the operation's own cap. For tests, and for an endpoint Braze has since changed. */
   batchSize?: number
+  /**
+   * Batch and check everything, send nothing: every record that would have gone out comes back
+   * `planned`, carrying the `batchId` it would have had.
+   *
+   * **It runs through the same loop rather than beside it.** A dry run that walked the source
+   * separately would be a second batcher, a second place `checkRecord` is called and a second
+   * notion of what a batch is — and the arithmetic a dry run exists to show ("this file is 10 000
+   * requests") would be the one thing it never exercised.
+   */
+  dryRun?: boolean
 }
 
 const DEFAULT_CONCURRENCY = 4
+
+/** No request carried this record — it was refused here, or never sent at all. */
+const NO_BATCH = 0
 
 /**
  * Turns a stream of records into Braze requests, and a stream of outcomes back.
@@ -33,12 +55,19 @@ const DEFAULT_CONCURRENCY = 4
  * waiting to be yielded, counted together. So at most `concurrency * 2 * batchSize` records are
  * resident: 600 at the defaults, whatever the input size. Counting the finished-but-unyielded ones
  * is the part that is easy to leave out and the part that makes the bound true.
+ *
+ * ## Every record comes back, and every outcome can be acted on
+ *
+ * A record refused here never reaches Braze and still gets an outcome (`invalid`); a record the
+ * source still held when a signal arrived gets one too (`skipped`). Together with `recordId`, which
+ * is never blank, that is what makes the audit answerable a week later: 500 records in, 500
+ * outcomes out, each naming which run and which line it came from.
  */
 export async function* executeBulk(
   client: BrazeClient,
   operation: Operation,
   records: AsyncIterable<BulkRecord>,
-  options: BulkOptions = {},
+  options: BulkOptions,
 ): AsyncGenerator<BulkOutcome> {
   const concurrency = options.concurrency ?? DEFAULT_CONCURRENCY
   const batchSize = options.batchSize ?? operation.batchTotal ?? 1
@@ -70,17 +99,42 @@ export async function* executeBulk(
   }
 
   /**
-   * One batch, or nothing left. Reads no further than `batchSize` — the buffer this holds is the
-   * only place input accumulates.
+   * One request's worth of input, or nothing left.
+   *
+   * **The budget is records read, not records sent.** A record refused by `checkRecord` still
+   * counts against `batchSize`, so a file where every line is malformed cannot grow one unit
+   * without bound — the memory ceiling above holds whatever the input contains. The price is a
+   * short request when a batch happens to contain bad lines, paid only by input that is already
+   * wrong.
    */
-  const nextBatch = async (): Promise<BulkRecord[] | undefined> => {
-    const batch: BulkRecord[] = []
-    while (batch.length < batchSize) {
+  const nextUnit = async (): Promise<{ send: BulkRecord[]; invalid: BulkOutcome[] } | undefined> => {
+    const send: BulkRecord[] = []
+    const invalid: BulkOutcome[] = []
+    let read = 0
+
+    while (read < batchSize) {
       const step = await source.next()
       if (step.done) break
-      batch.push(step.value)
+      read += 1
+
+      const record = step.value
+      const reason = checkRecord(operation, record.field, record.value)
+      if (reason === undefined) {
+        send.push(record)
+        continue
+      }
+
+      invalid.push(
+        outcome(record, options.runId, {
+          batchId: NO_BATCH,
+          status: "invalid",
+          errorCode: "validation_error",
+          errorMessage: reason,
+        }),
+      )
     }
-    return batch.length > 0 ? batch : undefined
+
+    return read > 0 ? { send, invalid } : undefined
   }
 
   try {
@@ -93,26 +147,42 @@ export async function* executeBulk(
       // stays true, and this loop reads the entire two-million-row file into `ready` while the
       // consumer is still on record one. Counting completed-but-unyielded work closes that.
       while (!exhausted && !options.signal?.aborted && queue.size + queue.pending + ready.length < maxQueued) {
-        const batch = await nextBatch()
-        if (!batch) {
+        const unit = await nextUnit()
+        if (!unit) {
           exhausted = true
           break
         }
 
+        // An invalid record's outcome is already known, so it is yielded as soon as it is read
+        // rather than waiting for a request it is not part of.
+        if (unit.invalid.length > 0) ready.push(unit.invalid)
+
+        if (unit.send.length === 0) continue
+
         batchId += 1
         const id = batchId
+
+        if (options.dryRun) {
+          ready.push(unit.send.map((record) => outcome(record, options.runId, { batchId: id, status: "planned" })))
+          continue
+        }
+
         void queue.add(async () => {
-          ready.push(await send(client, operation, batch, id, options.signal))
+          ready.push(await dispatch(client, operation, unit.send, id, options))
           onProgress()
         })
       }
 
       while (ready.length > 0) {
-        for (const outcome of ready.shift() as BulkOutcome[]) yield outcome
+        for (const settled of ready.shift() as BulkOutcome[]) yield settled
       }
 
-      const idle = queue.size === 0 && queue.pending === 0
-      if (idle && (exhausted || options.signal?.aborted)) break
+      if (queue.size === 0 && queue.pending === 0) {
+        if (exhausted || options.signal?.aborted) break
+        // Nothing is in flight to wake us — a unit whose every record was refused schedules no
+        // request — so the only way on is to read more input.
+        continue
+      }
 
       // A batch that finished while we were yielding has already made progress; waiting for
       // another wake-up would be waiting for something that has already happened.
@@ -132,7 +202,7 @@ export async function* executeBulk(
       for (;;) {
         const step = await source.next()
         if (step.done) break
-        yield { row: step.value.row, batchId: 0, status: "skipped" }
+        yield outcome(step.value, options.runId, { batchId: NO_BATCH, status: "skipped" })
       }
     }
   } finally {
@@ -147,45 +217,97 @@ export async function* executeBulk(
  * One request, and an outcome for every record it carried — rule 5: a request with 75 users is 75
  * audit rows, because the user is the unit anyone cares about and the batch is transport.
  */
-const send = async (
+const dispatch = async (
   client: BrazeClient,
   operation: Operation,
   batch: readonly BulkRecord[],
   batchId: number,
-  signal: AbortSignal | undefined,
+  options: BulkOptions,
 ): Promise<BulkOutcome[]> => {
   const body: Record<string, unknown[]> = {}
+  const placed: Placement[] = []
   for (const record of batch) {
     const field = body[record.field] ?? []
+    // Recorded here because here is the only place it is knowable: Braze names a refused object by
+    // its position in its own array, and that position is decided as the body is filled.
+    placed.push({ record, field: record.field, index: field.length })
     field.push(record.value)
     body[record.field] = field
   }
 
   try {
-    const result = await client.execute(operation, { body }, signal ? { signal } : {})
+    const result = await client.execute(operation, { body }, options.signal ? { signal: options.signal } : {})
+    const verdicts = verdictsFor(placed, result.data)
 
-    return batch.map((record) => ({
-      row: record.row,
-      batchId,
-      // Never `success`: Braze accepted the request, and says nothing about the users inside it.
-      status: "submitted" as const,
-      httpStatus: result.status,
-      attempts: result.attempts,
-      durationMs: Math.round(result.totalDurationMs),
-    }))
+    return batch.map((record) => {
+      // `submitted`, never `success`: where Braze said nothing about a record, all we know is that
+      // it went out in a request Braze accepted.
+      const verdict = verdicts.get(record.row) ?? { status: "submitted" as const }
+
+      return outcome(record, options.runId, {
+        batchId,
+        status: verdict.status,
+        startedAt: result.startedAt.toISOString(),
+        httpStatus: result.status,
+        attempts: result.attempts,
+        durationMs: Math.round(result.totalDurationMs),
+        // No `errorCode`: the closed list describes a request that failed, and this request
+        // succeeded. What failed is one object inside it, and Braze's own words are the only
+        // taxonomy there is for that.
+        ...(verdict.errorMessage === undefined ? {} : { errorMessage: verdict.errorMessage }),
+        ...(verdict.note === undefined ? {} : { note: verdict.note }),
+      })
+    })
   } catch (error) {
     const failure = error instanceof BrazeError ? error : undefined
 
-    // Rule 4 and §24: a connection that died after the request left may well have been processed.
-    // Calling that `failed` invites a re-run that double-applies it.
-    const status = failure?.code === "outcome_unknown" ? ("unknown" as const) : ("failed" as const)
+    // Three different things, and calling them all `failed` would be wrong in three ways.
+    //
+    // - `outcome_unknown` — the request left and the answer never came. Braze may well have applied
+    //   it, so `failed` invites a re-run that double-applies (rule 4, §24).
+    // - `cancelled` — the signal landed **before this request was sent** (`client.ts` says so in as
+    //   many words). Braze never saw these records, so `failed` claims a refusal that never
+    //   happened; `skipped` is the word §34 has for exactly this. A write cancelled mid-flight
+    //   never reaches here as `cancelled` — the client turns that into `outcome_unknown`.
+    // - anything else — Braze answered and refused.
+    const status =
+      failure?.code === "outcome_unknown" ? "unknown" : failure?.code === "cancelled" ? "skipped" : "failed"
 
-    return batch.map((record) => ({
-      row: record.row,
-      batchId,
-      status,
-      errorCode: failure?.code,
-      errorMessage: failure?.message ?? (error instanceof Error ? error.message : String(error)),
-    }))
+    return batch.map((record) =>
+      outcome(record, options.runId, {
+        batchId,
+        status,
+        // Carried through because it is what says a request was actually made. Every failure the
+        // client raises after sending sets it; the one it raises *before* sending — the signal
+        // arriving while this batch waited in the queue — does not, and that absence is the only
+        // way to tell a batch Braze refused from a batch Braze never saw.
+        ...(failure?.details.attempts === undefined ? {} : { attempts: failure.details.attempts }),
+        errorCode: failure?.code,
+        errorMessage: failure?.message ?? (error instanceof Error ? error.message : String(error)),
+      }),
+    )
+  }
+}
+
+/**
+ * The one place an outcome is built, so the four ways a record can end — sent, refused by Braze,
+ * refused here, never sent — cannot disagree about its identity. `NEED-31` is a property of every
+ * row, and the row easiest to forget is `skipped`: an interrupted run is exactly when somebody
+ * needs to know which records to re-send.
+ */
+const outcome = (
+  record: BulkRecord,
+  runId: string,
+  settled: Omit<BulkOutcome, "row" | "recordId" | "recordIdSource" | "identity">,
+): BulkOutcome => {
+  // A CSV column that happens to be empty supplies `""`, which is an id nobody can act on.
+  const own = record.recordId?.trim()
+
+  return {
+    row: record.row,
+    recordId: own ? own : `${runId}-${record.row}`,
+    recordIdSource: own ? "input" : "generated",
+    identity: record.identity ?? identifiersOf(record.value),
+    ...settled,
   }
 }

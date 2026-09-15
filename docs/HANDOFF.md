@@ -14,18 +14,27 @@ stdout, a closed list of error codes).
 The Braze client underneath is a separate package that **must run unchanged in a Cloudflare
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
-**Status 2026-09-14: Phase 1 closed and verified against live Braze; Phase 2's catalog is built.**
+**Status 2026-09-15: Phase 1 closed and verified against live Braze, Phase 2's catalog is built, and
+Phase 3's bulk pipeline is complete.**
 `braze profile`, `braze api` and `braze runs` work, and **95 operations are generated from Braze's
 own collection and registered as typed commands** — `braze staging campaigns list --json` returns
 what the raw call does, without anyone having written a `campaigns` command. Each one is contract
 tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
-`--paginate` walks pages under a ceiling it cannot exceed. 355 tests.
+`--paginate` walks pages under a ceiling it cannot exceed. 493 tests.
 
 Every command is documented in [`commands.md`](commands.md), generated from the CLI itself and
 gated in CI, so it cannot describe a version of the program that no longer exists.
 
-**Not built:** Valibot validation and its three levels (`CORE-10`), and the bulk pipeline —
-Phase 3, which is the next substantial thread.
+**`braze <profile> users track --records users.jsonl --records-field attributes --confirm` works**,
+verified against a staging workspace: records stream out of a JSONL or CSV file, batch to Braze's
+limit, and leave one audit row each in `records.csv` with a truthful status — including for the
+records refused here and the ones an interrupted run never sent. The summary on stdout is the
+result of the run.
+
+Memory is bounded and measured, not hoped for: a million-record run peaks at **599 records
+resident** against a predicted ceiling of 600.
+
+**Not built:** `BULK-10` (`braze runs cleanup`) and `BULK-13` (JSON-array input), both P3.
 
 ## 2. Layout
 
@@ -54,6 +63,7 @@ Take your row. Do not read the rest.
 | What to build next | [`../BACKLOG.md`](../BACKLOG.md), then the plan in [`plans/`](plans/) |
 | Anything in core | [`ARCHITECTURE.md`](ARCHITECTURE.md) §2–§4, `packages/core/src/client.ts` |
 | A request, a retry, an error code | `packages/core/src/{client,retry,errors}.ts` |
+| Anything bulk | [`ARCHITECTURE.md`](ARCHITECTURE.md) §7 and §7a, then `packages/core/src/bulk/` — the CLI half is `packages/cli/src/{bulk.ts,input/records.ts,runs/records-file.ts}` |
 | Anything that prints | [`ARCHITECTURE.md`](ARCHITECTURE.md) §5, [`TESTING.md`](TESTING.md) — the machine-output invariant |
 | What a command takes | [`commands.md`](commands.md) — generated from the CLI; `braze schema <operation>` for one |
 | The API catalog | [`ARCHITECTURE.md`](ARCHITECTURE.md) §6, [`REQUIREMENTS.md`](REQUIREMENTS.md) §6–§13 |
@@ -100,7 +110,10 @@ Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
 4. **A write is never retried automatically.** Braze documents no general idempotency key. A
    connection that died after the request left is `outcome_unknown`, never `failed`.
 5. **One HTTP request carrying 75 users is 75 audit rows**, and their status is `submitted` — not
-   `success`, because Braze does not acknowledge them one by one.
+   `success`, because Braze does not acknowledge them one by one. Braze *does* name the objects it
+   refused inside a 2xx, by `index` within `input_array` — undocumented, measured — and those
+   records are `failed`. A batch cancelled before it was sent is `skipped`, never `failed`: Braze
+   never saw it (`BUG-10`).
 6. **`--confirm` is a flag, never a prompt**, for any API command. A missing one returns
    `confirmation_required`.
 7. **A credential never reaches a logger**, redaction or not, and never appears as a recommended
@@ -127,17 +140,19 @@ Braze returns it inside a 401 body (`SEC-1`), so both are filtered.
 The live list is [`../BACKLOG.md`](../BACKLOG.md); the rules for taking a number are in it, under
 the fold.
 
-**The open thread is Phase 2, the generated catalog.** Start with the handoff —
-[`plans/2026-09-14-phase-2-handoff.md`](plans/2026-09-14-phase-2-handoff.md) — and its §0, which
-prints the state in one command.
+**Phase 3, the bulk pipeline, is complete** —
+[`plans/2026-09-14-phase-3-bulk.md`](plans/2026-09-14-phase-3-bulk.md), seven steps, each marked
+done in place as it landed. **All seven steps are closed**, and the plan is ready to be deleted once whoever picks up Phase 4
+has read it — it carries the reasoning behind the executor's shape.
 
-**Updated 2026-09-14: Phase 2 is functionally complete.** All six steps of
-[the plan](plans/2026-09-13-phase-2-catalog.md) are closed. 362 tests. What remains is `CORE-10`
-(Valibot validation) and `CAT-10` at P3, neither of which blocks anything.
+`RISK-3` is closed, and its answer is worth carrying forward: **Braze refuses individual objects
+inside a 201** and names them by `index` within `input_array`, which its own page documents
+nowhere. Measured against the staging workspace on 2026-09-15; the response is a test fixture in
+`packages/core/src/bulk/verdict.test.ts`.
 
-**The next substantial thread is Phase 3, the bulk pipeline** — `BULK-1`…`BULK-10` in
-[`../BACKLOG.md`](../BACKLOG.md). It has no plan yet; write one before building, per
-[`../CLAUDE.md`](../CLAUDE.md).
+Phase 2 is functionally complete — all six steps of
+[its plan](plans/2026-09-13-phase-2-catalog.md) are closed. `CORE-10` closed on 2026-09-14. What is
+left outside Phase 3 is `CAT-10` at P3, which blocks nothing.
 
 Nothing is waiting on the owner.
 

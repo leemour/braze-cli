@@ -157,6 +157,41 @@ This is why the audit CSV says `submitted` and not `success` for a record in a b
 accepted: the request succeeded, and whether that particular user was updated is a different
 question with a different answer.
 
+**Braze does say which objects it refused, and its own documentation does not mention it.** Measured
+against a staging workspace on 2026-09-15, five objects sent and three refused:
+
+```json
+{"attributes_processed": 2,
+ "errors": [{"index": 1, "input_array": "attributes", "type": "'email_subscribe' must be …"}, …]}
+```
+
+`index` counts from zero **inside the named array**, not across the request, so a record's position
+in its own field's array is what `packages/core/src/bulk/verdict.ts` records at dispatch. Neither
+field appears on Braze's page, so every read of that shape degrades rather than throws: an entry we
+cannot place makes `unknown` the records it might be, never `failed`. The response is kept verbatim
+as a fixture in `verdict.test.ts`, because a measurement nobody can replay is a rumour.
+
+## 7a. The bulk pipeline is a pull chain, and the bound is a number
+
+`executeBulk` is an async generator: it advances the source only when the consumer asks for the next
+outcome. That makes "the parser must not enqueue two million promises" (§39 of the brief) impossible
+rather than merely unlikely, since nothing else can advance the source.
+
+**At most `concurrency * 2` batches are outstanding at once** — queued, running, *and finished but
+not yet yielded*, counted together. The third of those is the one that is easy to leave out and the
+one that makes the bound true: without it, an endpoint answering faster than the consumer reads
+empties the queue between pulls and the loop reads the whole file into memory (`BUG-9`). So at most
+`concurrency * 2 * batchSize` records are resident — 600 at the defaults, **measured at 599** on a
+million-record run.
+
+The chain only holds if every link pulls: the CLI's audit writer awaits `drain` when the file cannot
+keep up, which is what stops the whole pipeline running at Braze's speed.
+
+**Where each half lives:** core batches, sends and decides each record's status, and knows nothing
+about files; the CLI owns the JSONL and CSV parsers, `records.csv`, the progress line and the signal
+handler. Core takes an async iterable and returns one, so the same executor runs over a database
+cursor or a generator.
+
 ## 8. A message from Braze is untrusted data, not text
 
 Braze answers a 401 with `Invalid API key: <the key itself>` in the body. The first real request

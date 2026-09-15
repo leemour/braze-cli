@@ -63,6 +63,7 @@ Take your row. Do not read the rest.
 | What to build next | [`../BACKLOG.md`](../BACKLOG.md), then the plan in [`plans/`](plans/) |
 | Anything in core | [`ARCHITECTURE.md`](ARCHITECTURE.md) §2–§4, `packages/core/src/client.ts` |
 | A request, a retry, an error code | `packages/core/src/{client,retry,errors}.ts` |
+| Anything bulk | [`ARCHITECTURE.md`](ARCHITECTURE.md) §7 and §7a, then `packages/core/src/bulk/` — the CLI half is `packages/cli/src/{bulk.ts,input/records.ts,runs/records-file.ts}` |
 | Anything that prints | [`ARCHITECTURE.md`](ARCHITECTURE.md) §5, [`TESTING.md`](TESTING.md) — the machine-output invariant |
 | What a command takes | [`commands.md`](commands.md) — generated from the CLI; `braze schema <operation>` for one |
 | The API catalog | [`ARCHITECTURE.md`](ARCHITECTURE.md) §6, [`REQUIREMENTS.md`](REQUIREMENTS.md) §6–§13 |

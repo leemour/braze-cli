@@ -15,20 +15,23 @@ The Braze client underneath is a separate package that **must run unchanged in a
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
 **Status 2026-09-15: Phase 1 closed and verified against live Braze, Phase 2's catalog is built, and
-Phase 3's bulk pipeline is four steps in.**
+Phase 3's bulk pipeline works end to end.**
 `braze profile`, `braze api` and `braze runs` work, and **95 operations are generated from Braze's
 own collection and registered as typed commands** — `braze staging campaigns list --json` returns
 what the raw call does, without anyone having written a `campaigns` command. Each one is contract
 tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
-`--paginate` walks pages under a ceiling it cannot exceed. 440 tests.
+`--paginate` walks pages under a ceiling it cannot exceed. 490 tests.
 
 Every command is documented in [`commands.md`](commands.md), generated from the CLI itself and
 gated in CI, so it cannot describe a version of the program that no longer exists.
 
-**Not built:** the rest of Phase 3 — the streaming parsers, `records.csv`, the progress UI and the
-end-of-run summary. What exists is the executor underneath them:
-[`packages/core/src/bulk/`](../packages/core/src/bulk/) turns an async iterable of records into
-Braze requests and truthful per-record outcomes, in bounded memory.
+**`braze <profile> users track --records users.jsonl --records-field attributes --confirm` works**,
+verified against a staging workspace: records stream out of a JSONL or CSV file, batch to Braze's
+limit, and leave one audit row each in `records.csv` with a truthful status — including for the
+records refused here and the ones an interrupted run never sent. The summary on stdout is the
+result of the run.
+
+**Not built:** `BULK-9`, the million-record proof that memory stays flat.
 
 ## 2. Layout
 
@@ -132,8 +135,9 @@ the fold.
 
 **The open thread is Phase 3, the bulk pipeline.** Its plan is written, approved and being built
 against: [`plans/2026-09-14-phase-3-bulk.md`](plans/2026-09-14-phase-3-bulk.md), seven steps, each
-marked done in place as it lands. **Steps 1–4 are done** — the signal handler, the executor, per-record identity
-and validation, and truthful status. **Step 5 is next: the streaming parsers**, JSONL first.
+marked done in place as it lands. **Steps 1–6 are done** — the signal handler, the executor, per-record identity
+and validation, truthful status, the parsers, and the artifacts. **Step 7 is next and last:
+`BULK-9`**, a synthetic million-record run proving memory stays flat.
 
 `RISK-3` is closed, and its answer is worth carrying forward: **Braze refuses individual objects
 inside a 201** and names them by `index` within `input_array`, which its own page documents

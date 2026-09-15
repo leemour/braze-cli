@@ -135,7 +135,7 @@ Expected to ship with the first practically useful release, not after it.
 
 | Number | Task | P |
 |---|---|---|
-| `BULK-2` | Streaming parsers for JSONL, CSV and JSON, none of which may materialize the whole input | P1 |
+| `BULK-13` | Bulk input as one big JSON array. Deferred 2026-09-15 with `BULK-2`: streaming it needs a hand-rolled incremental scanner — depth, strings, escapes — that we would then own, and §37 already tells callers to prefer JSONL at this scale. JSONL and CSV cover every stated use. Worth building only if somebody turns up with an array they cannot convert | P3 |
 | `BULK-5` | `records.csv` streamed as work completes, one row per logical record even when 75 shared one HTTP request | P1 |
 | `BULK-7` | Progress UI: records/sec, batches/sec, elapsed, rough ETA — pretty mode only, never in a log or on stdout in JSON mode | P2 |
 | `BULK-8` | Ctrl+C mid-run flushes the audit CSV and finalizes `run.json` without corrupting a row | P1 |

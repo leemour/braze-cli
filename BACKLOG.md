@@ -74,9 +74,9 @@ a wrong batch limit that would have made the Phase 3 pipeline send three times B
 
 **The open thread is Phase 3, the bulk pipeline.** Its plan is written and approved:
 [`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — seven steps,
-**four of them done as of 2026-09-15**; step 5 is the streaming parsers. `RISK-3` is closed: Braze
-does attribute an error inside a 2xx, by `index` and `input_array`, measured against the staging
-workspace.
+**six of them done as of 2026-09-15**, and the pipeline works end to end against the staging
+workspace. What is left is `BULK-9`, the million-record proof. `RISK-3` is closed: Braze does
+attribute an error inside a 2xx, by `index` and `input_array`.
 
 `CAT-10` at P3 blocks nothing.
 
@@ -137,12 +137,8 @@ Expected to ship with the first practically useful release, not after it.
 | Number | Task | P |
 |---|---|---|
 | `BULK-13` | Bulk input as one big JSON array. Deferred 2026-09-15 with `BULK-2`: streaming it needs a hand-rolled incremental scanner — depth, strings, escapes — that we would then own, and §37 already tells callers to prefer JSONL at this scale. JSONL and CSV cover every stated use. Worth building only if somebody turns up with an array they cannot convert | P3 |
-| `BULK-5` | `records.csv` streamed as work completes, one row per logical record even when 75 shared one HTTP request | P1 |
-| `BULK-7` | Progress UI: records/sec, batches/sec, elapsed, rough ETA — pretty mode only, never in a log or on stdout in JSON mode | P2 |
-| `BULK-8` | Ctrl+C mid-run flushes the audit CSV and finalizes `run.json` without corrupting a row | P1 |
 | `BULK-9` | A synthetic million-record run proving memory stays bounded, without making a million HTTP calls | P2 |
 | `BULK-10` | `braze runs cleanup` with an explicit retention setting — opt-in, never a default (`NEED-3`) | P3 |
-| `BULK-12` | End-of-run summary as the **result** of a bulk run — one count per §34 status, on stdout in both modes, with `invalid` (refused here) kept distinct from `failed` (refused by Braze). `RunMetadata` gains `invalidRecords` and `skippedRecords`, the two of the six it never reserved | P1 |
 
 ## Phase 4 — when real usage asks for it
 

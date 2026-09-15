@@ -8,6 +8,18 @@ export interface Interruptible {
   /** Stops work in flight. The client turns an aborted signal into `cancelled`, or into
    * `outcome_unknown` for a write that may already have reached Braze. */
   cancel(): void
+  /**
+   * Work the run has to finish **after** cancelling and **before** the file is finalized.
+   *
+   * A single request has none: cancelling is the end of it. A bulk run has the part that matters
+   * most — the records that never went still need their `skipped` rows, the audit needs closing
+   * and the summary is what says how far it got. Exiting the moment the signal arrived would
+   * truncate the CSV mid-row and print nothing, which is the failure `BULK-8` names.
+   *
+   * It may hang, in principle — a request that never answers. That is what the second signal is
+   * for, and why this is awaited rather than raced against a timer nobody could pick.
+   */
+  drain?: () => Promise<void>
   /** Idempotent by construction in `run.ts`, which is what makes this safe to call from a signal. */
   finish(status: RunStatus, extra?: Record<string, unknown>): Promise<void>
 }
@@ -62,6 +74,13 @@ export const handleInterrupt = async (signal: NodeJS.Signals, options: Interrupt
 
   warn(`${signal} — stopping, finishing the run file. Press again to exit immediately.`)
   run.cancel()
+
+  try {
+    await run.drain?.()
+  } catch {
+    // The run's own error handling has already seen this; here it only decides whether we get to
+    // write the file, and we still do.
+  }
 
   try {
     await run.finish("cancelled")

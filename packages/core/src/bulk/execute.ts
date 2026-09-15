@@ -20,6 +20,16 @@ export interface BulkOptions {
   signal?: AbortSignal
   /** Overrides the operation's own cap. For tests, and for an endpoint Braze has since changed. */
   batchSize?: number
+  /**
+   * Batch and check everything, send nothing: every record that would have gone out comes back
+   * `planned`, carrying the `batchId` it would have had.
+   *
+   * **It runs through the same loop rather than beside it.** A dry run that walked the source
+   * separately would be a second batcher, a second place `checkRecord` is called and a second
+   * notion of what a batch is — and the arithmetic a dry run exists to show ("this file is 10 000
+   * requests") would be the one thing it never exercised.
+   */
+  dryRun?: boolean
 }
 
 const DEFAULT_CONCURRENCY = 4
@@ -151,6 +161,12 @@ export async function* executeBulk(
 
         batchId += 1
         const id = batchId
+
+        if (options.dryRun) {
+          ready.push(unit.send.map((record) => outcome(record, options.runId, { batchId: id, status: "planned" })))
+          continue
+        }
+
         void queue.add(async () => {
           ready.push(await dispatch(client, operation, unit.send, id, options))
           onProgress()
@@ -231,6 +247,7 @@ const dispatch = async (
       return outcome(record, options.runId, {
         batchId,
         status: verdict.status,
+        startedAt: result.startedAt.toISOString(),
         httpStatus: result.status,
         attempts: result.attempts,
         durationMs: Math.round(result.totalDurationMs),
@@ -244,9 +261,17 @@ const dispatch = async (
   } catch (error) {
     const failure = error instanceof BrazeError ? error : undefined
 
-    // Rule 4 and §24: a connection that died after the request left may well have been processed.
-    // Calling that `failed` invites a re-run that double-applies it.
-    const status = failure?.code === "outcome_unknown" ? "unknown" : "failed"
+    // Three different things, and calling them all `failed` would be wrong in three ways.
+    //
+    // - `outcome_unknown` — the request left and the answer never came. Braze may well have applied
+    //   it, so `failed` invites a re-run that double-applies (rule 4, §24).
+    // - `cancelled` — the signal landed **before this request was sent** (`client.ts` says so in as
+    //   many words). Braze never saw these records, so `failed` claims a refusal that never
+    //   happened; `skipped` is the word §34 has for exactly this. A write cancelled mid-flight
+    //   never reaches here as `cancelled` — the client turns that into `outcome_unknown`.
+    // - anything else — Braze answered and refused.
+    const status =
+      failure?.code === "outcome_unknown" ? "unknown" : failure?.code === "cancelled" ? "skipped" : "failed"
 
     return batch.map((record) =>
       outcome(record, options.runId, {

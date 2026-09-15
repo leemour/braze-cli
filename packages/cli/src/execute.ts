@@ -1,5 +1,8 @@
 import { BrazeClient, BrazeError, type Operation, resolvePath, validateRequest } from "brazecli-core"
+import { runBulk } from "./bulk.js"
 import { assertWriteAllowed } from "./guards.js"
+import { resolveRecordsFormat } from "./input/records.js"
+import type { RunLogger } from "./logging/logger.js"
 import { createRenderer, type Renderer } from "./output/renderer.js"
 import { processStreams, type Streams } from "./output/stream.js"
 import { startRun } from "./runs/run.js"
@@ -40,10 +43,23 @@ export const runOperation = async (
 
   const path = resolvePath(operation.path, request.pathParams ?? {})
 
+  const bulk = settings.records !== undefined
+
+  if (bulk && body !== undefined) {
+    throw new BrazeError(
+      "validation_error",
+      "--input sends one request body and --records sends many records in batches — pass one or the other (NEED-30)",
+      { operation: operation.id },
+    )
+  }
+
   // Before the guards, not after. `--dry-run` is the tool you reach for on a locked-down profile,
   // and validating second would make it answer `permission_error` while never mentioning that the
   // body was malformed — a question nobody asked. Neither check sends anything.
-  validateRequest(operation, { pathParams: request.pathParams, query, body })
+  //
+  // A bulk run has no assembled body to check: each record is checked on its own before it joins a
+  // batch, so that one bad line among 75 costs one audit row instead of the whole request.
+  if (!bulk) validateRequest(operation, { pathParams: request.pathParams, query, body })
   assertWriteAllowed(settings, operation, `${operation.method} ${path}`)
 
   const run = startRun({
@@ -59,6 +75,27 @@ export const runOperation = async (
   const untrack = trackRun(run)
 
   try {
+    if (bulk) {
+      await runBulk({
+        operation,
+        client: newClient(settings, run, context),
+        run,
+        renderer,
+        streams,
+        source: settings.records as string,
+        format: resolveRecordsFormat(settings.records as string, settings.recordsFormat),
+        records: {
+          ...(settings.recordsField === undefined ? {} : { field: settings.recordsField }),
+          ...(settings.recordId === undefined ? {} : { recordIdKey: settings.recordId }),
+        },
+        concurrency: settings.concurrency,
+        dryRun: settings.dryRun,
+        interactive: settings.interactive,
+        outputFormat: settings.outputFormat,
+      })
+      return
+    }
+
     if (settings.dryRun) {
       const plan = {
         dryRun: true,
@@ -77,15 +114,7 @@ export const runOperation = async (
       return
     }
 
-    const client = new BrazeClient({
-      endpoint: settings.restEndpoint,
-      apiKey: settings.apiKey,
-      logger: run.logger,
-      fetch: context.fetch,
-      userAgent: `brazecli/${VERSION} runtime/node platform/${process.platform}`,
-      ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
-      ...(settings.retries === undefined ? {} : { retry: { retries: settings.retries } }),
-    })
+    const client = newClient(settings, run, context)
 
     if (settings.paginate) {
       const walked = await walkPages(client, operation, request, settings, renderer)
@@ -131,6 +160,17 @@ export const runOperation = async (
     untrack()
   }
 }
+
+const newClient = (settings: Settings, run: { logger: RunLogger }, context: ExecutionContext): BrazeClient =>
+  new BrazeClient({
+    endpoint: settings.restEndpoint,
+    apiKey: settings.apiKey,
+    logger: run.logger,
+    fetch: context.fetch,
+    userAgent: `brazecli/${VERSION} runtime/node platform/${process.platform}`,
+    ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
+    ...(settings.retries === undefined ? {} : { retry: { retries: settings.retries } }),
+  })
 
 /**
  * Braze returns a page with no total and no "next" marker, so a full page and the last page look

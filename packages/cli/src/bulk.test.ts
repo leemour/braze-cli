@@ -1,0 +1,163 @@
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { BrazeClient, findOperation } from "brazecli-core"
+import { brazeResponses, mockBraze } from "brazecli-core/testing"
+import { beforeEach, describe, expect, it } from "vitest"
+import { runBulk } from "./bulk.js"
+import { createRenderer } from "./output/renderer.js"
+import { captureStreams } from "./output/stream.js"
+import { type Run, startRun } from "./runs/run.js"
+
+const track = findOperation("users.track.create") as NonNullable<ReturnType<typeof findOperation>>
+
+let runsDir: string
+let inputDir: string
+let streams: ReturnType<typeof captureStreams>
+
+const users = (count: number): string => {
+  const path = join(inputDir, `users-${count}.jsonl`)
+  const lines = [...Array(count)].map((_, index) => JSON.stringify({ external_id: `u${index + 1}` }))
+  writeFileSync(path, `${lines.join("\n")}\n`)
+  return path
+}
+
+const bulk = (run: Run, source: string, mock: ReturnType<typeof mockBraze>, concurrency = 1) =>
+  runBulk({
+    operation: track,
+    client: new BrazeClient({ endpoint: "https://rest.iad-01.braze.com", apiKey: "k", fetch: mock.fetch }),
+    run,
+    renderer: createRenderer({ format: "json", color: false, streams }),
+    streams,
+    source,
+    format: "jsonl",
+    records: { field: "attributes" },
+    concurrency,
+    dryRun: false,
+    interactive: false,
+    outputFormat: "json",
+  })
+
+const newRun = (): Run =>
+  startRun({ runsDir, command: "users track", operation: track.id, profile: "test", cliVersion: "0.0.0" })
+
+const auditRows = (run: Run): string[] => readFileSync(join(run.dir, "records.csv"), "utf8").trim().split("\n").slice(1)
+
+/** Lines currently in the audit, header included. 0 before it exists. */
+const lines = (run: Run): number => {
+  try {
+    return readFileSync(join(run.dir, "records.csv"), "utf8").trim().split("\n").length
+  } catch {
+    return 0
+  }
+}
+
+beforeEach(() => {
+  runsDir = mkdtempSync(join(tmpdir(), "brazecli-bulkruns-"))
+  inputDir = mkdtempSync(join(tmpdir(), "brazecli-bulkin-"))
+  streams = captureStreams()
+})
+
+describe("a run interrupted in the middle", () => {
+  /**
+   * The interrupted run is when the audit matters most: somebody has to know which records went and
+   * which did not. 500 in, 500 out — nothing silently disappears.
+   */
+  it("accounts for every record, and calls the ones that never went skipped", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => {
+      run.cancel()
+      return brazeResponses.created()
+    })
+
+    const summary = await bulk(run, users(500), mock)
+
+    const accounted =
+      summary.planned + summary.submitted + summary.failed + summary.unknown + summary.invalid + summary.skipped
+
+    expect(summary.records).toBe(500)
+    expect(summary.skipped).toBeGreaterThan(0)
+    expect(accounted).toBe(500)
+    expect(summary.interrupted).toBe(true)
+    // Nothing is `failed`: Braze refused none of them. The batch already in flight finished and is
+    // `submitted`; everything the signal caught before it was sent is `skipped`. A write cancelled
+    // mid-flight would be `unknown` — never `failed`, since stopping waiting is not the same as it
+    // not happening (rule 4).
+    expect(summary.failed).toBe(0)
+  })
+
+  it("still prints the summary — that is when the counts matter most", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => {
+      run.cancel()
+      return brazeResponses.created()
+    })
+
+    await bulk(run, users(200), mock)
+
+    const summary = JSON.parse(streams.stdout.join("\n"))
+    expect(summary.interrupted).toBe(true)
+    expect(summary.skipped).toBeGreaterThan(0)
+    expect(streams.stderr.join("\n")).toContain("never sent")
+  })
+
+  /** A half-written row reads as a successful submission, which is the worst thing this file can do. */
+  it("leaves an audit whose every row is complete", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => {
+      run.cancel()
+      return brazeResponses.created()
+    })
+
+    await bulk(run, users(300), mock)
+
+    const rows = auditRows(run)
+    expect(rows).toHaveLength(300)
+    // Every row has the same number of columns as the header, so none was cut short.
+    const columns = readFileSync(join(run.dir, "records.csv"), "utf8").split("\n")[0]?.split(",").length
+    expect(rows.every((row) => row.split(",").length === columns)).toBe(true)
+  })
+
+  it("records the run as cancelled, with the counts that explain it", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => {
+      run.cancel()
+      return brazeResponses.created()
+    })
+
+    const summary = await bulk(run, users(200), mock)
+    const metadata = JSON.parse(readFileSync(join(run.dir, "run.json"), "utf8"))
+
+    expect(metadata.status).toBe("cancelled")
+    expect(metadata.skippedRecords).toBe(summary.skipped)
+    expect(metadata.inputRecords).toBe(200)
+  })
+})
+
+describe("the audit is written as work completes", () => {
+  /**
+   * `BULK-5` means the rows are handed over per record rather than collected and written at the
+   * end — but a row handed to a stream is not yet a row on disk, so "read the file mid-run" tests
+   * the operating system's buffer, not this code. What the audit actually promises is that **any
+   * orderly end leaves every row on disk**, a signal included, and that is what is checked here and
+   * in the interrupted run above. A `kill -9` is outside what any buffered writer can promise.
+   */
+  it("has every row on disk the moment the run returns", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.created())
+
+    const summary = await bulk(run, users(300), mock)
+
+    expect(lines(run)).toBe(301)
+    expect(auditRows(run)).toHaveLength(summary.records)
+  })
+
+  it("names the audit in the summary, so nobody has to guess where it went", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.created())
+
+    const summary = await bulk(run, users(2), mock)
+
+    expect(summary.recordsFile).toBe(join(run.dir, "records.csv"))
+  })
+})

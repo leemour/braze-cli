@@ -8,6 +8,10 @@ Covers file deletions, dropped databases, Docker volumes and containers, stale b
 worktrees, generated artifacts and temp directories — anything whose removal is not itself the
 task at hand.
 
+**Ruled 2026-09-15 (`NEED-40`, option A), not yet done:** the three plans below go **once PR #23 is
+merged**, and the run artifacts stay. Nothing was deleted on the day: the plans live in the branch
+under review, and removing them first would edit the diff being read.
+
 **Done 2026-09-15**, after the owner confirmed (`NEED-36`, option B): the throwaway `sigtest` profile and its
 keyring entry are gone. The two staging user profiles could not be: the key is refused `users.delete` with a 403,
 so their line stays below with what it would take. Run artifacts were deliberately kept — they are the only record

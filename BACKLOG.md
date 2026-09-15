@@ -73,9 +73,10 @@ HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests
 a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
 
 **The open thread is Phase 3, the bulk pipeline.** Its plan is written and approved:
-[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — **seven steps,
-starting at `CLI-13`.** One measurement is outstanding and blocks nobody (`RISK-3`: how Braze
-attributes an error inside a 2xx; Step 4 settles it against the sandbox).
+[`docs/plans/2026-09-14-phase-3-bulk.md`](docs/plans/2026-09-14-phase-3-bulk.md) — seven steps,
+**four of them done as of 2026-09-15**; step 5 is the streaming parsers. `RISK-3` is closed: Braze
+does attribute an error inside a 2xx, by `index` and `input_array`, measured against the staging
+workspace.
 
 `CAT-10` at P3 blocks nothing.
 
@@ -136,7 +137,6 @@ Expected to ship with the first practically useful release, not after it.
 |---|---|---|
 | `BULK-2` | Streaming parsers for JSONL, CSV and JSON, none of which may materialize the whole input | P1 |
 | `BULK-5` | `records.csv` streamed as work completes, one row per logical record even when 75 shared one HTTP request | P1 |
-| `BULK-6` | Truthful per-record status: `planned`/`submitted`/`failed`/`unknown`/`invalid`/`skipped` — never `success` without a per-record acknowledgement from Braze | P1 |
 | `BULK-7` | Progress UI: records/sec, batches/sec, elapsed, rough ETA — pretty mode only, never in a log or on stdout in JSON mode | P2 |
 | `BULK-8` | Ctrl+C mid-run flushes the audit CSV and finalizes `run.json` without corrupting a row | P1 |
 | `BULK-9` | A synthetic million-record run proving memory stays bounded, without making a million HTTP calls | P2 |

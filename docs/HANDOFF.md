@@ -15,12 +15,12 @@ The Braze client underneath is a separate package that **must run unchanged in a
 Worker, a browser or a serverless function**. That constraint shapes almost every decision here.
 
 **Status 2026-09-15: Phase 1 closed and verified against live Braze, Phase 2's catalog is built, and
-Phase 3's bulk pipeline is three steps in.**
+Phase 3's bulk pipeline is four steps in.**
 `braze profile`, `braze api` and `braze runs` work, and **95 operations are generated from Braze's
 own collection and registered as typed commands** — `braze staging campaigns list --json` returns
 what the raw call does, without anyone having written a `campaigns` command. Each one is contract
 tested, every flag carries a description, `braze schema <operation>` answers for a single one, and
-`--paginate` walks pages under a ceiling it cannot exceed. 423 tests.
+`--paginate` walks pages under a ceiling it cannot exceed. 440 tests.
 
 Every command is documented in [`commands.md`](commands.md), generated from the CLI itself and
 gated in CI, so it cannot describe a version of the program that no longer exists.
@@ -132,9 +132,13 @@ the fold.
 
 **The open thread is Phase 3, the bulk pipeline.** Its plan is written, approved and being built
 against: [`plans/2026-09-14-phase-3-bulk.md`](plans/2026-09-14-phase-3-bulk.md), seven steps, each
-marked done in place as it lands. **Steps 1–3 are done** (the signal handler, the executor, and
-per-record identity and validation); **step 4 is next, and it opens with a sandbox measurement** —
-how Braze attributes an error inside a 2xx (`RISK-3`), which the honest-status design rests on.
+marked done in place as it lands. **Steps 1–4 are done** — the signal handler, the executor, per-record identity
+and validation, and truthful status. **Step 5 is next: the streaming parsers**, JSONL first.
+
+`RISK-3` is closed, and its answer is worth carrying forward: **Braze refuses individual objects
+inside a 201** and names them by `index` within `input_array`, which its own page documents
+nowhere. Measured against the staging workspace on 2026-09-15; the response is a test fixture in
+`packages/core/src/bulk/verdict.test.ts`.
 
 Phase 2 is functionally complete — all six steps of
 [its plan](plans/2026-09-13-phase-2-catalog.md) are closed. `CORE-10` closed on 2026-09-14. What is

@@ -1,5 +1,6 @@
 export { type BulkOptions, executeBulk } from "./bulk/execute.js"
 export type { BulkOutcome, BulkProgress, BulkRecord, BulkStatus } from "./bulk/types.js"
+export { type BulkVerdict, type Placement, verdictsFor } from "./bulk/verdict.js"
 export {
   BrazeClient,
   type BrazeClientOptions,

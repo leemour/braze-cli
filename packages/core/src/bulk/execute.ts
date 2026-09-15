@@ -5,6 +5,7 @@ import { identifiersOf } from "../identity.js"
 import type { Operation } from "../operation.js"
 import { checkRecord } from "../validate.js"
 import type { BulkOutcome, BulkRecord } from "./types.js"
+import { type Placement, verdictsFor } from "./verdict.js"
 
 export interface BulkOptions {
   /**
@@ -208,25 +209,38 @@ const dispatch = async (
   options: BulkOptions,
 ): Promise<BulkOutcome[]> => {
   const body: Record<string, unknown[]> = {}
+  const placed: Placement[] = []
   for (const record of batch) {
     const field = body[record.field] ?? []
+    // Recorded here because here is the only place it is knowable: Braze names a refused object by
+    // its position in its own array, and that position is decided as the body is filled.
+    placed.push({ record, field: record.field, index: field.length })
     field.push(record.value)
     body[record.field] = field
   }
 
   try {
     const result = await client.execute(operation, { body }, options.signal ? { signal: options.signal } : {})
+    const verdicts = verdictsFor(placed, result.data)
 
-    return batch.map((record) =>
-      outcome(record, options.runId, {
+    return batch.map((record) => {
+      // `submitted`, never `success`: where Braze said nothing about a record, all we know is that
+      // it went out in a request Braze accepted.
+      const verdict = verdicts.get(record.row) ?? { status: "submitted" as const }
+
+      return outcome(record, options.runId, {
         batchId,
-        // Never `success`: Braze accepted the request, and says nothing about the users inside it.
-        status: "submitted",
+        status: verdict.status,
         httpStatus: result.status,
         attempts: result.attempts,
         durationMs: Math.round(result.totalDurationMs),
-      }),
-    )
+        // No `errorCode`: the closed list describes a request that failed, and this request
+        // succeeded. What failed is one object inside it, and Braze's own words are the only
+        // taxonomy there is for that.
+        ...(verdict.errorMessage === undefined ? {} : { errorMessage: verdict.errorMessage }),
+        ...(verdict.note === undefined ? {} : { note: verdict.note }),
+      })
+    })
   } catch (error) {
     const failure = error instanceof BrazeError ? error : undefined
 

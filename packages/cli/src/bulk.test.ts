@@ -209,3 +209,79 @@ describe("a million records, watched from the heap", () => {
     expect((process.memoryUsage().heapUsed - before) / 1024 / 1024).toBeLessThan(250)
   }, 600_000)
 })
+
+describe("the request count", () => {
+  /**
+   * Batches complete out of order once more than one is in flight, so the number of requests cannot
+   * be derived from the highest batch id seen so far. With four in flight, batch 3 can arrive before
+   * batch 2 — and a high-water mark then never counts batch 2's request at all.
+   */
+  it("matches the number of requests actually made, with batches completing out of order", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.created())
+
+    // Later requests answer sooner, so batch 4 finishes before batch 1. An instant mock always
+    // completes in order, which is why this needs arranging rather than assuming.
+    let sent = 0
+    const backwards = new BrazeClient({
+      endpoint: "https://rest.iad-01.braze.com",
+      apiKey: "k",
+      fetch: async (input, init) => {
+        const delay = Math.max(0, 40 - sent * 10)
+        sent += 1
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        return mock.fetch(input, init)
+      },
+    })
+
+    const summary = await runBulk({
+      operation: track,
+      client: backwards,
+      run,
+      renderer: createRenderer({ format: "json", color: false, streams }),
+      streams,
+      source: users(300),
+      format: "jsonl",
+      records: { field: "attributes" },
+      concurrency: 4,
+      dryRun: false,
+      interactive: false,
+      outputFormat: "json",
+    })
+
+    expect(mock.requests).toHaveLength(4)
+    expect(summary.requests).toBe(mock.requests.length)
+    expect(summary.batches).toBe(4)
+  })
+})
+
+describe("what counts as a request", () => {
+  it("counts a batch Braze refused — the request was made", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => brazeResponses.error(400, "Bad Request"))
+
+    const summary = await bulk(run, users(150), mock)
+
+    expect(mock.requests).toHaveLength(2)
+    expect(summary.requests).toBe(2)
+    expect(summary.failed).toBe(150)
+  })
+
+  /**
+   * The batch already queued when the signal lands never reaches the network. Counting it reports
+   * more requests than were made — measured at four for a run that made two, against a black-holed
+   * endpoint, before `attempts` became the test.
+   */
+  it("does not count a batch that was cancelled before it was sent", async () => {
+    const run = newRun()
+    const mock = mockBraze(() => {
+      run.cancel()
+      return brazeResponses.created()
+    })
+
+    const summary = await bulk(run, users(400), mock, 2)
+
+    expect(summary.requests).toBe(mock.requests.length)
+    expect(summary.batches).toBe(mock.requests.length)
+  })
+})

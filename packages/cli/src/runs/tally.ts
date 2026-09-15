@@ -6,6 +6,16 @@ export interface BulkTally {
   requests: number
   retries: number
   byStatus: Record<BulkStatus, number>
+  /**
+   * Which batches have already been counted.
+   *
+   * **A high-water mark looks right here and is not.** Outcomes arrive in the order batches
+   * *complete*, not the order they were sent, so with four requests in flight batch 4 can land
+   * first — and "count it if its id is higher than anything seen" then silently skips batches 1 to
+   * 3. Measured before this was a set: four requests made, `requests: 1` reported. It holds at most
+   * `concurrency * 2` ids, because a batch cannot complete before it exists.
+   */
+  counted: Set<number>
 }
 
 /**
@@ -19,18 +29,27 @@ export const newTally = (): BulkTally => ({
   requests: 0,
   retries: 0,
   byStatus: { planned: 0, submitted: 0, failed: 0, unknown: 0, invalid: 0, skipped: 0 },
+  counted: new Set(),
 })
+
+/** What a record that never reached a request carries — refused here, or never sent. */
+const NO_BATCH = 0
 
 export const count = (tally: BulkTally, outcome: BulkOutcome): void => {
   tally.records += 1
   tally.byStatus[outcome.status] += 1
 
-  // A batch is counted once, when its first record arrives — every record of it carries the same
-  // id, and a record that never reached a request carries none.
-  if (outcome.batchId > tally.batches) {
-    tally.batches = outcome.batchId
-    tally.requests += outcome.attempts ?? 1
-    tally.retries += (outcome.attempts ?? 1) - 1
+  // A batch is counted once, when its first record arrives — every record of it carries the same id.
+  //
+  // **`attempts` is what says a request was made**, not the presence of a batch id. A batch that was
+  // already queued when the signal landed has an id and never reached the network: counting it would
+  // report four requests for a run that made two, which is what an interrupted run against a
+  // black-holed endpoint reported before this.
+  if (outcome.attempts !== undefined && outcome.batchId !== NO_BATCH && !tally.counted.has(outcome.batchId)) {
+    tally.counted.add(outcome.batchId)
+    tally.batches += 1
+    tally.requests += outcome.attempts
+    tally.retries += outcome.attempts - 1
   }
 }
 

@@ -48,6 +48,13 @@ export interface BulkOutcome {
   durationMs?: number
   errorCode?: string
   errorMessage?: string
+  /**
+   * Something true about the batch that is not this record's failure — Braze's own counts not
+   * adding up, for instance. Kept beside the status rather than folded into it: a run where the
+   * numbers look odd is not a run where the records failed, and the audit has to be able to say
+   * both things at once.
+   */
+  note?: string
 }
 
 export interface BulkProgress {

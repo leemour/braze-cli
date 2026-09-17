@@ -37,8 +37,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+
+      # Before the tests, not after: `tests/machine-output.test.ts` runs the built binary, and
+      # the typecheck deliberately emits no JavaScript — it used to overwrite the bundled entry
+      # point with its own (`BUG-16`).
       - run: pnpm build
+      - run: pnpm test
 
       # Reads the committed snapshot, never the network, so it gates every PR without making CI
       # depend on Postman's uptime. Fails when the catalog no longer matches the spec it claims

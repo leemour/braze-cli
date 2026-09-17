@@ -54,6 +54,20 @@ package, `braze-cli@0.4.1`, published 2026-08-03 from
 "existing braze-cli" that [`REQUIREMENTS.md`](REQUIREMENTS.md) §69 says to take ideas from
 (`FIND-5`). Nothing is published until v1; `OPS-2` carries the work.
 
+**NEED-47 · One published package, or two?**
+**One: `brazecli`.** «we don't need to run brazecli on worker so don't need to split into 2
+packages… we just need this as cli on dev machines». `brazecli-core` stays `private` and is bundled
+into the published binary at build time.
+
+**The isolation stays** — the owner asked for that explicitly. Two source directories, `types: []`
+on core, the linter's ban on Node APIs inside it, the neutral bundle and the bun run are all
+unchanged. What changed is only what reaches the registry.
+
+This narrows [`REQUIREMENTS.md`](REQUIREMENTS.md) §2, which called running in a Cloudflare Worker a
+product requirement: the constraint is kept as an internal discipline, not as a shipped artifact.
+`OPS-5` — a Worker consumer — now needs core published first, which is a decision to take then and
+not before.
+
 **NEED-5 · Which Braze cluster?**
 **`https://rest.fra-01.braze.eu`.** The owner read it from the dashboard. Measured, not assumed:
 the same key answers `403 Access Denied` there and `401 Invalid API key` on `iad-01`, and per

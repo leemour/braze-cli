@@ -1,7 +1,8 @@
 {
   "name": "brazecli-core",
   "version": "0.1.0",
-  "description": "Runtime-neutral Braze REST client and operation catalog. Web Platform APIs only \u2014 no Node.",
+  "private": true,
+  "description": "The Braze client inside brazecli. Web Platform APIs only — no Node. Not published separately.",
   "license": "MIT",
   "author": "Viacheslav Ptsarev",
   "homepage": "https://github.com/leemour/brazecli#readme",
@@ -10,16 +11,6 @@
     "url": "git+https://github.com/leemour/brazecli.git",
     "directory": "packages/core"
   },
-  "bugs": {
-    "url": "https://github.com/leemour/brazecli/issues"
-  },
-  "keywords": [
-    "braze",
-    "braze-api",
-    "cloudflare-workers",
-    "edge",
-    "rest-client"
-  ],
   "type": "module",
   "exports": {
     ".": {
@@ -37,9 +28,6 @@
   ],
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

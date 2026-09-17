@@ -266,8 +266,9 @@ pnpm portability:core     # core bundles for a runtime with no builtins at all
 pnpm smoke:bun            # core actually executes under a second runtime
 ```
 
-Underneath the CLI is `brazecli-core`, a separate package that uses Web Platform APIs only and runs
-unchanged in a Cloudflare Worker, a browser or a serverless function. Contributions follow
+Inside the repository the Braze client is kept apart from everything Node-shaped — `packages/core`
+uses Web Platform APIs only, and three checks keep it that way. It is **not a separate install**:
+the build inlines it into the one published package. Contributions follow
 [docs/CONVENTIONS.md](docs/CONVENTIONS.md); the roadmap is [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ## License

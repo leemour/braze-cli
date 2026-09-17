@@ -55,14 +55,8 @@ jobs:
             exit 1
           }
 
-      # Core first: the CLI depends on it, and `pnpm publish` rewrites `workspace:*` into a real
-      # range on the way out. A CLI published before core installs for nobody.
-      - name: Publish brazecli-core
-        if: ${{ github.event_name == 'push' || inputs.dry-run == false }}
-        run: pnpm --filter brazecli-core publish --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
+      # One package (`NEED-47`): `packages/core` is private and is bundled into the command by
+      # `prepack`, so there is nothing to publish before this and nothing to order against.
       - name: Publish brazecli
         if: ${{ github.event_name == 'push' || inputs.dry-run == false }}
         run: pnpm --filter brazecli publish --no-git-checks --access public
@@ -71,6 +65,4 @@ jobs:
 
       - name: Pack only
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
-        run: |
-          pnpm --filter brazecli-core publish --dry-run --no-git-checks
-          pnpm --filter brazecli publish --dry-run --no-git-checks
+        run: pnpm --filter brazecli publish --dry-run --no-git-checks

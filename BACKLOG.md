@@ -157,7 +157,7 @@ Expected to ship with the first practically useful release, not after it.
 
 | Number | Task | P |
 |---|---|---|
-| `OPS-2` | Release `brazecli` and `brazecli-core` at v1: changelog, versioning, and confirming npm accepts a name one hyphen from `braze-cli` (`NEED-2`) | P3 |
+| `OPS-2` | Release `brazecli` and `brazecli-core` at v1: changelog, versioning, and confirming npm accepts a name one hyphen from `braze-cli` (`NEED-2`). **Handoff written 2026-09-17: [`docs/plans/2026-09-17-publication-handoff.md`](docs/plans/2026-09-17-publication-handoff.md)** — what to read, what bites, and the four decisions that are not settled | P3 |
 | `OPS-3` | Shell completions for bash/zsh/fish, generated from the catalog | P3 |
 | `SEC-2` | Sweep every other place a third-party string reaches a stream — Braze's message is data from outside, and `SEC-1` proved it can carry the key | P2 |
 | `OPS-4` | `test:live` harness — read-only by default, a dedicated profile, never run in CI | P2 |

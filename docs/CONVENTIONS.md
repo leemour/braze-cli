@@ -54,8 +54,8 @@ that lies at the top. Rewrite the wrong sentence. If the wrong version circulate
 do not hide it.
 
 **One fact, one home.** A decision lives in [`DECISIONS.md`](DECISIONS.md); a task lives in
-[`BACKLOG.md`](BACKLOG.md); something to delete lives in [`../docs_ai/CLEANUP.md`](../docs_ai/CLEANUP.md);
-a plan lives in [`../docs_ai/plans/`](../docs_ai/plans/). Everywhere else links to it. Two copies of a fact drift, and
+[`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`;
+a plan lives in `docs_ai/plans/`. Everywhere else links to it. Two copies of a fact drift, and
 the reader cannot tell which is current.
 
 **Write the trap, not the rule.** "Call `flush` before exit" is weaker than "SIGINT during a bulk

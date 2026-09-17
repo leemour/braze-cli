@@ -3,8 +3,8 @@
 Everything not yet built, one line per item. A closed item is **deleted** from here — the trail
 stays in [`BACKLOG_DONE.md`](BACKLOG_DONE.md) and in git history.
 
-The brief this is cut from: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md). The plan for the
-current phase: [`../docs_ai/plans/`](../docs_ai/plans/).
+The brief this is cut from: [`docs/REQUIREMENTS.md`](REQUIREMENTS.md). The plan for the
+current phase: `docs_ai/plans/` (local only, not committed).
 
 <details>
 <summary>Rules of this file — read once</summary>
@@ -27,15 +27,15 @@ current phase: [`../docs_ai/plans/`](../docs_ai/plans/).
   | `DOC` | handwritten documentation |
 
   Findings carry the journal's own prefixes (`FIND`, `BUG`, `SEC`, `PERF`, `UX`, `IDEA`, `RISK`,
-  `DEBT`) and are allocated by [`../docs_ai/journal/next-id.sh`](../docs_ai/journal/next-id.sh). A finding
+  `DEBT`) and are allocated by `docs_ai/journal/next-id.sh` (local only). A finding
   that turns into work gets a backlog number too, and the journal entry keeps a pointer.
 - **The title is the task, not the symptom.** "Give ambiguous writes their own outcome", not
   "ambiguous writes look like failures".
 - **One line, with an anchor in it.** `packages/core/src/retry.ts:42` is worth more than a
   paragraph — it points at where the work starts. Analysis goes elsewhere: a durable truth about
-  an area into [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), an owner's ruling into
-  [`DECISIONS.md`](DECISIONS.md), a deletion into [`../docs_ai/CLEANUP.md`](../docs_ai/CLEANUP.md), a plan
-  into [`../docs_ai/plans/`](../docs_ai/plans/).
+  an area into [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), an owner's ruling into
+  [`DECISIONS.md`](DECISIONS.md), a deletion into `docs_ai/CLEANUP.md` (local only), a plan
+  into `docs_ai/plans/` (local only, not committed).
 - **Priority.** **P1** blocks other work or breaks something real · **P2** needed this cycle ·
   **P3** someday. Rank honestly; a backlog where everything is P1 says nothing.
 - **Mark.** Empty — not started · 🟡 half done, the remainder named in the line · ⏸️ deferred by
@@ -66,7 +66,7 @@ committed, 95 operations are generated from it, and every one is registered as a
 **Phase 2 is functionally complete** (2026-09-14). `CAT-1`…`CAT-9`, `CAT-11` and `CAT-13` are all
 closed: 95 operations generated from Braze's own collection and registered as typed commands,
 contract-tested, every flag described, `braze schema` answering for one, `--paginate` bounded, and
-[`docs/commands.md`](docs/commands.md) generated from the CLI with a CI gate. 362 tests.
+[`docs/commands.md`](commands.md) generated from the CLI with a CI gate. 362 tests.
 
 **`CORE-10` closed 2026-09-14**: `validateRequest` refuses what cannot work before it costs an
 HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests. It found `BUG-8`,

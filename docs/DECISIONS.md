@@ -31,11 +31,18 @@ Consequence for `CLI-5`: mode selection is one function, so the whole default ca
 one line if agent traffic ever makes that the better default.
 
 **NEED-2 · Publish to npm, and under what name?**
+**Publish as `brazecli`.** ~~At v1, not before~~ — **correction 2026-09-17: the first published
+version is `0.1.0`** (`NEED-43`). Nobody had installed this on a machine other than the one that
+built it, and `0.x` promises nothing while the first macOS reports come back. The name ruling below
+stands unchanged; the GitHub repository was renamed to
+[`leemour/brazecli`](https://github.com/leemour/brazecli) on 2026-09-17, so the sentence about it
+keeping `braze-cli` no longer holds either.
+
 **Publish at v1, not before, as `brazecli`.** «publish later, we can pick a similar name, help me
 choose» → «let's use brazecli». Unscoped, chosen over `brazectl` and over a personal scope. The
 packages are `brazecli` and `brazecli-core`; **the typed command stays `braze`**, set by the `bin`
-field, so the package name is only ever seen in an install line. The GitHub repository keeps its
-`braze-cli` name and URL.
+field, so the package name is only ever seen in an install line. The GitHub repository was renamed to `brazecli` on
+2026-09-17 (it kept `braze-cli` when this was ruled).
 
 ⚠ **Unverified, and it only surfaces at the first publish:** npm refuses a new name that differs
 from an existing one by punctuation alone, and `brazecli` is `braze-cli` without the hyphen. A 404
@@ -102,7 +109,7 @@ and no token**. 99 requests in 32 folders, covering every endpoint already confi
 So the first row of the plan's probe table wins and no fallback is needed: `spec:sync` downloads,
 it does not merely validate a manual export. `RISK-1` recorded this source as unconfirmed; it had
 tested three guessed addresses, none of them this one, and is corrected in place in
-[`journal/2026-09-13-repo-setup.md`](journal/2026-09-13-repo-setup.md).
+the session journal for 2026-09-13.
 
 Three properties that the rest of Phase 2 is built on, each measured:
 

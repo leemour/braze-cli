@@ -29,11 +29,18 @@ describe("the generated command documentation", () => {
     const doc = readFileSync("docs/commands.md", "utf8")
 
     // The point of rendering from the program rather than the snapshot: the snapshot knows
-    // nothing about `profile add`, and would have documented 95 commands instead of 105.
+    // nothing about `profile add`, and would have documented only the generated ones.
     expect(doc).toContain("### `braze profile add`")
     expect(doc).toContain("### `braze schema`")
     expect(doc).toContain("### `braze <profile> campaigns list`")
-    expect(doc).toContain("105 runnable commands")
+
+    // Counted rather than pinned to a number: a new command must not fail this test, only an
+    // unbalanced total should.
+    const counted = doc.match(/(\d+) runnable commands: (\d+) written by hand, (\d+) generated/)
+    expect(counted).not.toBeNull()
+    const [, total, handwritten, generated] = (counted ?? []).map(Number)
+    expect(handwritten).toBeGreaterThan(1)
+    expect(total).toBe(handwritten + generated)
   })
 
   /**

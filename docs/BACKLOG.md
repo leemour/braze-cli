@@ -4,7 +4,7 @@ Everything not yet built, one line per item. A closed item is **deleted** from h
 stays in [`BACKLOG_DONE.md`](BACKLOG_DONE.md) and in git history.
 
 The brief this is cut from: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md). The plan for the
-current phase: [`docs/plans/`](docs/plans/).
+current phase: [`../docs_ai/plans/`](../docs_ai/plans/).
 
 <details>
 <summary>Rules of this file — read once</summary>
@@ -13,7 +13,7 @@ current phase: [`docs/plans/`](docs/plans/).
   reused. Take the next one like this, not by eye:
   ```sh
   git pull --ff-only
-  grep -ohE '<PREFIX>-[0-9]+' BACKLOG.md BACKLOG_DONE.md | sort -V | tail -1
+  grep -ohE '<PREFIX>-[0-9]+' docs/BACKLOG.md docs/BACKLOG_DONE.md | sort -V | tail -1
   ```
 - **Prefixes, and nothing invented:**
 
@@ -27,15 +27,15 @@ current phase: [`docs/plans/`](docs/plans/).
   | `DOC` | handwritten documentation |
 
   Findings carry the journal's own prefixes (`FIND`, `BUG`, `SEC`, `PERF`, `UX`, `IDEA`, `RISK`,
-  `DEBT`) and are allocated by [`docs/journal/next-id.sh`](docs/journal/next-id.sh). A finding
+  `DEBT`) and are allocated by [`../docs_ai/journal/next-id.sh`](../docs_ai/journal/next-id.sh). A finding
   that turns into work gets a backlog number too, and the journal entry keeps a pointer.
 - **The title is the task, not the symptom.** "Give ambiguous writes their own outcome", not
   "ambiguous writes look like failures".
 - **One line, with an anchor in it.** `packages/core/src/retry.ts:42` is worth more than a
   paragraph — it points at where the work starts. Analysis goes elsewhere: a durable truth about
   an area into [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), an owner's ruling into
-  [`docs/DECISIONS.md`](docs/DECISIONS.md), a deletion into [`CLEANUP.md`](CLEANUP.md), a plan
-  into [`docs/plans/`](docs/plans/).
+  [`DECISIONS.md`](DECISIONS.md), a deletion into [`../docs_ai/CLEANUP.md`](../docs_ai/CLEANUP.md), a plan
+  into [`../docs_ai/plans/`](../docs_ai/plans/).
 - **Priority.** **P1** blocks other work or breaks something real · **P2** needed this cycle ·
   **P3** someday. Rank honestly; a backlog where everything is P1 says nothing.
 - **Mark.** Empty — not started · 🟡 half done, the remainder named in the line · ⏸️ deferred by
@@ -73,7 +73,7 @@ HTTP call, at three levels — 2 strict, 79 generated, 14 passthrough. 381 tests
 a wrong batch limit that would have made the Phase 3 pipeline send three times Braze's allowance.
 
 **Phase 3 is complete, 2026-09-15.** All seven steps of
-[its plan](docs/plans/2026-09-14-phase-3-bulk.md) are closed: the pipeline sends a file of records
+its plan are closed: the pipeline sends a file of records
 to Braze in bounded memory — measured at 599 records resident on a million-record run — leaves one
 truthful audit row each, and survives Ctrl+C without truncating the audit or lying about what
 reached Braze. Verified end to end against a staging workspace. `RISK-3` is closed: Braze does
@@ -87,12 +87,12 @@ and blocking nothing.
 ## Blocked on the owner
 
 **Nothing.** `NEED-30`, `NEED-31` and `NEED-32` were all answered on 2026-09-15 and are rulings in
-[`docs/DECISIONS.md`](docs/DECISIONS.md): bulk is a `--records` flag on the existing command, not a
+[`DECISIONS.md`](DECISIONS.md): bulk is a `--records` flag on the existing command, not a
 second command tree; and every record carries an identifier of ours, with required fields checked
 before the request rather than after Braze refuses it.
 
 Previously: `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
-[`docs/DECISIONS.md`](docs/DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;
+[`DECISIONS.md`](DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;
 the packages are `brazecli` and `brazecli-core`, published no earlier than v1; run artifacts never
 expire on a timer.
 
@@ -102,7 +102,7 @@ expire on a timer.
 
 Everything needed for one hand-written command to reach Braze safely. Closed and verified live on
 2026-09-13; its plan was removed on 2026-09-14 once the owner confirmed, so the rulings are in
-[`docs/DECISIONS.md`](docs/DECISIONS.md) and the leftovers are the rows below.
+[`DECISIONS.md`](DECISIONS.md) and the leftovers are the rows below.
 
 ### Core — the portable client
 
@@ -125,7 +125,7 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 
 | Number | Task | P |
 |---|---|---|
-| `CAT-1` | ✅ Done 2026-09-14. The source is Braze's own Postman documenter, fetched anonymously — `NEED-13` in [`docs/DECISIONS.md`](docs/DECISIONS.md) | P1 |
+| `CAT-1` | ✅ Done 2026-09-14. The source is Braze's own Postman documenter, fetched anonymously — `NEED-13` in [`DECISIONS.md`](DECISIONS.md) | P1 |
 | `CAT-2` | ✅ Done 2026-09-14. `pnpm spec:sync` writes `spec/braze.postman.json` (99 requests) and `spec/provenance.json`; refuses anything that is not a collection, and writes nothing when nothing changed | P1 |
 | `CAT-3` | ✅ Done 2026-09-14. `pnpm catalog:generate` → `packages/core/src/operations/generated.ts`, 95 operations from 99 requests; ids are deterministic and collisions fail the build | P1 |
 | `CAT-4` | ✅ Done 2026-09-14. `operations/overrides.ts` keyed by operation id, merged with validation; `FIND-13` fixed and verified live. Valibot schemas and PII fields still to come with `CORE-10` — corrected 2026-09-14, this said `CAT-10`, which is the smoke tests two rows down (`FIND-18`) | P1 |
@@ -156,9 +156,8 @@ Expected to ship with the first practically useful release, not after it.
 
 | Number | Task | P |
 |---|---|---|
-| `OPS-2` | Release `brazecli` and `brazecli-core` at v1: changelog, versioning, and confirming npm accepts a name one hyphen from `braze-cli` (`NEED-2`). **Handoff written 2026-09-17: [`docs/plans/2026-09-17-publication-handoff.md`](docs/plans/2026-09-17-publication-handoff.md)** — what to read, what bites, and the four decisions that are not settled | P3 |
 | `OPS-3` | Shell completions for bash/zsh/fish, generated from the catalog | P3 |
 | `SEC-2` | Sweep every other place a third-party string reaches a stream — Braze's message is data from outside, and `SEC-1` proved it can carry the key | P2 |
 | `OPS-4` | `test:live` harness — read-only by default, a dedicated profile, never run in CI | P2 |
-| `DOC-1` | Rewrite `README.md` as a real quick start once a command exists that can be run | P2 |
-| `DOC-2` | `docs/authentication.md`, `docs/configuration.md`, `docs/bulk-runs.md`, `docs/security.md`, `docs/development.md` — each written when the thing it describes exists, not before | P2 |
+| `OPS-6` | A second published version through the release workflow rather than by hand — the tag path in [`.github/workflows/release.yml`](../.github/workflows/release.yml) has never run, and it needs `NPM_TOKEN` in the repository secrets or npm trusted publishing configured | P2 |
+| `DOC-3` | `docs/development.md` — how to work on brazecli itself, split out of the README's Development section once there is a second contributor | P3 |

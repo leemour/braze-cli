@@ -49,6 +49,11 @@ jobs:
       # adds or renames a command and `docs/commands.md` still describes last week's CLI.
       - run: pnpm docs:check
 
+      # The published version lives in the CLI manifest and is copied into three other files, one
+      # of which is compiled into `braze --version` and the User-Agent. Bumping the manifest alone
+      # ships a tool that reports a version that was never published.
+      - run: pnpm version:check
+
   portability:
     name: Core runs outside Node
     runs-on: ubuntu-latest

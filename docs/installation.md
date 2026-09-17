@@ -1,0 +1,108 @@
+# Installation
+
+The npm package is **`brazecli`**. The command it puts on your PATH is **`braze`**.
+
+## Requirements
+
+- **Node 22 or newer.** Check with `node --version`. Node 20 will install and then fail on syntax
+  it does not know.
+- Nothing else. The one native dependency — the OS keyring — ships as a prebuilt binary for macOS
+  (arm64 and x64), Linux (x64, arm64, musl) and Windows, so no compiler is needed.
+
+## Without installing anything
+
+Good for trying it, and for a CI job that runs it once:
+
+```sh
+npx brazecli --help
+pnpm dlx brazecli --help
+bunx brazecli --help
+```
+
+`npx brazecli` runs the `braze` command inside the package. Everything after the package name is
+passed to it: `npx brazecli staging campaigns list --json`.
+
+## On your PATH
+
+```sh
+npm install -g brazecli
+pnpm add -g brazecli
+bun add -g brazecli
+```
+
+Then `braze --version`. If the shell cannot find it, the package manager's global bin directory is
+not on your PATH — `npm prefix -g` and `pnpm bin -g` print where it went.
+
+## As a project dependency
+
+Pins the version for everyone working on a repository, and keeps it out of the global namespace:
+
+```sh
+pnpm add -D brazecli
+pnpm exec braze --help
+```
+
+In `package.json`:
+
+```json
+{
+  "scripts": {
+    "braze": "braze"
+  },
+  "devDependencies": {
+    "brazecli": "^0.1.0"
+  }
+}
+```
+
+## Updating
+
+```sh
+npm install -g brazecli@latest
+pnpm add -g brazecli@latest
+```
+
+`braze --version` prints what is installed. The version also travels to Braze in the `User-Agent`
+of every request and into every run's `run.json`, so a support conversation can name it exactly.
+
+## From a clone
+
+For working on brazecli itself, or for running an unreleased commit:
+
+```sh
+git clone https://github.com/leemour/brazecli.git
+cd brazecli
+pnpm install
+pnpm build
+node packages/cli/dist/bin/braze.js --help
+```
+
+`pnpm build` marks the entry point executable, so it can also be symlinked onto your PATH:
+
+```sh
+ln -sfn "$PWD/packages/cli/dist/bin/braze.js" "${PNPM_HOME:-$HOME/.local/share/pnpm}/bin/braze"
+```
+
+The link points into the checkout, so `pnpm build` updates the command in place — and moving or
+deleting the checkout breaks it. `pnpm link --global` is not the way: pnpm 11 removed it.
+
+## Windows
+
+The keyring binary exists for Windows and the paths are resolved per platform, but nobody has run
+this there. If you do, [an issue](https://github.com/leemour/brazecli/issues) saying what happened
+is welcome, working or not.
+
+## What it writes on your machine
+
+| | macOS | Linux |
+|---|---|---|
+| profiles | `~/Library/Preferences/brazecli/config.json` | `~/.config/brazecli/config.json` |
+| run artifacts | `~/Library/Application Support/brazecli/runs/` | `~/.local/share/brazecli/runs/` |
+| the API key | Keychain | Secret Service (GNOME Keyring, KWallet) |
+
+`braze --help` prints the resolved paths for the machine it is running on. Both directories can be
+moved with `BRAZE_CONFIG_DIR` and `BRAZE_RUNS_DIR` — see
+[configuration.md](configuration.md).
+
+Nothing is installed outside those directories, and uninstalling the package leaves them behind;
+remove them by hand if you want them gone.

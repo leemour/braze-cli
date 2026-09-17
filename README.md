@@ -1,195 +1,275 @@
 # brazecli
 
-A command line interface for the [Braze](https://www.braze.com/docs/api/basics/) REST API, built
-for AI agents and automation first, and for people second.
+Read from and write to the [Braze](https://www.braze.com/docs/api/basics/) REST API from a terminal
+or a script — campaigns, canvases, users, catalogs, segments, exports — without writing a single
+`curl` line.
 
-> **Status: Phase 1 done, verified against live Braze** (2026-09-13). `braze profile`, `braze api`
-> and `braze runs` work; a read returns real data and a write is refused without `--confirm`.
-> **Typed commands work** — 95 of them, registered from the generated catalog rather than written
-> by hand, and `braze api` remains the escape hatch for anything the catalog does not carry.
-> Follow along in [`BACKLOG.md`](BACKLOG.md).
+It is built for **AI agents and automation first**: every command describes itself, every result is
+available as one deterministic JSON value, and every failure has a code to branch on. That same
+discipline is what makes it pleasant for a person — nothing is hidden, nothing is guessed, and the
+terminal gets tables and colour rather than a wall of JSON.
 
-## What it is for
+```sh
+npx brazecli profile add staging --endpoint https://rest.fra-01.braze.eu
+npx brazecli staging campaigns list
+```
 
-- **Agents and scripts** — `--json` gives exactly one deterministic JSON value on stdout, and a
-  closed list of error codes to branch on. No parsing of human help text.
-- **Bulk work** — hundreds of thousands of user updates, streamed, batched to Braze's limits,
-  with one audit row per user and honest per-record status.
-- **Debugging** — every run leaves a directory with structured logs and metadata you can grep.
-- **People** — tables, colour and a spinner when a terminal is attached.
+## What you get
 
-Underneath is a separate package, `brazecli-core`, that uses Web Platform APIs only and is meant
-to run unchanged in a Cloudflare Worker, a browser or a serverless function.
+- **The whole Braze API.** 95 typed commands, generated from Braze's own collection and kept in
+  step with it — `braze staging campaigns list`, `braze staging users track`. Anything the catalog
+  does not carry is one command away: `braze api POST /some/path --input @body.json`.
+- **Bulk work that finishes.** Stream a JSONL or CSV file of hundreds of thousands of records,
+  batched to Braze's limits, with bounded memory and one honest audit row per record.
+- **Writes that cannot happen by accident.** No default profile, `--confirm` on every write,
+  `--dry-run` that validates and counts without sending, and profiles you can mark read-only so a
+  production workspace refuses writes before a flag is even read.
+- **Credentials kept out of the way.** The API key goes to your OS keyring — never a config file,
+  never a command line argument, never a log — with a permission-restricted file as the fallback.
+- **The workspace is always named.** `braze production campaigns list` says which Braze workspace
+  it touched, in the command itself and in the audit afterwards.
+- **One tool, two audiences.** A terminal gets tables, colour and a progress line; `--json` gets
+  exactly one JSON value on stdout and a closed list of error codes on stderr.
+- **Every run recorded.** One directory per invocation: structured logs, what was sent, what came
+  back, and a per-record CSV when more than one record was touched.
+- **Retries that do not lie.** Reads back off and retry; writes never retry on their own, because
+  Braze documents no general idempotency key. A request whose connection died after it was sent is
+  reported as `outcome_unknown`, not as a failure.
+
+## Contents
+
+- [Install](#install)
+- [Authentication](#authentication)
+- [Usage](#usage)
+  - [Typed commands](#typed-commands)
+  - [Any request at all](#any-request-at-all)
+  - [Writes](#writes)
+  - [Paging](#paging)
+  - [Bulk: a file of records](#bulk-a-file-of-records)
+  - [What a past run did](#what-a-past-run-did)
+  - [Output for machines](#output-for-machines)
+- [For AI agents](#for-ai-agents)
+- [Documentation](#documentation)
+- [Development](#development)
+- [License](#license)
 
 ## Install
 
-Not published yet — it goes to npm as `brazecli` at v1, tracked as `OPS-2` in
-[`BACKLOG.md`](BACKLOG.md). The typed command is `braze` either way. For now, from a clone:
+The package is `brazecli`; the command it installs is `braze`.
+
+**Run it without installing anything:**
 
 ```sh
-pnpm install
-pnpm build
+npx brazecli --help          # npm
+pnpm dlx brazecli --help     # pnpm
+bunx brazecli --help         # bun
 ```
 
-Requires Node 22+ (24 in CI) and pnpm 11+.
-
-### Install it locally
-
-Nothing is published to npm yet (`OPS-2`), so `braze` gets onto your `PATH` by symlink. `pnpm
-build` marks the entry point executable, which is what makes this work:
+**Keep it on your PATH:**
 
 ```sh
-pnpm build
-ln -sfn "$PWD/packages/cli/dist/bin/braze.js" "${PNPM_HOME:-$HOME/.local/share/pnpm}/bin/braze"
-
-braze --version
+npm install -g brazecli
+pnpm add -g brazecli
+bun add -g brazecli
 ```
 
-Any directory already on your `PATH` will do; `$PNPM_HOME/bin` is used above because pnpm has
-already put it there. The link points into this checkout, so `pnpm build` updates the command in
-place — and moving or deleting the checkout breaks it.
+**Or as a project dependency**, so everyone on the repository gets the same version:
 
-`pnpm link --global` is not the way: pnpm 11 removed it, and `pnpm link` now only links a package
-*into* another project.
+```sh
+pnpm add -D brazecli         # then: pnpm exec braze --help
+```
+
+Needs **Node 22 or newer**. Developed on Linux and used on macOS; the keyring binary ships
+prebuilt for both, so nothing is compiled at install time. Windows has a prebuilt binary too but
+has not been exercised — [say so in an issue](https://github.com/leemour/brazecli/issues) if you
+try it.
+
+Full detail, including what to do when a global install is not an option:
+[docs/installation.md](docs/installation.md).
+
+## Authentication
+
+One profile per Braze workspace. A profile holds the REST endpoint and whether writes are allowed;
+the API key goes to your OS keyring under that profile's name.
+
+```sh
+braze profile add production --endpoint https://rest.fra-01.braze.eu --read-only
+braze profile add staging    --endpoint https://rest.fra-01.braze.eu
+braze profile list           # names, endpoints, whether a key exists — never the key itself
+```
+
+`profile add` asks for the key and reads it without echoing. In CI, pipe it in instead:
+
+```sh
+echo "$BRAZE_KEY" | braze profile add ci --endpoint https://rest.fra-01.braze.eu --key-stdin
+```
+
+Three things worth knowing before the first command:
+
+- **The endpoint is your cluster, and it differs per customer.** Braze lists them against dashboard
+  URLs in [the API overview](https://www.braze.com/docs/api/basics). European workspaces are on
+  `braze.eu`, not `braze.com`; getting it wrong makes every command fail at once.
+- **A workspace is chosen by its API key, not by the endpoint.** Two profiles on the same cluster
+  URL can point at completely different data.
+- **There is no default profile, on purpose.** A default is selected by omission, and the thing
+  most easily omitted should not be the workspace with a million people in it.
+
+```sh
+braze staging campaigns list            # the profile comes first
+braze --profile staging campaigns list  # the flag works too
+BRAZE_PROFILE=staging braze campaigns list
+```
+
+`BRAZE_API_KEY` and `BRAZE_REST_ENDPOINT` override the stored profile entirely, which is how this
+runs in a CI job with no keyring at all.
+
+More: [docs/authentication.md](docs/authentication.md) · [docs/configuration.md](docs/configuration.md)
 
 ## Usage
 
-Working today:
-
-```sh
-braze profile add production --endpoint <your Braze REST endpoint> --read-only
-braze profile list                       # names, endpoints, whether a key exists — never the key
-
-braze api GET /campaigns/list --json     # a read
-braze api GET /campaigns/details --query campaign_id=abc
-
-braze api POST /users/track --input @users.json --dry-run   # validates and counts, sends nothing
-braze api POST /users/track --input @users.json --confirm   # writes need --confirm, never a prompt
-
-braze runs list                          # what past invocations did
-braze runs path <run-id>                 # the directory holding its artifacts
-
-braze commands --json                    # the whole command surface, for an agent
-```
-
-```sh
-braze campaigns list --json              # typed, registered from the catalog
-braze campaigns list --page 0 --include-archived false
-braze catalogs items list --catalog-name my-catalog
-braze users track --input @users.json --confirm
-```
-
-Still to come: `braze schema <id>`, one operation's input contract.
-
-### For an agent
-
-**There is a ready-made prompt in [`docs/agent-prompt.md`](docs/agent-prompt.md)** — copy it into
-the agent's instructions and replace one path.
-
-Start with `braze commands --json`. It returns every command, its arguments and its options —
-including which options take a value and which must be given — plus the exit code for each kind of
-failure, so a caller branches on `$?` rather than parsing a message. It reads the live command
-tree, so the typed commands appear there the moment the catalog lands, with no second list to keep
-in step.
-
-**Failures are machine-readable too.** In `--json` mode an error is one JSON object on stderr —
-`{"error":{"code":"rate_limited","retryable":true,"retryAfterMs":3000,…}}` — while stdout stays
-empty, so a refusal can never be mistaken for a result. The exit code is what to branch on
-(`braze commands --json` publishes the whole table); the object says which record and how long to
-wait.
-
-Every catalog operation is a command in that surface, with its path placeholders as required
-named options and its documented query keys as optional ones — so an agent needs nothing but
-`braze commands --json` to construct a call. `--query key=value` still works on every command,
-because Postman's examples are not a schema and the documented keys are never the whole list.
-
-### Profiles
-
-One profile per Braze workspace. **A workspace is chosen by its API key, not by the endpoint** —
-two profiles on the same cluster URL can point at completely different data, so the endpoint alone
-tells you nothing about which one you are talking to.
-
-**The endpoint is your cluster**, and it differs per customer — Braze lists them against dashboard
-URLs in [the API overview](https://www.braze.com/docs/api/basics). European workspaces are on
-`braze.eu`, not `braze.com`; getting that wrong produces a host that does not resolve and every
-command fails at once.
-
-**Every command that talks to Braze names its profile.** The profile comes first:
+### Typed commands
 
 ```sh
 braze staging campaigns list
-braze production campaigns list --json
-
-BRAZE_PROFILE=staging braze campaigns list      # or set it once for a shell session
-braze --profile staging campaigns list          # the flag also works
+braze staging campaigns list --page 0 --include-archived false
+braze staging catalogs items list --catalog-name my-catalog
+braze staging users export ids --input @ids.json
 ```
 
-**There is no default profile, on purpose.** A default is selected by *omission*, and the thing
-most easily omitted should not be the workspace with a million people in it. Leaving the profile
-out is an error that lists the profiles you have.
+Every Braze endpoint in the catalog is a command, with its path placeholders as required options
+and its documented query keys as optional ones. `--query key=value` works on all of them, because
+Braze's documented keys are never the whole list.
 
-Commands that do not talk to Braze — `braze profile …`, `braze runs …`, `braze commands` — need no
-profile.
+`braze commands` lists the surface; `braze schema campaigns list` prints one operation's contract —
+parameters, body, and whether it writes. Every command is also in
+[docs/commands.md](docs/commands.md), generated from the program itself.
 
-A profile may not be named after a command (`users`, `campaigns`, `api`, …); `profile add` refuses
-it, because `braze users track` could otherwise mean two things.
-
-**A profile can be marked read-only**, which refuses every write before `--confirm` is even
-considered. `--confirm` guards against a mistyped command; this guards against a correct command
-aimed at the wrong environment. Recommended for anything pointing at production.
+### Any request at all
 
 ```sh
-braze profile add production --read-only      # refuse writes
-braze profile add staging --no-read-only      # allow them again
+braze staging api GET /campaigns/list --query page=0
+braze staging api POST /users/track --input @users.json --confirm
 ```
 
-Updating one field leaves the others alone: neither the endpoint nor the key has to be retyped,
-and a flag you do not mention keeps its current value.
+`braze api` sends anything Braze accepts, catalogued or not. It reads the body from a file
+(`@file`), from standard input (`-`) or inline.
 
-### Where things live
+### Writes
 
-| | |
-|---|---|
-| profiles | `~/.config/brazecli/config.json` — override with `BRAZE_CONFIG_DIR` |
-| run artifacts | `~/.local/share/brazecli/runs` — override with `BRAZE_RUNS_DIR` |
-| the API key | your OS keyring, never the config file |
+Every write needs `--confirm`, and it is a flag rather than a prompt, so nothing ever blocks
+waiting for a keypress:
 
-`braze --help` prints the resolved paths for the machine it runs on, and names your profiles.
-Braze's own endpoint index is [here](https://www.braze.com/docs/api/home), and authentication and
-rate limits are [here](https://www.braze.com/docs/api/basics).
+```sh
+braze staging users track --input @users.json --dry-run   # validates and counts, sends nothing
+braze staging users track --input @users.json --confirm   # sends
+```
 
-**Credentials** come from the OS keyring, with a warned fallback to a permission-restricted file.
-`BRAZE_API_KEY`, `BRAZE_REST_ENDPOINT` and `BRAZE_PROFILE` override it. The API key is never a
-recommended command line argument and never reaches a log.
+A profile added with `--read-only` refuses writes before `--confirm` is even considered. `--confirm`
+guards against a mistyped command; read-only guards against a correct command aimed at the wrong
+workspace. Recommended for anything pointing at production.
 
-**Writes** require `--confirm` and are never retried automatically — Braze documents no general
-idempotency key. A request whose connection died after it was sent is reported as
-`outcome_unknown`, not as a failure.
+### Paging
 
-**Run artifacts** live in the platform state directory (`~/.local/share/brazecli/runs/` on Linux),
-one directory per invocation: `run.json`, `events.jsonl`, and `records.csv` whenever more than one
-logical record was touched.
+```sh
+braze staging campaigns list --paginate --max-pages 20 --max-items 5000
+```
+
+`--paginate` walks a paged read and returns the pages as one value, under a ceiling it cannot
+exceed. Without it, a full page tells you on stderr that there is probably more.
+
+### Bulk: a file of records
+
+```sh
+braze staging users track --records users.jsonl --records-field attributes \
+  --record-id external_id --confirm
+```
+
+Records stream out of a JSONL or CSV file, batch to Braze's limit of 75 per request, and go out
+with four requests in flight by default. Memory stays bounded whatever the file size: a
+million-record run holds around 600 records at a time.
+
+Each record leaves a row in the run's `records.csv` with a truthful status — including the records
+refused locally before sending, the ones Braze named inside an otherwise successful response, and
+the ones an interrupted run never sent. Ctrl+C stops the run and still writes the audit.
+
+More: [docs/bulk.md](docs/bulk.md).
+
+### What a past run did
+
+```sh
+braze runs list                 # newest first
+braze runs show <run-id>        # everything recorded about one invocation
+braze runs path <run-id>        # the directory, for grep, jq or an upload
+```
+
+Every invocation that touches Braze writes `run.json`, `events.jsonl` and — when more than one
+record was involved — `records.csv`. Set `BRAZE_LOG=debug` for a fuller log without changing what
+stdout prints.
+
+### Output for machines
+
+```sh
+braze staging campaigns list --json
+```
+
+`--json` puts exactly one JSON value on stdout and nothing else: no spinner, no `✓`, no warning.
+A failure is one JSON object on **stderr**, with stdout left empty, so a refusal can never be
+mistaken for a result:
+
+```json
+{"error":{"code":"rate_limited","message":"…","retryable":true,"retryAfterMs":3000}}
+```
+
+The exit code is the thing to branch on — `2` validation, `4` authentication, `5` permission,
+`6` not found, `7` confirmation required, `8` rate limited, `9` timeout, `10` network,
+`14` outcome unknown, `130` cancelled. `braze commands --json` publishes the whole table.
+
+## For AI agents
+
+Install the skill once, and Claude Code, Codex or Hermes knows how to drive this without being told
+again:
+
+```sh
+npx brazecli skill install
+```
+
+It writes `SKILL.md` into every agent it finds on the machine — `~/.claude/skills/braze/`,
+`~/.codex/skills/braze/`, `~/.hermes/skills/braze/` — and prints what it did. Use `--claude`,
+`--codex`, `--hermes` or `--project` to be explicit, and `--dir <path>` for anything else.
+
+The skill teaches the two things an agent cannot guess: that discovery is `braze commands --json`
+rather than remembered flags, and which failures must never be retried. What it says, and how to
+drive this from a script without the skill: [docs/agents.md](docs/agents.md).
 
 ## Documentation
 
 | | |
 |---|---|
-| [`docs/HANDOFF.md`](docs/HANDOFF.md) | **start here** — layout, what to read, how to run the checks, the rules |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | the two packages, the portability gates, where the API catalog comes from |
-| [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) | the full brief this is built against |
-| [`docs/TESTING.md`](docs/TESTING.md) | how to check it yourself |
-| [`BACKLOG.md`](BACKLOG.md) | what is left to build |
+| [docs/installation.md](docs/installation.md) | installing, updating, and what needs which Node |
+| [docs/authentication.md](docs/authentication.md) | profiles, the keyring, CI without a keyring |
+| [docs/configuration.md](docs/configuration.md) | every setting, where files live, precedence |
+| [docs/usage.md](docs/usage.md) | the command surface, in the order you meet it |
+| [docs/bulk.md](docs/bulk.md) | large files: batching, the audit, interruption |
+| [docs/agents.md](docs/agents.md) | driving it from an agent or a script |
+| [docs/security.md](docs/security.md) | where the key lives, what is logged, what is not |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | the errors people actually hit |
+| [docs/commands.md](docs/commands.md) | every command and option — generated from the CLI |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how it is built, and why core has no Node in it |
 
 ## Development
 
 ```sh
-pnpm lint                 # biome: format, lint, and the ban on Node APIs inside core
-pnpm typecheck
-pnpm test
+pnpm install
+pnpm build
+pnpm lint && pnpm typecheck && pnpm test
 pnpm portability:core     # core bundles for a runtime with no builtins at all
 pnpm smoke:bun            # core actually executes under a second runtime
 ```
 
+Underneath the CLI is `brazecli-core`, a separate package that uses Web Platform APIs only and runs
+unchanged in a Cloudflare Worker, a browser or a serverless function. Contributions follow
+[docs/CONVENTIONS.md](docs/CONVENTIONS.md); the roadmap is [docs/BACKLOG.md](docs/BACKLOG.md).
+
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).

@@ -13,7 +13,16 @@ import { verifyCommand } from "./verify.js"
  * would need the built tree here and make a circular import of it, and this list is short and
  * changes with the handwritten commands, not with the catalog.
  */
-const RESERVED = ["profile", "api", "runs", "commands", "help", ...new Set(catalog.map((o) => o.command[0]))]
+const RESERVED = [
+  "profile",
+  "api",
+  "runs",
+  "commands",
+  "schema",
+  "skill",
+  "help",
+  ...new Set(catalog.map((o) => o.command[0])),
+]
 
 export interface ProfileContext {
   env?: NodeJS.ProcessEnv

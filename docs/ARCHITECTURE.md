@@ -2,19 +2,14 @@
 
 How this repository is put together and, more usefully, which seams you are not allowed to cross.
 
-**Status (2026-09-13):** Phase 1 built and verified against live Braze. `BrazeClient` performs
-one timed, cancellable attempt (`send`) under a policy layer that classifies, retries reads and
-refuses to guess about writes (`execute`). The CLI has profiles, keyring storage, output modes,
-run artifacts and `braze api`. 152 tests.
+`BrazeClient` performs one timed, cancellable attempt (`send`) under a policy layer that
+classifies, retries reads and refuses to guess about writes (`execute`). The CLI adds profiles,
+keyring storage, output modes and run artifacts on top.
 
-**The catalog exists as of 2026-09-14** (`CAT-2`, `CAT-3`): `spec/braze.postman.json` is the
-committed snapshot and `packages/core/src/operations/generated.ts` holds 95 operations generated
-from it. Read it through `catalog` in `packages/core/src/operations/index.ts`.
-
-⚠ **Nothing is wired to it yet.** No command is registered from the catalog, so every call still
-goes through `braze api`, which classifies by HTTP method and therefore treats a read like
-`POST /users/export/ids` as a write. Overrides (`CAT-4`) fix the classification; command
-registration is `CAT-6`.
+The catalog is `spec/braze.postman.json`, a committed snapshot of Braze's own collection;
+`packages/core/src/operations/generated.ts` holds the 95 operations generated from it, read through
+`catalog` in `packages/core/src/operations/index.ts`. Every one of them is registered as a typed
+command, and `braze api` remains the escape hatch for anything the catalog does not carry.
 
 Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 

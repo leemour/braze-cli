@@ -10,8 +10,8 @@ discipline is what makes it pleasant for a person — nothing is hidden, nothing
 terminal gets tables and colour rather than a wall of JSON.
 
 ```sh
-npx brazecli profile add staging --endpoint https://rest.fra-01.braze.eu
-npx brazecli staging campaigns list
+npx @leemour/brazecli profile add staging --endpoint https://rest.fra-01.braze.eu
+npx @leemour/brazecli staging campaigns list
 ```
 
 ## What you get
@@ -55,28 +55,30 @@ npx brazecli staging campaigns list
 
 ## Install
 
-The package is `brazecli`; the command it installs is `braze`.
+The package is **`@leemour/brazecli`**; the command it installs is **`braze`**. (The unscoped name was
+refused by npm as too close to an unrelated `braze-cli` — see
+[docs/DECISIONS.md](docs/DECISIONS.md), `NEED-48`.)
 
 **Run it without installing anything:**
 
 ```sh
-npx brazecli --help          # npm
-pnpm dlx brazecli --help     # pnpm
-bunx brazecli --help         # bun
+npx @leemour/brazecli --help          # npm
+pnpm dlx @leemour/brazecli --help     # pnpm
+bunx @leemour/brazecli --help         # bun
 ```
 
 **Keep it on your PATH:**
 
 ```sh
-npm install -g brazecli
-pnpm add -g brazecli
-bun add -g brazecli
+npm install -g @leemour/brazecli
+pnpm add -g @leemour/brazecli
+bun add -g @leemour/brazecli
 ```
 
 **Or as a project dependency**, so everyone on the repository gets the same version:
 
 ```sh
-pnpm add -D brazecli         # then: pnpm exec braze --help
+pnpm add -D @leemour/brazecli         # then: pnpm exec braze --help
 ```
 
 Needs **Node 22 or newer**. Developed on Linux and used on macOS; the keyring binary ships
@@ -230,7 +232,7 @@ Install the skill once, and Claude Code, Codex or Hermes knows how to drive this
 again:
 
 ```sh
-npx brazecli skill install
+npx @leemour/brazecli skill install
 ```
 
 It writes `SKILL.md` into every agent it finds on the machine — `~/.claude/skills/braze/`,

@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes to `brazecli`.
+Notable changes to `@leemour/brazecli`.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions
 follow [semantic versioning](https://semver.org/spec/v2.0.0.html) — with `0.x` meaning the command
@@ -19,5 +19,7 @@ installable.
   memory ceiling, and writes one audit row per record.
 - `braze skill install` — writes the agent skill into Claude Code, Codex or Hermes.
 - Every run leaves `run.json`, `events.jsonl` and, for a bulk run, `records.csv`.
+- Published as `@leemour/brazecli`: npm refused the unscoped `brazecli` as too similar to an
+  unrelated `braze-cli`. The command is `braze` either way.
 - One package to install. The Braze client is kept free of Node APIs inside the repository and is
   bundled into the published command at build time.

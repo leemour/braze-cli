@@ -6,7 +6,7 @@ version: 0.1.0
 
 # Braze from the command line
 
-`braze` is a CLI over the Braze REST API. It is on the PATH; if it is not, `npx brazecli` is the
+`braze` is a CLI over the Braze REST API. It is on the PATH; if it is not, `npx @leemour/brazecli` is the
 same program.
 
 ## Always do these three things

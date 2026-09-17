@@ -1,5 +1,5 @@
 {
-  "name": "brazecli",
+  "name": "@leemour/brazecli",
   "version": "0.1.0",
   "description": "Braze REST API command line interface for AI agents, automation and people.",
   "license": "MIT",

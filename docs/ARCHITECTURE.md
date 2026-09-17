@@ -37,7 +37,7 @@ Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 
 `cli` depends on `core`. **`core` never depends on `cli`, and never learns that a CLI exists.**
 
-**One package reaches npm.** `brazecli` is published; `packages/core` is private and is inlined
+**One package reaches npm.** `@leemour/brazecli` is published; `packages/core` is private and is inlined
 into `dist/bin/braze.js` at build time by [`scripts/bundle-cli.mjs`](../scripts/bundle-cli.mjs).
 Nobody installing a command line tool has a reason to install its HTTP client separately
 (`NEED-47`).

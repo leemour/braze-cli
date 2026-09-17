@@ -15,12 +15,12 @@ Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 
 ---
 
-## 1. Two packages, one direction
+## 1. Two halves, one direction, one published package
 
 ```text
                        portable — no Node, no filesystem, no terminal
                  ┌──────────────────────────────────────────────┐
-                 │  brazecli-core          packages/core        │
+                 │  the Braze client       packages/core        │
                  │                                              │
                  │  BrazeClient · operations · Valibot schemas  │
                  │  retry · pagination · batching · bulk queue  │
@@ -28,7 +28,7 @@ Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
                  └───────────────────────┬──────────────────────┘
                                          │ adapters only
                  ┌───────────────────────▼──────────────────────┐
-                 │  brazecli               packages/cli         │
+                 │  the command            packages/cli         │
                  │                                              │
                  │  Commander · keyring · config files · Pino   │
                  │  Clack · colors · tables · CSV · run dirs    │
@@ -37,9 +37,20 @@ Source brief: [`REQUIREMENTS.md`](REQUIREMENTS.md) §2–§5, §18–§19, §61.
 
 `cli` depends on `core`. **`core` never depends on `cli`, and never learns that a CLI exists.**
 
-Why two packages and not one: the client is meant to run in a Cloudflare Worker, in a browser and
-in a serverless function, unchanged. That is a stated product requirement, not a hypothetical, and
-a single package would make every Node import a silent future breakage.
+**One package reaches npm.** `brazecli` is published; `packages/core` is private and is inlined
+into `dist/bin/braze.js` at build time by [`scripts/bundle-cli.mjs`](../scripts/bundle-cli.mjs).
+Nobody installing a command line tool has a reason to install its HTTP client separately
+(`NEED-47`).
+
+Why the two halves stay separate in the source anyway: the boundary is what keeps the client
+honest. Everything the machine knows — the key, the paths, the terminal, the clock — enters core as
+an argument, which is what makes retry, timeout and batching testable without waiting for anything,
+and what leaves the door open to running the client somewhere without Node later (`OPS-5`, and it
+would need core published first).
+
+Because core is inlined, **its dependencies are the command's dependencies**: `p-queue` and
+`valibot` are listed in `packages/cli/package.json`, and the bundler fails the build if the bundle
+imports anything that is not.
 
 ## 2. What core may use
 

@@ -28,9 +28,8 @@
     "braze": "./dist/bin/braze.js"
   },
   "files": [
-    "dist",
-    "skills",
-    "!dist/**/*.test.*"
+    "dist/bin",
+    "skills"
   ],
   "engines": {
     "node": ">=22"
@@ -39,22 +38,24 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node -e \"require('fs').chmodSync('dist/bin/braze.js', 0o755)\""
+    "build": "tsc -p tsconfig.json && node ../../scripts/bundle-cli.mjs",
+    "prepack": "pnpm run build"
   },
   "dependencies": {
     "@clack/prompts": "^1.8.0",
     "@napi-rs/keyring": "^2.0.0",
-    "brazecli-core": "workspace:*",
     "cli-table3": "^0.6.5",
     "commander": "^15.0.0",
     "csv-parse": "^7.0.2",
     "csv-stringify": "^6.8.3",
     "env-paths": "^4.0.0",
+    "p-queue": "^9.0.0",
     "picocolors": "^1.1.1",
     "pino": "^10.3.1",
     "valibot": "^1.5.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "brazecli-core": "workspace:*"
   }
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes to `brazecli` and `brazecli-core`. The two packages share a version.
+Notable changes to `brazecli`.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions
 follow [semantic versioning](https://semver.org/spec/v2.0.0.html) — with `0.x` meaning the command
@@ -19,4 +19,5 @@ installable.
   memory ceiling, and writes one audit row per record.
 - `braze skill install` — writes the agent skill into Claude Code, Codex or Hermes.
 - Every run leaves `run.json`, `events.jsonl` and, for a bulk run, `records.csv`.
-- `brazecli-core`, published separately: the Braze client, runtime-neutral by construction.
+- One package to install. The Braze client is kept free of Node APIs inside the repository and is
+  bundled into the published command at build time.

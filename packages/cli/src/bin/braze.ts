@@ -6,4 +6,14 @@ import { installSignalHandlers } from "../runs/signals.js"
 // accumulates until Node warns about a leak.
 installSignalHandlers()
 
+// `braze commands --json | head` closes the pipe while we are still writing, and an unhandled
+// EPIPE makes Node print a stack trace over the output of the very command that worked. A reader
+// that stopped reading is not an error: leave quietly, the way every other Unix tool does.
+for (const stream of [process.stdout, process.stderr]) {
+  stream.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code === "EPIPE") process.exit(0)
+    throw error
+  })
+}
+
 process.exitCode = await run(process.argv.slice(2))

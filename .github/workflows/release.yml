@@ -59,10 +59,10 @@ jobs:
       # `prepack`, so there is nothing to publish before this and nothing to order against.
       - name: Publish brazecli
         if: ${{ github.event_name == 'push' || inputs.dry-run == false }}
-        run: pnpm --filter brazecli publish --no-git-checks --access public
+        run: pnpm --filter @leemour/brazecli publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Pack only
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
-        run: pnpm --filter brazecli publish --dry-run --no-git-checks
+        run: pnpm --filter @leemour/brazecli publish --dry-run --no-git-checks

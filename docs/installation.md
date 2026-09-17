@@ -1,6 +1,6 @@
 # Installation
 
-The npm package is **`brazecli`**. The command it puts on your PATH is **`braze`**.
+The npm package is **`@leemour/brazecli`**. The command it puts on your PATH is **`braze`**.
 
 ## Requirements
 
@@ -14,20 +14,20 @@ The npm package is **`brazecli`**. The command it puts on your PATH is **`braze`
 Good for trying it, and for a CI job that runs it once:
 
 ```sh
-npx brazecli --help
-pnpm dlx brazecli --help
-bunx brazecli --help
+npx @leemour/brazecli --help
+pnpm dlx @leemour/brazecli --help
+bunx @leemour/brazecli --help
 ```
 
-`npx brazecli` runs the `braze` command inside the package. Everything after the package name is
-passed to it: `npx brazecli staging campaigns list --json`.
+`npx @leemour/brazecli` runs the `braze` command inside the package. Everything after the
+package name is passed to it: `npx @leemour/brazecli staging campaigns list --json`.
 
 ## On your PATH
 
 ```sh
-npm install -g brazecli
-pnpm add -g brazecli
-bun add -g brazecli
+npm install -g @leemour/brazecli
+pnpm add -g @leemour/brazecli
+bun add -g @leemour/brazecli
 ```
 
 Then `braze --version`. If the shell cannot find it, the package manager's global bin directory is
@@ -38,7 +38,7 @@ not on your PATH — `npm prefix -g` and `pnpm bin -g` print where it went.
 Pins the version for everyone working on a repository, and keeps it out of the global namespace:
 
 ```sh
-pnpm add -D brazecli
+pnpm add -D @leemour/brazecli
 pnpm exec braze --help
 ```
 
@@ -50,7 +50,7 @@ In `package.json`:
     "braze": "braze"
   },
   "devDependencies": {
-    "brazecli": "^0.1.0"
+    "@leemour/brazecli": "^0.1.0"
   }
 }
 ```
@@ -58,8 +58,8 @@ In `package.json`:
 ## Updating
 
 ```sh
-npm install -g brazecli@latest
-pnpm add -g brazecli@latest
+npm install -g @leemour/brazecli@latest
+pnpm add -g @leemour/brazecli@latest
 ```
 
 `braze --version` prints what is installed. The version also travels to Braze in the `User-Agent`

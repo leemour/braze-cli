@@ -31,7 +31,10 @@ Consequence for `CLI-5`: mode selection is one function, so the whole default ca
 one line if agent traffic ever makes that the better default.
 
 **NEED-2 · Publish to npm, and under what name?**
-**Publish as `brazecli`.** ~~At v1, not before~~ — **correction 2026-09-17: the first published
+**Publish as ~~`brazecli`~~ `@leemour/brazecli`** — **correction 2026-09-17: npm refused the
+unscoped name** on the first upload, in the words this ruling predicted: «Package name too similar
+to existing package braze-cli; try renaming your package to '@leemour/brazecli'» (`NEED-48`). The
+command is `braze` either way, so only the install line changed. ~~At v1, not before~~ — **correction 2026-09-17: the first published
 version is `0.1.0`** (`NEED-43`). Nobody had installed this on a machine other than the one that
 built it, and `0.x` promises nothing while the first macOS reports come back. The name ruling below
 stands unchanged; the GitHub repository was renamed to

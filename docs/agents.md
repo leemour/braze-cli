@@ -5,7 +5,7 @@ The tool describes itself, so nothing here has to be memorised or kept in step b
 ## The one-command install
 
 ```sh
-npx brazecli skill install
+npx @leemour/brazecli skill install
 ```
 
 Writes `SKILL.md` into every agent found on the machine and prints where each copy went:
@@ -95,7 +95,7 @@ and report.
 export BRAZE_API_KEY="$BRAZE_KEY"
 export BRAZE_REST_ENDPOINT=https://rest.fra-01.braze.eu
 
-npx brazecli campaigns list --json > campaigns.json || {
+npx @leemour/brazecli campaigns list --json > campaigns.json || {
   code=$?
   echo "brazecli failed with $code" >&2
   exit $code

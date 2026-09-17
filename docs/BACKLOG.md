@@ -93,8 +93,8 @@ before the request rather than after Braze refuses it.
 
 Previously: `NEED-1`, `NEED-2` and `NEED-3` were all answered on 2026-09-13 and are rulings in
 [`DECISIONS.md`](DECISIONS.md): a terminal gets the pretty renderer and a pipe gets JSON;
-the published package is `brazecli` (`NEED-2`, and `NEED-47` for why it is one package rather than
-two); run artifacts never expire on a timer.
+the published package is `@leemour/brazecli` (`NEED-2`, `NEED-47` for why it is one package
+rather than two, and `NEED-48` for why it is scoped); run artifacts never expire on a timer.
 
 ---
 

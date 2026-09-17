@@ -56,7 +56,7 @@ which one the shell picked.
 ## `braze: command not found` after a global install
 
 The package manager's global bin directory is not on your PATH. `npm prefix -g` and `pnpm bin -g`
-print where the command went; add that directory to your PATH, or use `npx brazecli …` instead.
+print where the command went; add that directory to your PATH, or use `npx @leemour/brazecli …` instead.
 
 ## `confirmation_required` (exit code 7)
 

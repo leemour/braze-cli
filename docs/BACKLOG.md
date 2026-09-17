@@ -159,5 +159,5 @@ Expected to ship with the first practically useful release, not after it.
 | `OPS-3` | Shell completions for bash/zsh/fish, generated from the catalog | P3 |
 | `SEC-2` | Sweep every other place a third-party string reaches a stream — Braze's message is data from outside, and `SEC-1` proved it can carry the key | P2 |
 | `OPS-4` | `test:live` harness — read-only by default, a dedicated profile, never run in CI | P2 |
-| `OPS-6` | A second published version through the release workflow rather than by hand — the tag path in [`.github/workflows/release.yml`](../.github/workflows/release.yml) has never run, and it needs `NPM_TOKEN` in the repository secrets or npm trusted publishing configured | P2 |
+| `OPS-6` | Publish from CI instead of a laptop, **if it ever earns the long-lived npm token it needs** — check npm's trusted publishing over OIDC first, which needs no stored token. Ruled out for now (`NEED-49`): releases are local, and the procedure is [`docs/releasing.md`](releasing.md) | P3 |
 | `DOC-3` | `docs/development.md` — how to work on brazecli itself, split out of the README's Development section once there is a second contributor | P3 |

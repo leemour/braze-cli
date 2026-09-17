@@ -17,6 +17,11 @@ coverage/
 .env.*
 !.env.example
 
+# Plans, the session journal, the handoff and the cleanup list: the working trail, kept on
+# the machine doing the work. Everything that explains what this is and how it is built stays
+# in docs/ and is committed.
+/docs_ai/
+
 # Per-machine Claude Code state; the shared settings.json is committed.
 .claude/settings.local.json
 .claude/worktrees/

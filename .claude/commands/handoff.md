@@ -18,7 +18,7 @@ for it.
 
 1. **One thread, one handoff.** Three topics left means one handoff and two backlog lines. Unclear
    which thread? Ask.
-2. **Nothing already in [`docs/HANDOFF.md`](../../docs/HANDOFF.md):** what the project is, the
+2. **Nothing already in [`docs_ai/HANDOFF.md`](../../docs_ai/HANDOFF.md):** what the project is, the
    layout, the commands, the ten rules. A link with a section number, nothing more.
 3. **No history.** Not "how we got here", not "what I did". Closed work is one line in §1 at most.
    The exception is an **overturned owner decision** — that lives in `docs/DECISIONS.md` and §4
@@ -27,7 +27,7 @@ for it.
 ## Eight sections, all of them, in this order
 
 Title `# Handoff: <topic>`, and under it one line saying **what will be true when the work is
-done**. Then the signature: date, branch, head commit, and a link to `docs/HANDOFF.md`.
+done**. Then the signature: date, branch, head commit, and a link to `docs_ai/HANDOFF.md`.
 
 ### §0. Cold start
 
@@ -45,7 +45,7 @@ grep -B1 -A6 'NEED-1\b' docs/DECISIONS.md
 
 # 3. Sections of documents rather than whole files, addressed BY HEADING TEXT:
 #    a section number does not survive every edit, the heading does
-awk '/^## .*What will bite/,/^## .*Out of scope/' docs/plans/<plan>.md
+awk '/^## .*What will bite/,/^## .*Out of scope/' docs_ai/plans/<plan>.md
 
 # 4. The current state of the places being edited
 sed -n '30,70p' packages/core/src/retry.ts
@@ -77,7 +77,7 @@ Only what **cannot be found by searching**: broken assumptions, silent failures,
 line each, "symptom → cause". Reversed decisions go here with their `NEED-nn`.
 
 Repository-wide traps (core takes no `process`, writes are never retried) are **not repeated** —
-they are in `docs/HANDOFF.md` §5. Only what is specific to this thread.
+they are in `docs_ai/HANDOFF.md` §5. Only what is specific to this thread.
 
 ### §5. What not to read or touch
 
@@ -92,12 +92,12 @@ The forks the receiver will hit anyway. One line each: the fork, then
 
 The checks as copy-paste, **with the current green counts**, plus the one thing to do by hand:
 what to run, what should happen. Do not restate how to set the project up — link
-`docs/HANDOFF.md` §4.
+`docs_ai/HANDOFF.md` §4.
 
 ## Check before handing it over
 
 ```sh
-H=docs/plans/<file>.md
+H=docs_ai/plans/<file>.md
 wc -l $H                      # whole file — 160 lines or fewer
 
 grep -ohE '`[A-Za-z0-9_./@-]+\.(ts|js|mjs|json|md|sh|yml)(:[0-9]+)?`' $H \
@@ -113,9 +113,9 @@ Not checkable by script:
 
 ## Where it goes
 
-- `docs/plans/YYYY-MM-DD-<topic>-handoff.md`, beside the thread's plan; link the plan, never
+- `docs_ai/plans/YYYY-MM-DD-<topic>-handoff.md`, beside the thread's plan; link the plan, never
   restate it.
-- Add `handoff: docs/plans/…-handoff.md` to the item's line in `BACKLOG.md`.
+- Add `handoff: docs_ai/plans/…-handoff.md` to the item's line in `docs/BACKLOG.md`.
 - The thread closes → the handoff is deleted along with the plan.
 
 ## Print in reply

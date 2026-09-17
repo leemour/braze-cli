@@ -5,8 +5,8 @@ The brief this repository is built against, recorded verbatim from the owner's s
 or overturned, the ruling lives in [`DECISIONS.md`](DECISIONS.md) and that file wins; a
 superseded paragraph below is marked, never deleted.
 
-How the work is cut up: [`../BACKLOG.md`](../BACKLOG.md). What exists today:
-[`HANDOFF.md`](HANDOFF.md).
+How the work is cut up: [`BACKLOG.md`](BACKLOG.md). What exists today:
+[`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ---
 

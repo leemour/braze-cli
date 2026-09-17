@@ -1,18 +1,42 @@
 {
   "name": "brazecli",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Braze REST API command line interface for AI agents, automation and people.",
+  "license": "MIT",
+  "author": "Viacheslav Ptsarev",
+  "homepage": "https://github.com/leemour/brazecli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leemour/brazecli.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/leemour/brazecli/issues"
+  },
+  "keywords": [
+    "braze",
+    "cli",
+    "braze-api",
+    "marketing",
+    "agent",
+    "automation",
+    "bulk",
+    "mcp"
+  ],
   "type": "module",
-  "description": "Braze REST API command line interface for agents, automation and humans.",
   "bin": {
     "braze": "./dist/bin/braze.js"
   },
   "files": [
     "dist",
+    "skills",
     "!dist/**/*.test.*"
   ],
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && node -e \"require('fs').chmodSync('dist/bin/braze.js', 0o755)\""

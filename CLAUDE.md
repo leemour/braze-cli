@@ -1,8 +1,13 @@
-# braze-cli — working rules
+# brazecli — working rules
 
-**Start with [`docs/HANDOFF.md`](docs/HANDOFF.md).** What this is, the layout, what to read for
-which task, how to run the checks, and the thirteen rules that cost time when broken. It is short;
-read it before anything else.
+**Start with [`docs_ai/HANDOFF.md`](docs_ai/HANDOFF.md).** What this is, the layout, what to read
+for which task, how to run the checks, and the rules that cost time when broken. It is short; read
+it before anything else.
+
+`docs_ai/` is the working trail — handoff, plans, session journal, cleanup list — and it is **not
+in git**. A fresh clone does not have it. When it is absent, start from
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/BACKLOG.md`](docs/BACKLOG.md) instead,
+and create `docs_ai/` as you go.
 
 Then the one reference that covers what you are about to touch —
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the seams,
@@ -20,7 +25,7 @@ they exist because any one of them alone lets something through.
 For anything that is not a one-file, one-step change, **write the plan first and stop for review**:
 
 1. Orient — read the relevant code and docs. No edits.
-2. Write the plan into [`docs/plans/`](docs/plans/) and show it. Wait for approval.
+2. Write the plan into [`docs_ai/plans/`](docs_ai/plans/) and show it. Wait for approval.
 3. Build against it, and correct the plan when reality diverges.
 
 The plan states: the goal, the current state with `path:line` anchors, the decisions being made and
@@ -50,8 +55,8 @@ narrating the change you just made.
 
 ## Record the trail as you go
 
-This repository keeps a [session journal](docs/journal/README.md). Take numbers with
-`docs/journal/note.sh`, which allocates and writes in one operation, and **write the entry when
+This repository keeps a [session journal](docs_ai/journal/README.md). Take numbers with
+`docs_ai/journal/note.sh`, which allocates and writes in one operation, and **write the entry when
 you find the thing, not at the end of the session**.
 
 A number that appeared in a reply and is missing from the journal is precisely the failure the
@@ -59,8 +64,8 @@ journal exists to prevent.
 
 ## Deletions
 
-**Never delete or clean up mid-task.** Append a line to [`CLEANUP.md`](CLEANUP.md) — the path, why
-it should go, the date — and do the removals in one batch at the end, after the owner confirms.
+**Never delete or clean up mid-task.** Append a line to
+[`docs_ai/CLEANUP.md`](docs_ai/CLEANUP.md) — the path, why it should go, the date — and do the removals in one batch at the end, after the owner confirms.
 This covers files, branches, worktrees, generated artifacts and temp directories.
 
 Exception: something that *is* the task ("remove the old X"), or a file you created earlier in the

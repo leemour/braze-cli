@@ -170,3 +170,82 @@ describe("braze profile", () => {
     expect(streams.stderr.join("\n")).toMatch(/key stored in the keyring/)
   })
 })
+
+describe("giving the key to a machine that has no terminal", () => {
+  const stored = (profile: string) =>
+    keyring.entries.get(`${keyringService(configDir, { BRAZE_CONFIG_DIR: configDir })}:${profile}`)
+
+  /**
+   * `CLI-15`. Before this, a CI with neither a TTY nor `BRAZE_API_KEY` in the environment simply
+   * could not configure a profile — and this CLI is built for automation first.
+   */
+  it("takes the key from standard input when asked to", async () => {
+    const code = await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu", "--key-stdin"], {
+      env: { BRAZE_CONFIG_DIR: configDir },
+      keyring,
+      streams,
+      readStdin: () => "piped-key",
+    })
+
+    expect(code).toBe(0)
+    expect(stored("staging")).toBe("piped-key")
+  })
+
+  /** `echo "$KEY" |` adds a newline, and a key with one in it fails auth in a way that reads as a wrong key. */
+  it("trims what it was given", async () => {
+    await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu", "--key-stdin"], {
+      env: { BRAZE_CONFIG_DIR: configDir },
+      keyring,
+      streams,
+      readStdin: () => "piped-key\n",
+    })
+
+    expect(stored("staging")).toBe("piped-key")
+  })
+
+  /** Asked for in this invocation beats left over in the shell. */
+  it("prefers what was piped in over BRAZE_API_KEY", async () => {
+    await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu", "--key-stdin"], {
+      env: { BRAZE_CONFIG_DIR: configDir, BRAZE_API_KEY: "from-the-environment" },
+      keyring,
+      streams,
+      readStdin: () => "piped-key",
+    })
+
+    expect(stored("staging")).toBe("piped-key")
+  })
+
+  it("says so plainly when the pipe was empty, rather than inventing a key", async () => {
+    const code = await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu", "--key-stdin"], {
+      env: { BRAZE_CONFIG_DIR: configDir },
+      keyring,
+      streams,
+      readStdin: () => "   ",
+    })
+
+    expect(code).toBe(2)
+    expect(streams.stderr.join("\n")).toMatch(/standard input was empty/)
+  })
+
+  it("never echoes the key it was given", async () => {
+    await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu", "--key-stdin"], {
+      env: { BRAZE_CONFIG_DIR: configDir },
+      keyring,
+      streams,
+      readStdin: () => "secret-key",
+    })
+
+    expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain("secret-key")
+  })
+
+  it("points at the pipe when there is no key anywhere", async () => {
+    const code = await run(["profile", "add", "staging", "--endpoint", "https://rest.fra-01.braze.eu"], {
+      env: { BRAZE_CONFIG_DIR: configDir },
+      keyring,
+      streams,
+    })
+
+    expect(code).toBe(2)
+    expect(streams.stderr.join("\n")).toMatch(/--key-stdin/)
+  })
+})

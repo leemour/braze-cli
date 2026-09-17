@@ -44,6 +44,7 @@ add or update a profile and store its API key
 | `--endpoint <url>` | no | Braze REST endpoint, e.g. https://rest.fra-01.braze.eu |
 | `--read-only` | no | refuse every write for this profile, whatever flags a command carries |
 | `--no-read-only` | no | allow writes again; they still need --confirm |
+| `--key-stdin` | no | read the API key from standard input, for a CI with no terminal |
 
 ### `braze profile verify`
 

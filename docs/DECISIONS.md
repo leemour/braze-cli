@@ -71,6 +71,16 @@ product requirement: the constraint is kept as an internal discipline, not as a 
 `OPS-5` — a Worker consumer — now needs core published first, which is a decision to take then and
 not before.
 
+**NEED-49 · Release from CI or from a maintainer's machine?**
+**From the machine.** «let's create a gh release and tag properly what we released in npm, we just
+release not from github but from local machine». The tag-triggered workflow was deleted: it would
+have needed a long-lived npm token in the repository secrets to save one command run a few times a
+year, and an unarmed one turns every tag into a failed run.
+
+The order matters and is written down in [`releasing.md`](releasing.md): publish first, then tag
+the commit that was published, then write the GitHub release. A tag made before the publish records
+an intention; a tag made after records a fact.
+
 **NEED-5 · Which Braze cluster?**
 **`https://rest.fra-01.braze.eu`.** The owner read it from the dashboard. Measured, not assumed:
 the same key answers `403 Access Denied` there and `401 Invalid API key` on `iad-01`, and per

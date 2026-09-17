@@ -15,6 +15,7 @@ one question, and are opened for a task rather than read in order.
 | [agents.md](agents.md) | the agent skill, and driving this from a script |
 | [security.md](security.md) | where the key lives, what is written, what never is |
 | [troubleshooting.md](troubleshooting.md) | the failures people actually hit |
+| [releasing.md](releasing.md) | how a new version is published, and by whom |
 
 ## Reference
 

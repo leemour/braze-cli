@@ -103,7 +103,7 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 
 | Number | Task | P |
 |---|---|---|
-| `CORE-11` | 🟡 The `userAgent` option exists and core invents no default; the CLI still has to build `brazecli/<version> runtime/<runtime> platform/<platform>` | P3 |
+| `CORE-11` | 🟡 **Corrected 2026-09-17: this said the CLI still has to build the user agent, and it has been building it since Phase 1** — `packages/cli/src/execute.ts` and `commands/verify.ts`. What is actually left is smaller and real: the same string is written out twice, and both hardcode `runtime/node` even under bun, which `pnpm smoke:bun` makes a supported runtime. One helper, and the runtime read from `process.versions` | P3 |
 
 ### CLI — the Node side
 
@@ -115,7 +115,6 @@ Everything needed for one hand-written command to reach Braze safely. Closed and
 
 | Number | Task | P |
 |---|---|---|
-| `CLI-15` | 🟡 `braze profile add` cannot take the key on stdin — only `BRAZE_API_KEY` or a terminal prompt. A CI that has neither is stuck | P3 |
 
 ## Phase 2 — the generated API catalog
 

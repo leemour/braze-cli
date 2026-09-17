@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { BrazeError, catalog } from "brazecli-core"
 import { Command } from "commander"
 import { Credentials } from "../auth/credentials.js"
@@ -20,6 +21,8 @@ export interface ProfileContext {
   streams?: Streams
   /** How the API key is obtained when the environment does not carry one. */
   promptForKey?: (profile: string) => Promise<string>
+  /** Injected so a test does not have to own the process's standard input. */
+  readStdin?: () => string
 }
 
 const context = (options: ProfileContext) => {
@@ -48,8 +51,9 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
     .option("--endpoint <url>", "Braze REST endpoint, e.g. https://rest.fra-01.braze.eu")
     .option("--read-only", "refuse every write for this profile, whatever flags a command carries")
     .option("--no-read-only", "allow writes again; they still need --confirm")
+    .option("--key-stdin", "read the API key from standard input, for a CI with no terminal")
     .description("add or update a profile and store its API key")
-    .action(async (name: string, flags: { endpoint?: string; readOnly?: boolean }) => {
+    .action(async (name: string, flags: { endpoint?: string; readOnly?: boolean; keyStdin?: boolean }) => {
       const { paths, config, streams, credentials, env } = context(options)
       const existingProfile = config.profiles[name]
 
@@ -64,7 +68,14 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
       }
 
       // Never a command line argument: it would land in shell history, in `ps`, and in CI logs.
-      const given = env.BRAZE_API_KEY?.trim() || (await askForKey(name, options))
+      //
+      // `--key-stdin` wins over the environment, because it was asked for in this invocation and
+      // `BRAZE_API_KEY` may be left over from the shell. Explicit rather than "read stdin whenever
+      // it is not a terminal": this command reads standard input for nothing else, so silently
+      // taking whatever is piped in would make a stray pipe install a key nobody meant to give.
+      const given = flags.keyStdin
+        ? keyFromStdin(options)
+        : env.BRAZE_API_KEY?.trim() || (await askForKey(name, options))
 
       // Re-running `add` to correct an endpoint must not demand the key again. Keeping the
       // stored one is the obvious reading of "update this profile", and it is said out loud so
@@ -73,7 +84,10 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
       if (!given && !existing) {
         throw new BrazeError(
           "validation_error",
-          "no API key given — set BRAZE_API_KEY for this command, or run it in a terminal to be asked",
+          flags.keyStdin
+            ? "--key-stdin was given and standard input was empty"
+            : "no API key given — pipe it in with --key-stdin, set BRAZE_API_KEY for this command, " +
+                "or run it in a terminal to be asked",
         )
       }
 
@@ -156,6 +170,22 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
     })
 
   return command
+}
+
+/**
+ * The whole of standard input, trimmed — `echo "$KEY" | braze profile add …` adds a newline nobody
+ * meant to store, and a key with a newline in it fails authentication in a way that looks like a
+ * wrong key.
+ */
+const keyFromStdin = (options: ProfileContext): string => {
+  try {
+    return (options.readStdin ? options.readStdin() : readFileSync(0, "utf8")).trim()
+  } catch (error) {
+    throw new BrazeError(
+      "validation_error",
+      `cannot read standard input: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
 }
 
 const askForKey = async (profile: string, options: ProfileContext): Promise<string> => {

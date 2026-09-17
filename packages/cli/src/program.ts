@@ -22,6 +22,8 @@ export interface ProgramOptions {
   streams?: Streams
   isTty?: boolean
   fetch?: typeof globalThis.fetch
+  /** `profile add --key-stdin`. Injected so a test does not have to own the process's input. */
+  readStdin?: () => string
 }
 
 export const buildProgram = (options: ProgramOptions = {}): Command => {

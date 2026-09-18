@@ -16,18 +16,19 @@ npx @leemour/brazecli staging campaigns list
 
 ## What you get
 
-- **The whole Braze API.** 95 typed commands, generated from Braze's own collection and kept in
-  step with it — `braze staging campaigns list`, `braze staging users track`. Anything the catalog
-  does not carry is one command away: `braze api POST /some/path --input @body.json`.
+- **Shorter than curl.** `braze staging campaigns list` instead of a URL, an auth header and a
+  query string assembled by hand every time. 95 typed commands, generated from Braze's own
+  collection; anything the catalog does not carry is `braze api POST /some/path --input @body.json`.
+- **Credentials out of reach.** The API key goes to your OS keyring: never a config file, never a
+  command line argument, never your shell history, never a log.
+- **Writes that cannot happen by accident.** `--confirm` on every write, `--dry-run` that validates
+  and counts without sending, and profiles you can mark read-only so a production workspace refuses
+  writes before a flag is even read.
+- **The workspace is always named.** `braze production campaigns list` says which one it touched,
+  in the command itself and in the audit afterwards. There is no default profile, so nothing lands
+  in production because a flag was forgotten.
 - **Bulk work that finishes.** Stream a JSONL or CSV file of hundreds of thousands of records,
   batched to Braze's limits, with bounded memory and one honest audit row per record.
-- **Writes that cannot happen by accident.** No default profile, `--confirm` on every write,
-  `--dry-run` that validates and counts without sending, and profiles you can mark read-only so a
-  production workspace refuses writes before a flag is even read.
-- **Credentials kept out of the way.** The API key goes to your OS keyring — never a config file,
-  never a command line argument, never a log — with a permission-restricted file as the fallback.
-- **The workspace is always named.** `braze production campaigns list` says which Braze workspace
-  it touched, in the command itself and in the audit afterwards.
 - **One tool, two audiences.** A terminal gets tables, colour and a progress line; `--json` gets
   exactly one JSON value on stdout and a closed list of error codes on stderr.
 - **Every run recorded.** One directory per invocation: structured logs, what was sent, what came

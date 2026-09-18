@@ -31,7 +31,6 @@ const ProfileSchema = v.object({
 
 export const ConfigSchema = v.object({
   version: v.literal(1),
-  defaultProfile: v.optional(v.string()),
   credentialStorage: v.optional(v.picklist(CREDENTIAL_STORAGE), "auto"),
   http: v.optional(
     v.object({

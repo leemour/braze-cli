@@ -18,13 +18,12 @@ describe("config file", () => {
   it("round-trips what was saved", () => {
     const dir = tempDir()
     const config = emptyConfig()
-    config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu", readOnly: false }
-    config.defaultProfile = "production"
+    config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu", readOnly: true }
 
     saveConfig(dir, config)
 
     expect(loadConfig(dir).profiles.production?.restEndpoint).toBe("https://rest.fra-01.braze.eu")
-    expect(loadConfig(dir).defaultProfile).toBe("production")
+    expect(loadConfig(dir).profiles.production?.readOnly).toBe(true)
   })
 
   it("names the field when the file is not a valid config", () => {

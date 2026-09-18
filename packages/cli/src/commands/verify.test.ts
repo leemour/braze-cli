@@ -14,7 +14,6 @@ let streams: ReturnType<typeof captureStreams>
 const configure = (expectMaxMonthlyActives?: number) => {
   const config = emptyConfig()
   config.profiles.staging = { restEndpoint: "https://rest.iad-01.braze.com", readOnly: false, expectMaxMonthlyActives }
-  config.defaultProfile = "staging"
   saveConfig(configDir, config)
 }
 

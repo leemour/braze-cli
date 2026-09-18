@@ -85,7 +85,8 @@ describe("braze profile", () => {
     expect(readFileSync(join(configDir, "config.json"), "utf8")).not.toContain("prod-key")
   })
 
-  // NEED-25: no profile is ever the default, so nothing is reached by omission.
+  // NEED-25: no profile is ever the default, so nothing is reached by omission. The config
+  // field that once held one was removed in DEBT-2; this guards against it coming back.
   it("makes no profile the default, whichever was created first", async () => {
     await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"], {
       BRAZE_API_KEY: "k",
@@ -120,6 +121,22 @@ describe("braze profile", () => {
       name: "production",
       apiKey: { present: true, source: "keyring" },
     })
+  })
+
+  // BUG-17: add, list and remove wrote JSON to stdout directly, so NEED-1 held everywhere in the
+  // program except the three commands a newcomer runs first.
+  it("renders a table when the format asks for one, like every other command", async () => {
+    await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"], {
+      BRAZE_API_KEY: "prod-key",
+    })
+    streams.stdout.length = 0
+
+    await braze(["--output", "pretty", "profile", "list"])
+
+    const output = streams.stdout.join("\n")
+    expect(() => JSON.parse(output)).toThrow()
+    expect(output).toMatch(/name\s+restEndpoint/)
+    expect(output).toContain("production")
   })
 
   it("keeps the stored key when re-run only to correct the endpoint", async () => {

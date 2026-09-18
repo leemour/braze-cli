@@ -1,25 +1,23 @@
 # Quickstart
 
-`braze` reads from and writes to the [Braze](https://www.braze.com/docs/api/basics/) REST API from
-your terminal or a script.
+`braze` reads from and writes to the [Braze](https://www.braze.com/docs/api/basics/) REST API from your terminal or a script. Full documentation: [https://github.com/leemour/brazecli](https://github.com/leemour/brazecli)
 
 ## Advantages
 
 - **Shorter than curl.** `braze production campaigns list` instead of a URL, an auth header and a
-  query string assembled by hand every time.
+query string assembled by hand every time.
 - **Harder to get wrong.** Every write needs `--confirm`, `--dry-run` validates and counts without
-  sending anything, and the workspace is named in the command itself — there is no default profile,
-  so nothing lands in production because a flag was forgotten.
+sending anything, and the workspace is named in the command itself — there is no default profile,
+so nothing lands in production because a flag was forgotten.
 - **Safer with credentials.** The API key goes to your OS keyring. Never a config file, never a
-  command line argument, never your shell history, never a log.
+command line argument, never your shell history, never a log.
 - **Access you control.** A profile marked read-only refuses writes outright, before `--confirm` is
-  even considered. Keep one profile per workspace and mark production read-only.
+even considered. Keep one profile per workspace and mark production read-only.
 - **A record of everything.** One directory per run: what was sent, what came back, how long it
-  took.
+took.
 - **Serves a person and a script.** A terminal gets tables; a pipe or `--json` gets one JSON value.
 
-Unlike an MCP server it needs no server process and no agent runtime — it runs in any shell and any
-CI job.
+Unlike an MCP server it needs no server process and no agent runtime — it runs in any shell and any CI job and doesn't pollute context.
 
 ## Install
 
@@ -51,7 +49,7 @@ number is not the size you expect, the key belongs to a different workspace.
 
 ## Use
 
-The profile name comes first, always.
+The profile name comes first, always. `braze commands` lists everything available, and `braze schema campaigns list` explains one command — its parameters, and whether it writes.
 
 ```sh
 braze production campaigns list
@@ -61,8 +59,3 @@ braze production campaigns details --campaign-id <id>
 braze production campaigns list --json | jq -r '.campaigns[].name'
 braze production api GET /campaigns/list --query page=0
 ```
-
-`braze commands` lists everything available, and `braze schema campaigns list` explains one command
-— its parameters, and whether it writes.
-
-Full documentation: <https://github.com/leemour/brazecli>

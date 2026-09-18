@@ -27,7 +27,7 @@ const MAU = "kpi.mau.data-series.get"
  */
 export const verifyCommand = (context: VerifyContext = {}): Command =>
   new Command("verify")
-    .argument("[name]", "profile to check; the default profile otherwise")
+    .argument("[name]", "profile to check; otherwise --profile or BRAZE_PROFILE")
     .option("--expect-max <count>", "record this ceiling on monthly active users", Number)
     .description("check that a profile still points at the workspace you think it does")
     .action(async (name: string | undefined, flags: { expectMax?: number }, self: Command) => {

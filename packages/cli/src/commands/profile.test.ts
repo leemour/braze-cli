@@ -85,7 +85,8 @@ describe("braze profile", () => {
     expect(readFileSync(join(configDir, "config.json"), "utf8")).not.toContain("prod-key")
   })
 
-  // NEED-25: no profile is ever the default, so nothing is reached by omission.
+  // NEED-25: no profile is ever the default, so nothing is reached by omission. The config
+  // field that once held one was removed in DEBT-2; this guards against it coming back.
   it("makes no profile the default, whichever was created first", async () => {
     await braze(["profile", "add", "production", "--endpoint", "https://rest.fra-01.braze.eu"], {
       BRAZE_API_KEY: "k",

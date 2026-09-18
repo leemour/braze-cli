@@ -17,7 +17,6 @@ let streams: ReturnType<typeof captureStreams>
 const braze = (argv: string[], mock: ReturnType<typeof mockBraze>, readOnly = false) => {
   const config = emptyConfig()
   config.profiles.production = { restEndpoint: "https://rest.iad-01.braze.com", readOnly }
-  config.defaultProfile = "production"
   saveConfig(configDir, config)
 
   return run(argv, {

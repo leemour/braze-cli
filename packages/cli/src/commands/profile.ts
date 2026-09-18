@@ -166,7 +166,7 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
         apiKey: credentials.read(name) ? { present: true, source: credentials.read(name)?.source } : { present: false },
       }))
 
-      renderer.result({ profiles: rows, defaultProfile: config.defaultProfile ?? null })
+      renderer.result({ profiles: rows })
     })
 
   command
@@ -181,7 +181,6 @@ export const profileCommand = (options: ProfileContext = {}): Command => {
       }
 
       delete config.profiles[name]
-      if (config.defaultProfile === name) config.defaultProfile = Object.keys(config.profiles)[0]
       saveConfig(paths.config, config)
 
       const removedFrom = credentials.remove(name)

@@ -17,7 +17,6 @@ let keyring: ReturnType<typeof memoryKeyring>
 const configure = (readOnly: boolean) => {
   const config = emptyConfig()
   config.profiles.production = { restEndpoint: "https://rest.iad-01.braze.com", readOnly }
-  config.defaultProfile = "production"
   saveConfig(configDir, config)
 }
 

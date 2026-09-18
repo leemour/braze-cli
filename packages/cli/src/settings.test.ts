@@ -12,7 +12,6 @@ const configured = () => {
   const config = emptyConfig()
   config.profiles.production = { restEndpoint: "https://rest.fra-01.braze.eu", readOnly: false }
   config.profiles.staging = { restEndpoint: "https://rest.iad-03.braze.com", readOnly: false }
-  config.defaultProfile = "production"
   saveConfig(dir, config)
   return dir
 }

@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 follow [semantic versioning](https://semver.org/spec/v2.0.0.html) — with `0.x` meaning the command
 surface may still move between minor versions.
 
+## 0.1.1 — 2026-09-18
+
+Both of these surfaced the first time the package was installed from the registry rather than
+run out of its own build directory.
+
+### Fixed
+
+- `braze profile add`, `profile list` and `profile remove` printed raw JSON to a terminal and
+  ignored `--output pretty`. They now render a table like every other command. The JSON that
+  `--json` and a pipe produce is unchanged.
+
+### Removed
+
+- `defaultProfile` in the config file. Nothing had read it since profiles stopped having a
+  default: a command without a profile named still fails, and asks for one. It was printed by
+  `profile list`, where it read as a statement that some workspace was the default. A config
+  that still carries the field is fine — it is ignored, and dropped the next time the file is
+  written.
+
 ## 0.1.0 — 2026-09-17
 
 The first published version. Everything below already existed; this is the release that makes it

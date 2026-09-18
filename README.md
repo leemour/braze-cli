@@ -91,6 +91,11 @@ Full detail, including what to do when a global install is not an option:
 
 ## Authentication
 
+Create the key in the Braze dashboard under **Settings → APIs and Identifiers → Create API Key**,
+granting only the permissions you will actually use
+([Braze's instructions](https://www.braze.com/docs/api/basics/)). The same page lists the REST
+endpoint for every dashboard URL.
+
 One profile per Braze workspace. A profile holds the REST endpoint and whether writes are allowed;
 the API key goes to your OS keyring under that profile's name.
 
@@ -105,6 +110,15 @@ braze profile list           # names, endpoints, whether a key exists — never 
 ```sh
 echo "$BRAZE_KEY" | braze profile add ci --endpoint https://rest.fra-01.braze.eu --key-stdin
 ```
+
+Check it landed:
+
+```sh
+braze profile verify production
+```
+
+That prints the endpoint, whether the profile is read-only, and the workspace's monthly active
+users. If that number is not the size you expect, the key belongs to a different workspace.
 
 Three things worth knowing before the first command:
 
@@ -242,6 +256,10 @@ It writes `SKILL.md` into every agent it finds on the machine — `~/.claude/ski
 The skill teaches the two things an agent cannot guess: that discovery is `braze commands --json`
 rather than remembered flags, and which failures must never be retried. What it says, and how to
 drive this from a script without the skill: [docs/agents.md](docs/agents.md).
+
+Unlike an MCP server, this needs no server process and no agent runtime, and nothing sits in the
+context window until a command is actually run. It works the same from a shell, a CI job or an
+agent.
 
 ## Documentation
 

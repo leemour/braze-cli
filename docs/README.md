@@ -7,7 +7,6 @@ one question, and are opened for a task rather than read in order.
 
 | | |
 |---|---|
-| [quickstart.md](quickstart.md) | the five-minute path: install, a read-only key, first reads |
 | [installation.md](installation.md) | installing, updating, what needs which Node, where files land |
 | [authentication.md](authentication.md) | profiles, the endpoint, the keyring, CI without one |
 | [configuration.md](configuration.md) | every setting, every environment variable, what wins |

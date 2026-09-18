@@ -57,7 +57,7 @@ check that a profile still points at the workspace you think it does
 
 | Argument | Required | |
 |---|---|---|
-| `name` | no | profile to check; the default profile otherwise |
+| `name` | no | profile to check; otherwise --profile or BRAZE_PROFILE |
 
 | Option | Required | |
 |---|---|---|
